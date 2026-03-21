@@ -1,19 +1,15 @@
 import numpy as np
-from tensorflow.keras.models import load_model
 import joblib
+from tensorflow.keras.models import load_model
 
 from src.utils.metrics import evaluate
 from src.utils.visualization import plot_predictions
 
-X = np.load("data/processed/X.npy")
-y = np.load("data/processed/y.npy")
+
+X_test = np.load("data/processed/X_test.npy")
+y_test = np.load("data/processed/y_test.npy")
 
 scaler_y = joblib.load("data/processed/scaler_y.pkl")
-
-
-train_size = int(len(X) * 0.8)
-X_test = X[train_size:]
-y_test = y[train_size:]
 
 
 def run_prediction(model_path, X_test, y_test, scaler_y):
@@ -21,8 +17,14 @@ def run_prediction(model_path, X_test, y_test, scaler_y):
 
     predictions = model.predict(X_test)
 
+    predictions = predictions.reshape(-1, 1)
+    y_test = y_test.reshape(-1, 1)
+
     predictions = scaler_y.inverse_transform(predictions)
     y_test_real = scaler_y.inverse_transform(y_test)
+
+    predictions = predictions.flatten()
+    y_test_real = y_test_real.flatten()
 
     metrics = evaluate(y_test_real, predictions)
     print(metrics)
