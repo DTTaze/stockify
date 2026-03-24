@@ -9,6 +9,7 @@ import {
 } from "@/components/common/form/input/FormInput";
 import { Form } from "@/components/ui/Form";
 import { cn } from "@/utils";
+import Link from "next/link";
 import { useRegister } from "../hook";
 
 export default function RegisterForm() {
@@ -30,8 +31,8 @@ export default function RegisterForm() {
         <Form {...form}>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             <FormInputText
-              label="Họ tên"
               control={control}
+              label="Họ tên"
               name="username"
               inputProps={{
                 prefixIcon: <User className="h-6 w-6 text-gray-400" />,
@@ -42,13 +43,12 @@ export default function RegisterForm() {
             />
 
             <FormInputText
+              control={control}
               label="Email"
               labelClassName="text-[#1a365d]"
-              control={control}
               name="email"
               inputProps={{
                 prefixIcon: <Mail className="h-6 w-6 text-gray-400" />,
-
                 suffixIcon: !errors.email && email?.trim() && (
                   <Check className="h-4 w-4 rounded-full bg-green-500 text-white" />
                 ),
@@ -56,8 +56,8 @@ export default function RegisterForm() {
             />
 
             <FormInputPassword
-              label="Mật khẩu"
               control={control}
+              label="Mật khẩu"
               name="password"
               inputProps={{
                 prefixIcon: <Lock className="h-6 w-6 text-gray-400" />,
@@ -65,8 +65,8 @@ export default function RegisterForm() {
             />
 
             <FormInputPassword
-              label="Xác nhận mật khẩu"
               control={control}
+              label="Xác nhận mật khẩu"
               name="confirmPassword"
               inputProps={{
                 prefixIcon: <Lock className="h-6 w-6 text-gray-400" />,
@@ -91,6 +91,16 @@ export default function RegisterForm() {
               {loading ? "Đang đăng ký..." : "Đăng ký"}
             </ButtonCustom>
           </form>
+
+          <p className="mt-8 text-center text-gray-600">
+            Đã có tài khoản?
+            <Link
+              href="/login"
+              className="text-[#1a365d] transition-colors hover:text-[#d4af37]"
+            >
+              Đăng nhập ngay
+            </Link>
+          </p>
         </Form>
       </div>
     </div>

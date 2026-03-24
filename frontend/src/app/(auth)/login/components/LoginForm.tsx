@@ -33,6 +33,7 @@ export default function LoginForm() {
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             <FormInputText
               control={control}
+              label="Email"
               name="email"
               inputProps={{
                 prefixIcon: <Mail className="h-6 w-6 text-gray-400" />,
@@ -43,6 +44,7 @@ export default function LoginForm() {
             />
 
             <FormInputPassword
+              label="Mật khẩu"
               control={control}
               name="password"
               inputProps={{
