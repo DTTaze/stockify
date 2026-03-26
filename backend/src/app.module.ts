@@ -1,42 +1,43 @@
-import databaseConfig from 'src/configs/database.config';
-
 import { Module } from '@nestjs/common';
-import { ConfigModule, ConfigType } from '@nestjs/config';
-import { EventEmitterModule } from '@nestjs/event-emitter';
-import { ScheduleModule } from '@nestjs/schedule';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
+import { AuditModule } from '@modules/audit/audit.module';
+import { AuthModule } from '@modules/auth/auth.module';
 import { GlobalModule } from '@modules/global/global.module';
-import { HealthModule } from '@modules/health/health.module';
-
-import configs from './configs';
+import { UserModule } from '@modules/user/user.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      load: configs,
       envFilePath: ['.env'],
     }),
+
     TypeOrmModule.forRootAsync({
-      inject: [databaseConfig.KEY],
-      useFactory: (dbConfig: ConfigType<typeof databaseConfig>) => ({
-        type: 'postgres',
-        host: dbConfig.host,
-        port: dbConfig.port,
-        username: dbConfig.username,
-        password: dbConfig.password,
-        database: dbConfig.schema,
+      inject: [ConfigService],
+      useFactory: (config: ConfigService) => ({
+        type: 'mssql',
+
+        host: config.get('DB_HOST'),
+        port: parseInt(config.get('DB_PORT') || '1433'),
+        username: config.get('DB_USERNAME'),
+        password: config.get('DB_PASSWORD'),
+        database: config.get('DB_NAME'),
+
         autoLoadEntities: true,
-        entities: [],
-        synchronize: dbConfig.synchronize,
-        logging: dbConfig.logging,
+        synchronize: true,
+
+        options: {
+          encrypt: false,
+          trustServerCertificate: true,
+        },
       }),
     }),
-    EventEmitterModule.forRoot(),
-    ScheduleModule.forRoot(),
     GlobalModule,
-    HealthModule,
+    AuditModule,
+    UserModule,
+    AuthModule,
   ],
 })
 export class AppModule {}
