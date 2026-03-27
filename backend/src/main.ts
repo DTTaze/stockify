@@ -1,40 +1,63 @@
-import * as dayjs from 'dayjs';
-import * as timezone from 'dayjs/plugin/timezone';
-import * as utc from 'dayjs/plugin/utc';
-
-import { Logger } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
+import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { NestExpressApplication } from '@nestjs/platform-express';
-
-import { ENV_KEY } from '@shared/constants';
+import {
+  DocumentBuilder,
+  SwaggerCustomOptions,
+  SwaggerModule,
+} from '@nestjs/swagger';
 
 import { AppModule } from './app.module';
-import { setup } from './setup';
-
-dayjs.extend(utc);
-dayjs.extend(timezone);
-
-// Set it once if you want all dayjs() calls to default to that zone
-dayjs.tz.setDefault('Asia/Ho_Chi_Minh');
 
 async function bootstrap() {
-  const logger = new Logger('Bootstrap');
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
-  const configService = app.get(ConfigService);
 
-  setup(app);
+  app.enableCors();
 
-  const port = configService.get<number>(ENV_KEY.PORT) || 3000;
-  const mainUrl = `http://localhost:${port}`;
+  app.useBodyParser('json', { limit: '15mb' });
+  app.useBodyParser('urlencoded', { limit: '15mb', extended: true });
 
-  await app.listen(port);
+  app.useGlobalPipes(
+    new ValidationPipe({
+      transform: true,
+      forbidUnknownValues: true,
+      transformOptions: { enableImplicitConversion: true },
+    }),
+  );
+  app.setGlobalPrefix('/v1/api');
 
-  logger.log(`Server is listening on ${mainUrl}`);
+  if (process.env.ENABLE_CORS === 'true') {
+    app.enableCors({
+      origin: '*',
+      methods: '*',
+      credentials: true,
+    });
+  }
 
-  const enableSwagger = configService.get<boolean>(ENV_KEY.ENABLE_SWAGGER);
+  const enableSwagger = process.env.ENABLE_SWAGGER === 'true';
   if (enableSwagger) {
-    logger.log(`Swagger UI is running on ${mainUrl}/docs`);
+    const config = new DocumentBuilder()
+      .setTitle('Backend APIs')
+      .setDescription('All backend APIs for the product.')
+      .setVersion('1.0')
+      .addBearerAuth({ type: 'http', in: 'header' })
+      .build();
+    const document = SwaggerModule.createDocument(app, config);
+    const customOptions: SwaggerCustomOptions = {
+      swaggerOptions: {
+        persistAuthorization: true,
+      },
+    };
+    SwaggerModule.setup('docs', app, document, customOptions);
+  }
+
+  const port = process.env.PORT;
+  const mainUrl = `http://localhost:${port}`;
+  await app.listen(port);
+  console.log(`Server is listening on ${mainUrl}`);
+
+  if (enableSwagger) {
+    console.log(`Swagger API documentation is running on ${mainUrl}/docs`);
   }
 }
 
