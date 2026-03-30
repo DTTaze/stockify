@@ -16,14 +16,7 @@ export interface RunnerUser {
 export interface UserAuthProfile {
   id: string;
   username: string;
-  companyId: string;
-  role: string;
-  status: ENTITY_STATUS;
-  email?: string;
-  phone?: string;
-  bankAccountName?: string;
-  isPassCodeSet?: boolean;
-  isTwoFactorEnabled?: boolean;
+  email: string;
 }
 
 export interface SystemUserAuthProfile {

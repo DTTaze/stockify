@@ -1,51 +1,133 @@
-import { bcryptHelper, stringUtils } from 'mvc-common-toolkit';
+import {
+  AuditService,
+  ErrorLog,
+  OperationResult,
+  bcryptHelper,
+  stringUtils,
+} from 'mvc-common-toolkit';
 
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 
 import { UserService } from '@modules/user/user.service';
 
+import {
+  APP_ACTION,
+  ENTITY_STATUS,
+  ERR_CODE,
+  INJECTION_TOKEN,
+} from '@shared/constants';
+import { extractUserInfo } from '@shared/helpers/common';
+import {
+  generateConflictResult,
+  generateForbiddenResult,
+  generateInternalServerResult,
+  generateNotFoundResult,
+} from '@shared/helpers/operation-result.helper';
+import { UserAuthProfile } from '@shared/interfaces';
+
+import { LoginDTO, RegisterDTO } from './auth.dto';
+
 @Injectable()
 export class AuthService {
+  protected logger = new Logger(AuthService.name);
+
   constructor(
     private userService: UserService,
     private jwtService: JwtService,
+
+    @Inject(INJECTION_TOKEN.AUDIT_SERVICE)
+    protected auditService: AuditService,
   ) {}
 
-  async register(dto: any) {
-    const hashedPassword = await bcryptHelper.hash(dto.password, 10);
+  public async register(logId: string, dto: RegisterDTO) {
+    try {
+      const passwordHash = await bcryptHelper.hash(dto.password, 10);
 
-    const user = await this.userService.create({
-      email: dto.email,
-      fullName: dto.username,
-      password: hashedPassword,
-    });
+      const user = await this.userService.create({
+        username: dto.username,
+        email: dto.email,
+        password: passwordHash,
+      });
 
-    return { success: true, data: user };
+      return {
+        success: true,
+        data: user,
+      };
+    } catch (error) {
+      this.logger.error(error.message, error.stack);
+
+      this.auditService.emitLog(
+        new ErrorLog({
+          logId,
+          message: error.message,
+          payload: JSON.stringify(dto, stringUtils.maskFn),
+          action: APP_ACTION.REGISTER,
+        }),
+      );
+
+      return generateInternalServerResult();
+    }
   }
 
-  async login(dto: any) {
-    const user = await this.userService.findOne({ email: dto.email });
+  public async login(
+    logId: string,
+    data: LoginDTO,
+  ): Promise<OperationResult<UserAuthProfile>> {
+    try {
+      const user = await this.userService.findOne({ email: data.email });
 
-    if (!user) {
-      return { success: false, message: 'User not found' };
+      if (!user) {
+        return generateNotFoundResult(
+          'user not found',
+          ERR_CODE.USER_NOT_FOUND,
+        );
+      }
+
+      if (user.status !== ENTITY_STATUS.ACTIVE) {
+        return generateForbiddenResult(
+          'user not active',
+          ERR_CODE.ACCOUNT_DEACTIVATED,
+        );
+      }
+
+      if (!user.password) {
+        return generateConflictResult(
+          'password incorrect',
+          ERR_CODE.PASSWORD_INCORRECT,
+        );
+      }
+
+      const isPasswordValid = await bcryptHelper.compare(
+        data.password,
+        user.password,
+      );
+
+      if (!isPasswordValid) {
+        return generateConflictResult(
+          'password incorrect',
+          ERR_CODE.PASSWORD_INCORRECT,
+        );
+      }
+
+      return {
+        success: true,
+        data: extractUserInfo(user),
+      };
+    } catch (error) {
+      this.logger.error(error.message, error.stack);
+
+      this.auditService.emitLog(
+        new ErrorLog({
+          logId: logId,
+          message: error.message,
+          payload: JSON.stringify(data, stringUtils.maskFn),
+          action: APP_ACTION.LOGIN,
+        }),
+      );
+
+      return generateInternalServerResult();
     }
-
-    const isValid = await bcryptHelper.compare(dto.password, user.password);
-
-    if (!isValid) {
-      return { success: false, message: 'Wrong password' };
-    }
-
-    const token = await this.jwtService.signAsync({ id: user.id });
-
-    return {
-      success: true,
-      data: {
-        accessToken: token,
-        user,
-      },
-    };
   }
 
   async changePassword(userId: string, dto: any) {

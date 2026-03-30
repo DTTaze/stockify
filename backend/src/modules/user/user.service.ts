@@ -4,6 +4,10 @@ import { Repository } from 'typeorm';
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 
+import { ENTITY_STATUS, ERR_CODE } from '@shared/constants';
+import { generateConflictResult } from '@shared/helpers/operation-result.helper';
+
+import { VerifyUniquenessUserDTO } from './user.dto';
 import { User } from './user.model';
 
 @Injectable()
@@ -40,13 +44,42 @@ export class UserService {
 
     const user = this.repo.create({
       email: data.email,
-      passwordHash: hashedPassword,
-      fullName: data.fullName,
-      role: 'USER',
-      status: 'ACTIVE',
+      password: hashedPassword,
+      username: data.fullName,
+      status: ENTITY_STATUS.ACTIVE,
     } as Partial<User>);
 
     return this.repo.save(user);
+  }
+
+  public async verifyUniquenessUser(dto: Partial<VerifyUniquenessUserDTO>) {
+    const { email, username } = dto;
+
+    if (email) {
+      const existsEmail = await this.findOne({ email });
+
+      if (existsEmail) {
+        return generateConflictResult(
+          'email already exists',
+          ERR_CODE.EMAIL_ALREADY_EXISTS,
+        );
+      }
+    }
+
+    if (username) {
+      const existsUsername = await this.findOne({ username });
+
+      if (existsUsername) {
+        return generateConflictResult(
+          'username already exists',
+          ERR_CODE.USERNAME_ALREADY_EXISTS,
+        );
+      }
+    }
+
+    return {
+      success: true,
+    };
   }
 
   async findByEmail(email: string) {

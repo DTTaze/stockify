@@ -1,52 +1,28 @@
 import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
-export enum UserRole {
-  USER = 'USER',
-  ADMIN = 'ADMIN',
-}
-
-export enum UserStatus {
-  ACTIVE = 'ACTIVE',
-  LOCKED = 'LOCKED',
-}
+import { ENTITY_STATUS } from '@shared/constants';
+import { Audit } from '@shared/models/audit.model';
 
 @Entity('users')
-export class User {
+export class User extends Audit {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ type: 'varchar', length: 255, unique: true })
+  @Column({ unique: true })
   email: string;
 
-  @Column({ name: 'password_hash', type: 'nvarchar', nullable: false })
+  @Column({ unique: true })
+  username: string;
+
+  @Column({ nullable: true })
   password: string;
 
-  @Column({ name: 'full_name', type: 'nvarchar', length: 255, nullable: true })
-  fullName: string;
+  @Column({ default: ENTITY_STATUS.ACTIVE })
+  status: ENTITY_STATUS;
 
   @Column({
-    type: 'varchar',
-    length: 10,
+    type: 'nvarchar',
+    nullable: true,
   })
-  role: UserRole;
-
-  @Column({
-    type: 'varchar',
-    length: 10,
-  })
-  status: UserStatus;
-
-  @Column({
-    name: 'created_at',
-    type: 'datetime2',
-    default: () => 'GETDATE()',
-  })
-  createdAt: Date;
-
-  @Column({
-    name: 'updated_at',
-    type: 'datetime2',
-    default: () => 'GETDATE()',
-  })
-  updatedAt: Date;
+  metadata: string;
 }
