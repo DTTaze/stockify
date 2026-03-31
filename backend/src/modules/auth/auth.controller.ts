@@ -12,8 +12,7 @@ import { RequestUser } from '@shared/decorators/request-user.decorator';
 import { AuthGuard } from '@shared/guards/auth.guard';
 import { extractUserInfo } from '@shared/helpers/common';
 import { UseCallQueue } from '@shared/interceptors/call-queue.interceptor';
-
-// import { ApplyRateLimiting } from '@shared/interceptors/rate-limiting.interceptor';
+import { ApplyRateLimiting } from '@shared/interceptors/rate-limiting.interceptor';
 
 import { ForgotPasswordDTO, LoginDTO, RegisterDTO } from './auth.dto';
 import { AuthService } from './auth.service';
@@ -30,7 +29,7 @@ export class AuthController {
 
   @ApiOperation({ summary: 'Register a new user' })
   @UseCallQueue()
-  // @ApplyRateLimiting(5)
+  @ApplyRateLimiting(5)
   @Post('register')
   public async register(@LogId() logId: string, @Body() dto: RegisterDTO) {
     const validateResult = dto.validate();
@@ -61,7 +60,7 @@ export class AuthController {
 
   @ApiOperation({ summary: 'Login' })
   @UseCallQueue()
-  // @ApplyRateLimiting(5)
+  @ApplyRateLimiting(5)
   @Post('login')
   public async login(
     @LogId() logId: string,
