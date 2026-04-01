@@ -2,7 +2,7 @@ import { z } from "zod";
 
 import { emailRegex } from "@/utils/regex";
 
-export const loginFormSchema = z.object({
+export const userFormSchema = z.object({
   email: z
     .string()
     .trim()

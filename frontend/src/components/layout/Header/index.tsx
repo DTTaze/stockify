@@ -1,5 +1,7 @@
 "use client";
 
+import { ButtonCustom } from "@/components/common/form/button";
+import { useLogout } from "@/hooks/common/useLogout";
 import {
   Bell,
   LayoutDashboard,
@@ -14,6 +16,8 @@ import { useState } from "react";
 
 export default function Header() {
   const location = usePathname();
+
+  const { handleLogout } = useLogout();
 
   const navItems = [
     { path: "/user/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -54,14 +58,14 @@ export default function Header() {
                 </div>
               </div>
 
-              <button
-                //   onClick={handleLogout}
+              <ButtonCustom
+                onClick={handleLogout}
                 className="flex items-center space-x-2 rounded-lg bg-white/10 px-4 py-2 transition-colors hover:bg-white/20"
               >
                 <LogOut className="h-4 w-4" />
 
                 <span className="text-sm">Đăng xuất</span>
-              </button>
+              </ButtonCustom>
             </div>
 
             <button
@@ -122,13 +126,13 @@ export default function Header() {
                 </Link>
               );
             })}
-            <button
-              // onClick={handleLogout}
+            <ButtonCustom
+              onClick={() => handleLogout()}
               className="flex w-full items-center space-x-3 rounded-lg px-4 py-3 hover:bg-white/10"
             >
               <LogOut className="h-5 w-5" />
               <span>Đăng xuất</span>
-            </button>
+            </ButtonCustom>
           </div>
         </div>
       )}

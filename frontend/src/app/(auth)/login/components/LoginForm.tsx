@@ -14,10 +14,10 @@ import { Lock, Mail } from "lucide-react";
 import { useLogin } from "../hook";
 
 export default function LoginForm() {
-  const { form, onSubmit, loading, email, password } = useLogin();
+  const { form, onSubmit, loading } = useLogin();
 
   const { control, handleSubmit, formState } = form;
-  const { errors, isValid } = formState;
+  const { isValid } = formState;
 
   const isDisabled = loading || !isValid;
 
@@ -36,10 +36,7 @@ export default function LoginForm() {
               label="Email"
               name="email"
               inputProps={{
-                prefixIcon: <Mail className="h-6 w-6 text-gray-400" />,
-                suffixIcon: !errors.email && email?.trim() && (
-                  <div className="h-4 w-4 rounded-full bg-green-500" />
-                ),
+                prefixIcon: <Mail className="mr-1 h-6 w-6 text-gray-400" />,
               }}
             />
 
@@ -48,7 +45,7 @@ export default function LoginForm() {
               control={control}
               name="password"
               inputProps={{
-                prefixIcon: <Lock className="h-6 w-6 text-gray-400" />,
+                prefixIcon: <Lock className="mr-1 h-6 w-6 text-gray-400" />,
               }}
             />
 

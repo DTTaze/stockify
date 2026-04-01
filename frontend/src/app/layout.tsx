@@ -1,9 +1,8 @@
-import Footer from "@/components/layout/Footer";
-import Header from "@/components/layout/Header";
-import NavigationBar from "@/components/layout/NavigationBar";
+import { cn } from "@/lib/utils";
+import { ReactQueryProvider } from "@/providers/ReactQueryProvider";
 import "@/styles/index.css";
 import { Geist } from "next/font/google";
-import { cn } from "@/lib/utils";
+import { Toaster } from "sonner";
 
 const geist = Geist({ subsets: ["latin"], variable: "--font-sans" });
 
@@ -14,7 +13,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className={cn("font-sans", geist.variable)}>
-      <body>{children}</body>
+      <body>
+        <ReactQueryProvider>{children}</ReactQueryProvider>
+        <Toaster position="top-right" richColors />
+      </body>
     </html>
   );
 }

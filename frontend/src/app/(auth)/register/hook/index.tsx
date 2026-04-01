@@ -1,12 +1,18 @@
 "use client";
 
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
+import { toast } from "sonner";
+
+import { handleShowMessage } from "@/helpers/error-code";
+import { signUpHandlers } from "@/services/auth/authHandlers";
 import { RegisterFormPayload } from "@/types/auth/auth.payload";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useState } from "react";
-import { useForm } from "react-hook-form";
 import { registerFormSchema } from "../validationSchema";
 
 export function useRegister() {
+  const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
 
@@ -21,26 +27,33 @@ export function useRegister() {
     },
   });
 
-  const name = form.watch("username");
+  const username = form.watch("username");
   const email = form.watch("email");
   const password = form.watch("password");
 
-  const passwordValue = form.watch("password");
-  const confirmPasswordValue = form.watch("confirmPassword");
-
-  if (passwordValue && confirmPasswordValue) {
-    form.trigger("confirmPassword");
-  }
+  useEffect(() => {
+    const subscription = form.watch((_, { name }) => {
+      if (name === "password") {
+        form.trigger("confirmPassword");
+      }
+    });
+    return () => subscription.unsubscribe();
+  }, [form.watch, form.trigger, form]);
 
   const onSubmit = async (data: RegisterFormPayload) => {
     try {
       setLoading(true);
 
-      await new Promise((resolve) => setTimeout(resolve, 1500));
+      const response = await signUpHandlers(data);
 
-      console.log("Đăng ký thành công:", data);
+      if (!response.success) {
+        toast.error(handleShowMessage(response.code));
+        return;
+      }
 
+      toast.success("Đăng kí thành công");
       setIsSubmitted(true);
+      router.push("/login");
     } catch (error) {
       console.error(error);
     } finally {
@@ -53,7 +66,7 @@ export function useRegister() {
     onSubmit,
     loading,
     isSubmitted,
-    name,
+    username,
     email,
     password,
   };

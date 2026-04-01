@@ -29,7 +29,7 @@ export function middleware(req: NextRequest) {
   }
 
   if (isPublicRoute(pathname) && token) {
-    return NextResponse.redirect(new URL("/profile", req.url));
+    return NextResponse.redirect(new URL("/user/dashboard", req.url));
   }
 
   return NextResponse.next();

@@ -14,9 +14,9 @@ export interface ForgotPasswordPayload {
 
 export interface RegisterFormPayload {
   username: string;
+  email: string;
   password: string;
   confirmPassword: string;
-  email: string;
 }
 
 export interface ChangePasswordFormPayload {

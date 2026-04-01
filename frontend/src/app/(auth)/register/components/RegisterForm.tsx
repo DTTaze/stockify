@@ -1,6 +1,7 @@
 "use client";
 
-import { Check, Lock, Mail, User } from "lucide-react";
+import { Lock, Mail, User } from "lucide-react";
+import Link from "next/link";
 
 import { ButtonCustom } from "@/components/common/form/button";
 import {
@@ -9,14 +10,13 @@ import {
 } from "@/components/common/form/input/FormInput";
 import { Form } from "@/components/ui/Form";
 import { cn } from "@/utils";
-import Link from "next/link";
 import { useRegister } from "../hook";
 
 export default function RegisterForm() {
-  const { form, onSubmit, loading, name, email, password } = useRegister();
+  const { form, onSubmit, loading } = useRegister();
 
   const { control, handleSubmit, formState } = form;
-  const { errors, isValid } = formState;
+  const { isValid } = formState;
 
   const isDisabled = loading || !isValid;
 
@@ -35,10 +35,7 @@ export default function RegisterForm() {
               label="Họ tên"
               name="username"
               inputProps={{
-                prefixIcon: <User className="h-6 w-6 text-gray-400" />,
-                suffixIcon: !errors.username && name?.trim() && (
-                  <Check className="h-4 w-4 rounded-full bg-green-500 text-gray-400" />
-                ),
+                prefixIcon: <User className="mr-1 h-6 w-6 text-gray-400" />,
               }}
             />
 
@@ -48,10 +45,7 @@ export default function RegisterForm() {
               labelClassName="text-[#1a365d]"
               name="email"
               inputProps={{
-                prefixIcon: <Mail className="h-6 w-6 text-gray-400" />,
-                suffixIcon: !errors.email && email?.trim() && (
-                  <Check className="h-4 w-4 rounded-full bg-green-500 text-white" />
-                ),
+                prefixIcon: <Mail className="mr-1 h-6 w-6 text-gray-400" />,
               }}
             />
 
@@ -60,7 +54,7 @@ export default function RegisterForm() {
               label="Mật khẩu"
               name="password"
               inputProps={{
-                prefixIcon: <Lock className="h-6 w-6 text-gray-400" />,
+                prefixIcon: <Lock className="mr-1 h-6 w-6 text-gray-400" />,
               }}
             />
 
@@ -69,15 +63,9 @@ export default function RegisterForm() {
               label="Xác nhận mật khẩu"
               name="confirmPassword"
               inputProps={{
-                prefixIcon: <Lock className="h-6 w-6 text-gray-400" />,
+                prefixIcon: <Lock className="mr-1 h-6 w-6 text-gray-400" />,
               }}
             />
-
-            {password && (
-              <p className="text-xs text-gray-500">
-                Mật khẩu đang được nhập...
-              </p>
-            )}
 
             <ButtonCustom
               type="submit"
@@ -93,7 +81,7 @@ export default function RegisterForm() {
           </form>
 
           <p className="mt-8 text-center text-gray-600">
-            Đã có tài khoản?
+            Đã có tài khoản?{" "}
             <Link
               href="/login"
               className="text-[#1a365d] transition-colors hover:text-[#d4af37]"

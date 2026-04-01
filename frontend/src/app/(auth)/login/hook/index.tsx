@@ -1,20 +1,21 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { z } from "zod";
+import { toast } from "sonner";
 
-const loginSchema = z.object({
-  email: z.string().email("Email không hợp lệ"),
-  password: z.string().min(1, "Vui lòng nhập mật khẩu"),
-});
-
-type LoginFormValues = z.infer<typeof loginSchema>;
+import { ACCESS_TOKEN } from "@/constants/auth";
+import { handleShowMessage } from "@/helpers/error-code";
+import { signInWithCredentialHandlers } from "@/services/auth/authHandlers";
+import { LoginFormPayload } from "@/types/auth/auth.payload";
+import { useRouter } from "next/navigation";
+import { userFormSchema } from "../validationSchema";
 
 export function useLogin() {
+  const router = useRouter();
   const [loading, setLoading] = useState(false);
 
-  const form = useForm<LoginFormValues>({
-    resolver: zodResolver(loginSchema),
+  const form = useForm<LoginFormPayload>({
+    resolver: zodResolver(userFormSchema),
     mode: "onChange",
     defaultValues: {
       email: "",
@@ -22,16 +23,21 @@ export function useLogin() {
     },
   });
 
-  const email = form.watch("email");
-  const password = form.watch("password");
-
-  const onSubmit = async (data: LoginFormValues) => {
+  const onSubmit = async (data: LoginFormPayload) => {
     try {
       setLoading(true);
 
-      await new Promise((r) => setTimeout(r, 1000));
+      const response = await signInWithCredentialHandlers(data);
 
-      console.log("Login success", data);
+      if (!response.success) {
+        toast.error(handleShowMessage(response.code));
+        return;
+      }
+
+      toast.success("Login success");
+
+      cookieStore.set(ACCESS_TOKEN, response.data.accessToken);
+      router.push("user/dashboard");
     } finally {
       setLoading(false);
     }
@@ -41,7 +47,5 @@ export function useLogin() {
     form,
     onSubmit,
     loading,
-    email,
-    password,
   };
 }
