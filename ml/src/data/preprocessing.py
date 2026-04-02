@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 from sklearn.preprocessing import MinMaxScaler
 import joblib
+from ..utils.paths import RAW_DATA_DIR, PROCESSED_DATA_DIR
 
 
 def load_data(path):
@@ -51,7 +52,7 @@ def scale_data(train_df, val_df, test_df):
         "Volume_Change",
     ]
 
-    target_col = ["Close"]  
+    target_col = ["Close"]
 
     scaler_X = MinMaxScaler()
     scaler_y = MinMaxScaler()
@@ -67,7 +68,7 @@ def scale_data(train_df, val_df, test_df):
     return X_train, X_val, X_test, y_train, y_val, y_test, scaler_X, scaler_y
 
 
-def create_dataset(X, y, time_step=20): 
+def create_dataset(X, y, time_step=20):
     Xs, ys = [], []
 
     for i in range(len(X) - time_step):
@@ -78,7 +79,7 @@ def create_dataset(X, y, time_step=20):
 
 
 if __name__ == "__main__":
-    df = load_data("data/raw/stock_data.csv")
+    df = load_data(RAW_DATA_DIR / "stock_data.csv")
     df = feature_engineering(df)
 
     train_df, val_df, test_df = split_data(df)
@@ -91,13 +92,15 @@ if __name__ == "__main__":
     X_val, y_val = create_dataset(X_val, y_val)
     X_test, y_test = create_dataset(X_test, y_test)
 
-    np.save("data/processed/X_train.npy", X_train)
-    np.save("data/processed/X_val.npy", X_val)
-    np.save("data/processed/X_test.npy", X_test)
+    np.save(PROCESSED_DATA_DIR / "X_train.npy", X_train)
+    np.save(PROCESSED_DATA_DIR / "X_val.npy", X_val)
+    np.save(PROCESSED_DATA_DIR / "X_test.npy", X_test)
 
-    np.save("data/processed/y_train.npy", y_train)
-    np.save("data/processed/y_val.npy", y_val)
-    np.save("data/processed/y_test.npy", y_test)
+    np.save(PROCESSED_DATA_DIR / "y_train.npy", y_train)
+    np.save(PROCESSED_DATA_DIR / "y_val.npy", y_val)
+    np.save(PROCESSED_DATA_DIR / "y_test.npy", y_test)
+
+    joblib.dump(scaler_y, PROCESSED_DATA_DIR / "scaler_y.pkl")
 
     joblib.dump(scaler_X, "data/processed/scaler_X.pkl")
     joblib.dump(scaler_y, "data/processed/scaler_y.pkl")
