@@ -1,15 +1,36 @@
 import { TrendingDown, TrendingUp } from "lucide-react";
 
-export function MarketOverview() {
-  const indices = [
-    { name: "VN-INDEX", value: "1,258.45", change: 1.23, trend: "up" },
-    { name: "VN30", value: "1,312.67", change: 0.85, trend: "up" },
-    { name: "HNX-INDEX", value: "235.82", change: -0.45, trend: "down" },
-    { name: "UPCOM", value: "92.15", change: 0.32, trend: "up" },
+import {
+  initialStockData,
+  useQueryIndexQuote,
+} from "@/queries/stocks/QueryHooksStocks";
+
+function useMarketIndices() {
+  const vnIndex = useQueryIndexQuote("vn-index");
+  const vn30 = useQueryIndexQuote("vn30");
+  const hnxIndex = useQueryIndexQuote("hnx-index");
+  const upcom = useQueryIndexQuote("upcom");
+
+  return [
+    { label: "VN-INDEX", data: vnIndex.data },
+    { label: "VN30", data: vn30.data },
+    { label: "HNX-INDEX", data: hnxIndex.data },
+    { label: "UPCOM", data: upcom.data },
   ];
+}
+
+export function MarketOverview() {
+  const rawIndices = useMarketIndices();
+
+  const indices = rawIndices.map(({ label, data = initialStockData }) => ({
+    name: label,
+    value: data.price.toLocaleString(),
+    change: data.change_percent,
+    trend: data.change >= 0 ? "up" : "down",
+  }));
 
   return (
-    <div className="rounded-xl bg-gradient-to-r from-[#1a365d] to-[#2d4a7c] p-6 text-white shadow-lg">
+    <div className="rounded-xl bg-linear-to-r from-[#1a365d] to-[#2d4a7c] p-6 text-white shadow-lg">
       <div className="mb-4 flex items-center justify-between">
         <h2 className="text-lg">Tổng quan thị trường</h2>
         <div className="text-sm text-blue-200">
@@ -25,6 +46,7 @@ export function MarketOverview() {
           >
             <div className="mb-2 text-xs text-blue-200">{index.name}</div>
             <div className="mb-1 text-2xl">{index.value}</div>
+
             <div
               className={`flex items-center space-x-1 text-sm ${
                 index.trend === "up" ? "text-green-400" : "text-red-400"

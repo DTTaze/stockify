@@ -1,10 +1,21 @@
-import { RedisService, stringUtils } from 'mvc-common-toolkit';
+import {
+  AxiosHttpService,
+  RedisService,
+  stringUtils,
+} from 'mvc-common-toolkit';
 
 import { Global, Logger, Module, Provider } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
 
 import { ENV_KEY, INJECTION_TOKEN } from '@shared/constants';
+
+const httpServiceProvider: Provider = {
+  provide: INJECTION_TOKEN.HTTP_SERVICE,
+  useFactory: () => {
+    return new AxiosHttpService();
+  },
+};
 
 const redisServiceProvider: Provider = {
   provide: INJECTION_TOKEN.REDIS_SERVICE,
@@ -13,7 +24,7 @@ const redisServiceProvider: Provider = {
       host: config.get(ENV_KEY.REDIS_HOST, 'localhost'),
       port: config.get(ENV_KEY.REDIS_PORT, 6379),
       password: config.get(ENV_KEY.REDIS_PASSWORD),
-      keyPrefix: config.get(ENV_KEY.SERVICE_NAME, 'aidacity-backend'),
+      keyPrefix: config.get(ENV_KEY.SERVICE_NAME, 'stockify-backend'),
     });
   },
   inject: [ConfigService],
@@ -42,7 +53,11 @@ const JwtModuleProvider = JwtModule.registerAsync({
 @Global()
 @Module({
   imports: [JwtModuleProvider],
-  providers: [redisServiceProvider],
-  exports: [INJECTION_TOKEN.REDIS_SERVICE, JwtModuleProvider],
+  providers: [httpServiceProvider, redisServiceProvider],
+  exports: [
+    INJECTION_TOKEN.HTTP_SERVICE,
+    INJECTION_TOKEN.REDIS_SERVICE,
+    JwtModuleProvider,
+  ],
 })
 export class GlobalModule {}

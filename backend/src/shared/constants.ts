@@ -58,6 +58,8 @@ export const ENV_KEY = {
   JWT_EXPIRATION: CONFIG_KEY.APP + '.jwtExpiration',
 
   AUDIT_WEBHOOK_URL: CONFIG_KEY.APP + '.auditWebhookUrl',
+
+  ML_SERVICE_URL: CONFIG_KEY.APP + '.mlServiceUrl',
 };
 
 export enum METADATA_KEY {
