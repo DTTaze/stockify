@@ -1,11 +1,11 @@
 "use client";
 
+import { Mail } from "lucide-react";
+
 import { ButtonCustom } from "@/components/common/form/button";
 import { FormInputText } from "@/components/common/form/input/FormInput";
 import { Form } from "@/components/ui/Form";
-
 import { cn } from "@/utils";
-import { Mail } from "lucide-react";
 import { useForgotPassword } from "../hook";
 
 export default function ForgotForm({ onSuccess }: any) {
@@ -19,7 +19,7 @@ export default function ForgotForm({ onSuccess }: any) {
   return (
     <>
       <div className="mb-12">
-        <h2 className="mb-3 text-4xl text-[#1a365d]">Quên mật khẩu</h2>
+        <h2 className="text-brand-900 mb-3 text-4xl">Quên mật khẩu</h2>
         <p className="text-gray-600">
           Nhập email của bạn để nhận link đặt lại mật khẩu
         </p>
@@ -44,7 +44,7 @@ export default function ForgotForm({ onSuccess }: any) {
             loading={loading}
             className={cn(
               "w-full rounded-lg py-4 text-white",
-              isDisabled ? "bg-gray-300" : "bg-[#1a365d] hover:bg-[#162c4a]",
+              isDisabled ? "bg-gray-300" : "bg-brand-900 hover:bg-brand-800",
             )}
           >
             {loading ? "Đang gửi..." : "Gửi link đặt lại mật khẩu"}

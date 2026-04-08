@@ -17,7 +17,7 @@ export default function Home() {
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex h-20 items-center justify-between">
             <div className="flex items-center space-x-3">
-              <TrendingUp className="h-8 w-8 text-[#d4af37]" />
+              <TrendingUp className="hover:text-accent-500\ h-8 w-8" />
               <span className="text-primary text-2xl font-light tracking-wide">
                 DRAGON PREDICT
               </span>
@@ -25,13 +25,13 @@ export default function Home() {
             <div className="flex items-center space-x-4">
               <Link
                 href="/login"
-                className="text-primary px-6 py-2.5 transition-colors hover:text-[#d4af37]"
+                className="text-primary hover:hover:text-accent-500 px-6 py-2.5 transition-colors"
               >
                 Đăng nhập
               </Link>
               <Link
                 href="/register"
-                className="from-primary hover:shadow-primary/20 rounded-lg bg-gradient-to-r to-[#2d4a7c] px-6 py-2.5 text-white transition-all hover:shadow-lg"
+                className="from-primary hover:shadow-primary/20 to-brand-700 rounded-lg bg-linear-to-r px-6 py-2.5 text-white transition-all hover:shadow-lg"
               >
                 Đăng ký
               </Link>
@@ -44,7 +44,7 @@ export default function Home() {
         <div className="mx-auto max-w-7xl">
           <div className="grid items-center gap-12 lg:grid-cols-2">
             <div>
-              <div className="mb-6 inline-flex items-center space-x-2 rounded-full border border-[#d4af37]/20 bg-[#d4af37]/10 px-4 py-2 text-[#d4af37]">
+              <div className="border-accent-500/20 bg-accent-500/10 hover:text-accent-500 mb-6 inline-flex items-center space-x-2 rounded-full border px-4 py-2">
                 <Zap className="h-4 w-4" />
                 <span className="text-sm">Công nghệ AI tiên tiến</span>
               </div>
@@ -52,7 +52,7 @@ export default function Home() {
               <h1 className="text-primary mb-6 text-5xl leading-tight lg:text-6xl">
                 Dự đoán thông minh,
                 <br />
-                <span className="text-[#d4af37]">Đầu tư tự tin</span>
+                <span className="hover:text-accent-500">Đầu tư tự tin</span>
               </h1>
 
               <p className="text-muted-foreground mb-8 text-xl leading-relaxed">
@@ -64,7 +64,7 @@ export default function Home() {
               <div className="mb-8 flex flex-col gap-4 sm:flex-row">
                 <Link
                   href="/register"
-                  className="from-primary hover:shadow-primary/30 group inline-flex items-center justify-center rounded-lg bg-gradient-to-r to-[#2d4a7c] px-8 py-4 text-white transition-all hover:shadow-xl"
+                  className="from-primary hover:shadow-primary/30 group to-brand-700 inline-flex items-center justify-center rounded-lg bg-linear-to-r px-8 py-4 text-white transition-all hover:shadow-xl"
                 >
                   Bắt đầu ngay
                   <ChevronRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
@@ -100,7 +100,7 @@ export default function Home() {
             </div>
 
             <div className="relative">
-              <div className="to-primary/20 absolute inset-0 rounded-3xl bg-gradient-to-br from-[#d4af37]/20 blur-3xl"></div>
+              <div className="to-primary/20 from-accent-500/20 absolute inset-0 rounded-3xl bg-linear-to-br blur-3xl"></div>
               <div className="border-border relative rounded-2xl border bg-white p-8 shadow-2xl">
                 <div className="mb-6 flex items-center justify-between">
                   <h3 className="text-primary">VN-INDEX</h3>
@@ -121,7 +121,7 @@ export default function Home() {
                     (height, i) => (
                       <div
                         key={i}
-                        className="flex-1 rounded-t bg-gradient-to-t from-[#1a365d] to-[#d4af37]"
+                        className="from-brand-900 to-accent-500 flex-1 rounded-t bg-gradient-to-t"
                         style={{ height: `${height}%` }}
                       ></div>
                     ),
@@ -154,10 +154,10 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="from-primary relative overflow-hidden bg-linear-to-br to-[#2d4a7c] px-4 py-20 sm:px-6 lg:px-8">
+      <section className="from-primary to-brand-700 relative overflow-hidden bg-linear-to-br px-4 py-20 sm:px-6 lg:px-8">
         <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-0 right-0 h-96 w-96 rounded-full bg-[#d4af37] blur-3xl"></div>
-          <div className="absolute bottom-0 left-0 h-96 w-96 rounded-full bg-[#d4af37] blur-3xl"></div>
+          <div className="bg-accent-500 absolute top-0 right-0 h-96 w-96 rounded-full blur-3xl"></div>
+          <div className="bg-accent-500 absolute bottom-0 left-0 h-96 w-96 rounded-full blur-3xl"></div>
         </div>
 
         <div className="relative z-10 mx-auto max-w-7xl">
@@ -170,7 +170,7 @@ export default function Home() {
 
           <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
             <div className="group rounded-2xl border border-white/20 bg-white/10 p-8 backdrop-blur-sm transition-all hover:bg-white/15">
-              <div className="mb-6 flex h-14 w-14 items-center justify-center rounded-xl bg-[#d4af37] transition-transform group-hover:scale-110">
+              <div className="bg-accent-500 mb-6 flex h-14 w-14 items-center justify-center rounded-xl transition-transform group-hover:scale-110">
                 <BarChart3 className="text-primary h-7 w-7" />
               </div>
               <h3 className="mb-3 text-xl text-white">Biểu đồ Candlestick</h3>
@@ -181,7 +181,7 @@ export default function Home() {
             </div>
 
             <div className="group rounded-2xl border border-white/20 bg-white/10 p-8 backdrop-blur-sm transition-all hover:bg-white/15">
-              <div className="mb-6 flex h-14 w-14 items-center justify-center rounded-xl bg-[#d4af37] transition-transform group-hover:scale-110">
+              <div className="bg-accent-500 mb-6 flex h-14 w-14 items-center justify-center rounded-xl transition-transform group-hover:scale-110">
                 <LineChart className="text-primary h-7 w-7" />
               </div>
               <h3 className="mb-3 text-xl text-white">Dự đoán AI</h3>
@@ -192,7 +192,7 @@ export default function Home() {
             </div>
 
             <div className="group rounded-2xl border border-white/20 bg-white/10 p-8 backdrop-blur-sm transition-all hover:bg-white/15">
-              <div className="mb-6 flex h-14 w-14 items-center justify-center rounded-xl bg-[#d4af37] transition-transform group-hover:scale-110">
+              <div className="bg-accent-500 mb-6 flex h-14 w-14 items-center justify-center rounded-xl transition-transform group-hover:scale-110">
                 <Activity className="text-primary h-7 w-7" />
               </div>
               <h3 className="mb-3 text-xl text-white">Chỉ báo kỹ thuật</h3>
@@ -203,7 +203,7 @@ export default function Home() {
             </div>
 
             <div className="group rounded-2xl border border-white/20 bg-white/10 p-8 backdrop-blur-sm transition-all hover:bg-white/15">
-              <div className="mb-6 flex h-14 w-14 items-center justify-center rounded-xl bg-[#d4af37] transition-transform group-hover:scale-110">
+              <div className="bg-accent-500 mb-6 flex h-14 w-14 items-center justify-center rounded-xl transition-transform group-hover:scale-110">
                 <Target className="text-primary h-7 w-7" />
               </div>
               <h3 className="mb-3 text-xl text-white">Watchlist thông minh</h3>
@@ -214,7 +214,7 @@ export default function Home() {
             </div>
 
             <div className="group rounded-2xl border border-white/20 bg-white/10 p-8 backdrop-blur-sm transition-all hover:bg-white/15">
-              <div className="mb-6 flex h-14 w-14 items-center justify-center rounded-xl bg-[#d4af37] transition-transform group-hover:scale-110">
+              <div className="bg-accent-500 mb-6 flex h-14 w-14 items-center justify-center rounded-xl transition-transform group-hover:scale-110">
                 <Shield className="text-primary h-7 w-7" />
               </div>
               <h3 className="mb-3 text-xl text-white">Bảo mật tuyệt đối</h3>
@@ -225,7 +225,7 @@ export default function Home() {
             </div>
 
             <div className="group rounded-2xl border border-white/20 bg-white/10 p-8 backdrop-blur-sm transition-all hover:bg-white/15">
-              <div className="mb-6 flex h-14 w-14 items-center justify-center rounded-xl bg-[#d4af37] transition-transform group-hover:scale-110">
+              <div className="bg-accent-500 mb-6 flex h-14 w-14 items-center justify-center rounded-xl transition-transform group-hover:scale-110">
                 <Zap className="text-primary h-7 w-7" />
               </div>
               <h3 className="mb-3 text-xl text-white">Xử lý nhanh</h3>
@@ -241,10 +241,10 @@ export default function Home() {
       {/* Stats Section */}
       <section className="px-4 py-20 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-7xl">
-          <div className="from-primary relative overflow-hidden rounded-3xl bg-gradient-to-br to-[#2d4a7c] p-12 lg:p-16">
+          <div className="from-primary to-brand-700 relative overflow-hidden rounded-3xl bg-linear-to-br p-12 lg:p-16">
             <div className="absolute inset-0 opacity-10">
-              <div className="absolute top-0 left-0 h-64 w-64 rounded-full bg-[#d4af37] blur-3xl"></div>
-              <div className="absolute right-0 bottom-0 h-64 w-64 rounded-full bg-[#d4af37] blur-3xl"></div>
+              <div className="bg-accent-500 absolute top-0 left-0 h-64 w-64 rounded-full blur-3xl"></div>
+              <div className="bg-accent-500 absolute right-0 bottom-0 h-64 w-64 rounded-full blur-3xl"></div>
             </div>
 
             <div className="relative z-10 text-center">
@@ -258,19 +258,25 @@ export default function Home() {
 
               <div className="grid gap-8 md:grid-cols-4">
                 <div className="rounded-xl border border-white/20 bg-white/10 p-6 backdrop-blur-sm">
-                  <div className="mb-2 text-4xl text-[#d4af37]">10,000+</div>
+                  <div className="hover:text-accent-500 mb-2 text-4xl">
+                    10,000+
+                  </div>
                   <div className="text-blue-100">Người dùng hoạt động</div>
                 </div>
                 <div className="rounded-xl border border-white/20 bg-white/10 p-6 backdrop-blur-sm">
-                  <div className="mb-2 text-4xl text-[#d4af37]">1M+</div>
+                  <div className="hover:text-accent-500 mb-2 text-4xl">1M+</div>
                   <div className="text-blue-100">Dự đoán thành công</div>
                 </div>
                 <div className="rounded-xl border border-white/20 bg-white/10 p-6 backdrop-blur-sm">
-                  <div className="mb-2 text-4xl text-[#d4af37]">500+</div>
+                  <div className="hover:text-accent-500 mb-2 text-4xl">
+                    500+
+                  </div>
                   <div className="text-blue-100">Mã cổ phiếu</div>
                 </div>
                 <div className="rounded-xl border border-white/20 bg-white/10 p-6 backdrop-blur-sm">
-                  <div className="mb-2 text-4xl text-[#d4af37]">99.8%</div>
+                  <div className="hover:text-accent-500 mb-2 text-4xl">
+                    99.8%
+                  </div>
                   <div className="text-blue-100">Độ chính xác</div>
                 </div>
               </div>
@@ -290,7 +296,7 @@ export default function Home() {
           </p>
           <Link
             href="/register"
-            className="from-primary hover:shadow-primary/30 group inline-flex items-center justify-center rounded-lg bg-gradient-to-r to-[#2d4a7c] px-10 py-4 text-lg text-white transition-all hover:shadow-xl"
+            className="from-primary hover:shadow-primary/30 group to-brand-700 inline-flex items-center justify-center rounded-lg bg-linear-to-r px-10 py-4 text-lg text-white transition-all hover:shadow-xl"
           >
             Đăng ký miễn phí ngay
             <ChevronRight className="ml-2 h-6 w-6 transition-transform group-hover:translate-x-1" />
@@ -302,7 +308,7 @@ export default function Home() {
         <div className="mx-auto max-w-7xl">
           <div className="flex flex-col items-center justify-between md:flex-row">
             <div className="mb-4 flex items-center space-x-3 md:mb-0">
-              <TrendingUp className="h-8 w-8 text-[#d4af37]" />
+              <TrendingUp className="hover:text-accent-500 h-8 w-8" />
               <span className="text-2xl font-light text-white">
                 DRAGON PREDICT
               </span>

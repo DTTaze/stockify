@@ -9,15 +9,18 @@ export default function ForgotSuccess({ email, onRetry }: any) {
         </div>
       </div>
 
-      <h2 className="mb-4 text-3xl text-[#1a365d]">Kiểm tra email của bạn</h2>
+      <h2 className="text-brand-900 mb-4 text-3xl">Kiểm tra email của bạn</h2>
 
       <p className="mb-6 text-gray-600">
         Chúng tôi đã gửi link đặt lại mật khẩu đến <strong>{email}</strong>
       </p>
 
-      <div className="mb-6 rounded-lg bg-blue-50 p-4 text-sm text-[#1a365d]">
+      <div className="text-brand-900 mb-6 rounded-lg bg-blue-50 p-4 text-sm">
         Không nhận được email? Kiểm tra spam hoặc{" "}
-        <button onClick={onRetry} className="text-[#d4af37] hover:underline">
+        <button
+          onClick={onRetry}
+          className="hover:text-accent-500 hover:underline"
+        >
           thử lại
         </button>
       </div>

@@ -66,7 +66,7 @@ export default function UserManagement() {
     <div className="space-y-6 p-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl text-[#1a365d]">Quản lý User</h1>
+          <h1 className="text-brand-900 text-3xl">Quản lý User</h1>
           <p className="mt-1 text-gray-600">Quản lý tài khoản người dùng</p>
         </div>
         <div className="flex items-center space-x-4">
@@ -77,7 +77,7 @@ export default function UserManagement() {
               placeholder="Tìm kiếm user..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="rounded-lg border-2 border-gray-200 py-2 pr-4 pl-10 transition-all outline-none focus:border-[#d4af37] focus:ring-2 focus:ring-[#d4af37]"
+              className="focus:border-accent-500 focus:ring-accent-500 rounded-lg border-2 border-gray-200 py-2 pr-4 pl-10 transition-all outline-none focus:ring-2"
             />
           </div>
         </div>
@@ -87,7 +87,7 @@ export default function UserManagement() {
       <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
         <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
           <div className="mb-2 text-sm text-gray-600">Tổng User</div>
-          <div className="text-3xl text-[#1a365d]">{users.length}</div>
+          <div className="text-brand-900 text-3xl">{users.length}</div>
         </div>
         <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
           <div className="mb-2 text-sm text-gray-600">Đang hoạt động</div>
@@ -106,7 +106,7 @@ export default function UserManagement() {
       {/* Users Table */}
       <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
         <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gradient-to-r from-[#1a365d] to-[#2d4a7c] text-white">
+          <thead className="from-brand-900 to-brand-700 bg-linear-to-r text-white">
             <tr>
               <th className="px-6 py-4 text-left text-xs tracking-wider uppercase">
                 User
@@ -132,7 +132,7 @@ export default function UserManagement() {
             {filteredUsers.map((user) => (
               <tr key={user.id} className="transition-colors hover:bg-blue-50">
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm text-[#1a365d]">{user.name}</div>
+                  <div className="text-brand-900 text-sm">{user.name}</div>
                   <div className="text-xs text-gray-500">{user.role}</div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">

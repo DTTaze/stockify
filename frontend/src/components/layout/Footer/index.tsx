@@ -2,12 +2,12 @@ import { TrendingUp } from "lucide-react";
 
 export default function Footer() {
   return (
-    <footer className="mt-16 bg-[#1a365d] text-white">
+    <footer className="bg-brand-900 mt-16 text-white">
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         <div className="mb-8 grid grid-cols-1 gap-8 md:grid-cols-3">
           <div>
             <div className="mb-4 flex items-center space-x-2">
-              <TrendingUp className="h-6 w-6 text-[#d4af37]" />
+              <TrendingUp className="hover:text-accent-500 h-6 w-6" />
               <span className="text-lg">DRAGON PREDICT</span>
             </div>
             <p className="text-sm text-blue-200">
@@ -15,7 +15,7 @@ export default function Footer() {
             </p>
           </div>
           <div>
-            <h4 className="mb-4 text-sm text-[#d4af37]">Liên kết</h4>
+            <h4 className="hover:text-accent-500 mb-4 text-sm">Liên kết</h4>
             <ul className="space-y-2 text-sm text-blue-200">
               <li>
                 <a href="#" className="hover:text-white">
@@ -35,7 +35,7 @@ export default function Footer() {
             </ul>
           </div>
           <div>
-            <h4 className="mb-4 text-sm text-[#d4af37]">Hỗ trợ</h4>
+            <h4 className="hover:text-accent-500 mb-4 text-sm">Hỗ trợ</h4>
             <ul className="space-y-2 text-sm text-blue-200">
               <li>
                 <a href="#" className="hover:text-white">

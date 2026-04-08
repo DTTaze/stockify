@@ -110,10 +110,10 @@ export default function ModelManagement() {
     <div className="space-y-6 p-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl text-[#1a365d]">Quản lý Model</h1>
+          <h1 className="text-brand-900 text-3xl">Quản lý Model</h1>
           <p className="mt-1 text-gray-600">Quản lý và triển khai AI models</p>
         </div>
-        <button className="rounded-lg bg-[#1a365d] px-4 py-2 text-white shadow-md transition-all hover:bg-[#2d4a7c]">
+        <button className="bg-brand-900 hover:bg-brand-700 rounded-lg px-4 py-2 text-white shadow-md transition-all">
           Thêm Model mới
         </button>
       </div>
@@ -122,7 +122,7 @@ export default function ModelManagement() {
       <div className="grid grid-cols-1 gap-6 md:grid-cols-4">
         <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
           <div className="mb-2 text-sm text-gray-600">Tổng Models</div>
-          <div className="text-3xl text-[#1a365d]">{models.length}</div>
+          <div className="text-brand-900 text-3xl">{models.length}</div>
         </div>
         <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
           <div className="mb-2 text-sm text-gray-600">Đang chạy</div>
@@ -138,7 +138,7 @@ export default function ModelManagement() {
         </div>
         <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
           <div className="mb-2 text-sm text-gray-600">Độ chính xác TB</div>
-          <div className="text-3xl text-[#d4af37]">
+          <div className="hover:text-accent-500 text-3xl">
             {(
               models.reduce((sum, m) => sum + m.accuracy, 0) / models.length
             ).toFixed(1)}
@@ -156,11 +156,11 @@ export default function ModelManagement() {
           >
             <div className="mb-4 flex items-center justify-between">
               <div className="flex items-center space-x-4">
-                <div className="rounded-xl bg-gradient-to-br from-[#1a365d] to-[#2d4a7c] p-3">
-                  <Cpu className="h-8 w-8 text-[#d4af37]" />
+                <div className="from-brand-900 to-brand-700 rounded-xl bg-linear-to-br p-3">
+                  <Cpu className="hover:text-accent-500 h-8 w-8" />
                 </div>
                 <div>
-                  <h3 className="text-xl text-[#1a365d]">{model.name}</h3>
+                  <h3 className="text-brand-900 text-xl">{model.name}</h3>
                   <p className="text-sm text-gray-500">
                     Version {model.version}
                   </p>
@@ -198,21 +198,21 @@ export default function ModelManagement() {
             </div>
 
             <div className="mb-4 grid grid-cols-1 gap-4 md:grid-cols-3">
-              <div className="rounded-xl border border-blue-100 bg-gradient-to-br from-blue-50 to-indigo-50 p-4">
+              <div className="rounded-xl border border-blue-100 bg-linear-to-br from-blue-50 to-indigo-50 p-4">
                 <div className="mb-1 text-xs text-gray-600">Độ chính xác</div>
-                <div className="text-2xl text-[#1a365d]">
+                <div className="text-brand-900 text-2xl">
                   {model.accuracy.toFixed(1)}%
                 </div>
               </div>
-              <div className="rounded-xl border border-green-100 bg-gradient-to-br from-green-50 to-emerald-50 p-4">
+              <div className="rounded-xl border border-green-100 bg-linear-to-br from-green-50 to-emerald-50 p-4">
                 <div className="mb-1 text-xs text-gray-600">Train lần cuối</div>
-                <div className="text-2xl text-[#1a365d]">
+                <div className="text-brand-900 text-2xl">
                   {model.lastTrained}
                 </div>
               </div>
-              <div className="rounded-xl border border-purple-100 bg-gradient-to-br from-purple-50 to-pink-50 p-4">
+              <div className="rounded-xl border border-purple-100 bg-linear-to-br from-purple-50 to-pink-50 p-4">
                 <div className="mb-1 text-xs text-gray-600">Deploy date</div>
-                <div className="text-2xl text-[#1a365d]">
+                <div className="text-brand-900 text-2xl">
                   {model.deployedDate}
                 </div>
               </div>

@@ -24,7 +24,7 @@ export default function RegisterForm() {
     <div className="flex flex-1 items-center justify-center bg-white p-8">
       <div className="w-full max-w-md">
         <div className="mb-12">
-          <h2 className="mb-3 text-4xl text-[#1a365d]">Đăng ký</h2>
+          <h2 className="text-brand-900 mb-3 text-4xl">Đăng ký</h2>
           <p className="text-gray-600">Tạo tài khoản mới để bắt đầu</p>
         </div>
 
@@ -42,7 +42,7 @@ export default function RegisterForm() {
             <FormInputText
               control={control}
               label="Email"
-              labelClassName="text-[#1a365d]"
+              labelClassName="text-brand-900"
               name="email"
               inputProps={{
                 prefixIcon: <Mail className="mr-1 h-6 w-6 text-gray-400" />,
@@ -73,7 +73,7 @@ export default function RegisterForm() {
               loading={loading}
               className={cn(
                 "w-full rounded-lg py-4 text-white",
-                isDisabled ? "bg-gray-300" : "bg-[#1a365d] hover:bg-[#162c4a]",
+                isDisabled ? "bg-gray-300" : "bg-brand-900 hover:bg-brand-800",
               )}
             >
               {loading ? "Đang đăng ký..." : "Đăng ký"}
@@ -84,7 +84,7 @@ export default function RegisterForm() {
             Đã có tài khoản?{" "}
             <Link
               href="/login"
-              className="text-[#1a365d] transition-colors hover:text-[#d4af37]"
+              className="text-brand-900 hover:hover:text-accent-500 transition-colors"
             >
               Đăng nhập ngay
             </Link>

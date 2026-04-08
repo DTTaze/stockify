@@ -1,7 +1,8 @@
 "use client";
 
 import { TrendingDown, TrendingUp } from "lucide-react";
-import { Activity, useState } from "react";
+import { useState } from "react";
+
 import { MarketOverview } from "./components/MarketOverview";
 import { PredictionPanel } from "./components/PredictionPanel";
 import { StockChart } from "./components/StockChart";
@@ -34,7 +35,7 @@ export default function DashBoardPage() {
                 />
               </div>
               <div className="flex items-center space-x-4">
-                <div className="text-4xl text-[#1a365d]">
+                <div className="text-brand-900 text-4xl">
                   {currentPrice.toLocaleString("vi-VN")} ₫
                 </div>
                 <div
@@ -65,7 +66,7 @@ export default function DashBoardPage() {
                 onClick={() => setTimeRange(range)}
                 className={`rounded-lg px-4 py-2 transition-all ${
                   timeRange === range
-                    ? "bg-[#1a365d] text-white shadow-md"
+                    ? "bg-brand-900 text-white shadow-md"
                     : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                 }`}
               >
@@ -79,9 +80,9 @@ export default function DashBoardPage() {
       {/* Main Chart */}
       <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
         <div className="mb-6 flex items-center justify-between">
-          <h2 className="text-2xl text-[#1a365d]">Biểu đồ giá</h2>
+          <h2 className="text-brand-900 text-2xl">Biểu đồ giá</h2>
           <div className="flex items-center space-x-2 text-sm text-gray-600">
-            <div className="h-3 w-3 rounded-full bg-[#1a365d]"></div>
+            <div className="bg-brand-900 h-3 w-3 rounded-full"></div>
             <span>Giá đóng cửa</span>
           </div>
         </div>

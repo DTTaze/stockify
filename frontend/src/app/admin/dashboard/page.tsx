@@ -95,7 +95,7 @@ export default function AdminDashboard() {
     <div className="space-y-6 p-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl text-[#1a365d]">Dashboard</h1>
+          <h1 className="text-brand-900 text-3xl">Dashboard</h1>
           <p className="mt-1 text-gray-600">Tổng quan hệ thống</p>
         </div>
         <div className="flex items-center space-x-2 rounded-lg border border-gray-200 bg-white px-4 py-2">
@@ -115,7 +115,7 @@ export default function AdminDashboard() {
             >
               <div className="mb-4 flex items-center justify-between">
                 <div
-                  className={`bg-gradient-to-br ${stat.color} rounded-xl p-3 shadow-md`}
+                  className={`bg-linear-to-br ${stat.color} rounded-xl p-3 shadow-md`}
                 >
                   <Icon className="h-6 w-6 text-white" />
                 </div>
@@ -125,7 +125,7 @@ export default function AdminDashboard() {
                   {stat.change}
                 </span>
               </div>
-              <div className="mb-1 text-3xl text-[#1a365d]">{stat.value}</div>
+              <div className="text-brand-900 mb-1 text-3xl">{stat.value}</div>
               <div className="text-sm text-gray-600">{stat.label}</div>
             </div>
           );
@@ -136,16 +136,16 @@ export default function AdminDashboard() {
       <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
         <div className="mb-6 flex items-center justify-between">
           <div>
-            <h2 className="text-2xl text-[#1a365d]">Hiệu suất hệ thống</h2>
+            <h2 className="text-brand-900 text-2xl">Hiệu suất hệ thống</h2>
             <p className="mt-1 text-sm text-gray-600">24 giờ qua</p>
           </div>
           <div className="flex items-center space-x-4">
             <div className="flex items-center space-x-2">
-              <div className="h-3 w-3 rounded-full bg-[#1a365d]"></div>
+              <div className="bg-brand-900 h-3 w-3 rounded-full"></div>
               <span className="text-sm text-gray-600">Requests</span>
             </div>
             <div className="flex items-center space-x-2">
-              <div className="h-3 w-3 rounded-full bg-[#d4af37]"></div>
+              <div className="bg-accent-500 h-3 w-3 rounded-full"></div>
               <span className="text-sm text-gray-600">Accuracy</span>
             </div>
           </div>
@@ -154,21 +154,43 @@ export default function AdminDashboard() {
           <AreaChart data={performanceData}>
             <defs>
               <linearGradient id="colorRequests" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#1a365d" stopOpacity={0.3} />
-                <stop offset="95%" stopColor="#1a365d" stopOpacity={0} />
+                <stop
+                  offset="5%"
+                  stopColor="var(--color-brand-900)"
+                  stopOpacity={0.3}
+                />
+                <stop
+                  offset="95%"
+                  stopColor="var(--color-brand-900)"
+                  stopOpacity={0}
+                />
               </linearGradient>
               <linearGradient id="colorAccuracy" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#d4af37" stopOpacity={0.3} />
-                <stop offset="95%" stopColor="#d4af37" stopOpacity={0} />
+                <stop
+                  offset="5%"
+                  stopColor="var(--color-accent-500)"
+                  stopOpacity={0.3}
+                />
+                <stop
+                  offset="95%"
+                  stopColor="var(--color-accent-500)"
+                  stopOpacity={0}
+                />
               </linearGradient>
             </defs>
-            <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-            <XAxis dataKey="time" tick={{ fill: "#64748b", fontSize: 12 }} />
-            <YAxis tick={{ fill: "#64748b", fontSize: 12 }} />
+            <CartesianGrid
+              strokeDasharray="3 3"
+              stroke="var(--color-neutral-200)"
+            />
+            <XAxis
+              dataKey="time"
+              tick={{ fill: "var(--color-neutral-500)", fontSize: 12 }}
+            />
+            <YAxis tick={{ fill: "var(--color-neutral-500)", fontSize: 12 }} />
             <Tooltip
               contentStyle={{
                 backgroundColor: "white",
-                border: "1px solid #e5e7eb",
+                border: "1px solid var(--color-neutral-200)",
                 borderRadius: "8px",
                 boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
               }}
@@ -176,14 +198,14 @@ export default function AdminDashboard() {
             <Area
               type="monotone"
               dataKey="requests"
-              stroke="#1a365d"
+              stroke="var(--color-brand-900)"
               strokeWidth={2}
               fill="url(#colorRequests)"
             />
             <Area
               type="monotone"
               dataKey="accuracy"
-              stroke="#d4af37"
+              stroke="var(--color-accent-500)"
               strokeWidth={2}
               fill="url(#colorAccuracy)"
             />
@@ -193,7 +215,7 @@ export default function AdminDashboard() {
 
       {/* Recent Activities */}
       <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-        <h2 className="mb-6 text-2xl text-[#1a365d]">Hoạt động gần đây</h2>
+        <h2 className="text-brand-900 mb-6 text-2xl">Hoạt động gần đây</h2>
         <div className="space-y-3">
           {recentActivities.map((activity, index) => (
             <div
@@ -218,7 +240,7 @@ export default function AdminDashboard() {
                 </div>
               )}
               <div className="flex-1">
-                <p className="text-sm text-[#1a365d]">{activity.message}</p>
+                <p className="text-brand-900 text-sm">{activity.message}</p>
                 <p className="mt-1 text-xs text-gray-500">{activity.time}</p>
               </div>
             </div>

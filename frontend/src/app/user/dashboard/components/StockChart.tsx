@@ -69,15 +69,26 @@ export function StockChart({ stock, timeRange }: StockChartProps) {
           <AreaChart data={data}>
             <defs>
               <linearGradient id="colorPrice" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#1a365d" stopOpacity={0.3} />
-                <stop offset="95%" stopColor="#1a365d" stopOpacity={0} />
+                <stop
+                  offset="5%"
+                  stopColor="var(--color-brand-900)"
+                  stopOpacity={0.3}
+                />
+                <stop
+                  offset="95%"
+                  stopColor="var(--color-brand-900)"
+                  stopOpacity={0}
+                />
               </linearGradient>
             </defs>
-            <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+            <CartesianGrid
+              strokeDasharray="3 3"
+              stroke="var(--color-neutral-200)"
+            />
             <XAxis
-              dataKey="date"
-              tick={{ fill: "#64748b", fontSize: 12 }}
-              axisLine={{ stroke: "#e5e7eb" }}
+              dataKey="time"
+              tick={{ fill: "var(--color-neutral-500)", fontSize: 12 }}
+              axisLine={{ stroke: "var(--color-neutral-200)" }}
             />
             <YAxis
               tick={{ fill: "#64748b", fontSize: 12 }}
@@ -95,7 +106,7 @@ export function StockChart({ stock, timeRange }: StockChartProps) {
             <Area
               type="monotone"
               dataKey="close"
-              stroke="#1a365d"
+              stroke="var(--color-brand-900)"
               strokeWidth={2}
               fill="url(#colorPrice)"
             />
@@ -105,7 +116,7 @@ export function StockChart({ stock, timeRange }: StockChartProps) {
 
       {/* Volume Chart */}
       <div>
-        <h3 className="mb-4 text-lg text-[#1a365d]">Khối lượng giao dịch</h3>
+        <h3 className="text-brand-900 mb-4 text-lg">Khối lượng giao dịch</h3>
         <ResponsiveContainer width="100%" height={150}>
           <ComposedChart data={data}>
             <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
@@ -126,7 +137,11 @@ export function StockChart({ stock, timeRange }: StockChartProps) {
                 borderRadius: "8px",
               }}
             />
-            <Bar dataKey="volume" fill="#d4af37" radius={[4, 4, 0, 0]} />
+            <Bar
+              dataKey="volume"
+              fill="var(--color-accent-500)"
+              radius={[4, 4, 0, 0]}
+            />
           </ComposedChart>
         </ResponsiveContainer>
       </div>

@@ -72,7 +72,7 @@ export function TechnicalIndicators({ stock }: TechnicalIndicatorsProps) {
   return (
     <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
       <div className="mb-6 flex items-center justify-between">
-        <h2 className="text-2xl text-[#1a365d]">Chỉ báo kỹ thuật</h2>
+        <h2 className="text-brand-900 text-2xl">Chỉ báo kỹ thuật</h2>
         <ChevronRight className="h-5 w-5 text-gray-400" />
       </div>
 
@@ -82,16 +82,16 @@ export function TechnicalIndicators({ stock }: TechnicalIndicatorsProps) {
           return (
             <div
               key={index}
-              className="group relative overflow-hidden rounded-xl border-2 border-gray-100 p-4 transition-all hover:border-[#d4af37] hover:shadow-sm"
+              className="group hover:border-accent-500 relative overflow-hidden rounded-xl border-2 border-gray-100 p-4 transition-all hover:shadow-sm"
             >
               <div className="flex items-center justify-between">
                 <div className="flex flex-1 items-center space-x-3">
-                  <div className="rounded-lg bg-gradient-to-br from-[#1a365d] to-[#2d4a7c] p-2.5">
-                    <Icon className="h-5 w-5 text-[#d4af37]" />
+                  <div className="from-brand-900 to-brand-700 rounded-lg bg-linear-to-br p-2.5">
+                    <Icon className="hover:text-accent-500 h-5 w-5" />
                   </div>
                   <div className="flex-1">
                     <div className="flex items-center space-x-2">
-                      <div className="text-sm text-[#1a365d]">
+                      <div className="text-brand-900 text-sm">
                         {indicator.name}
                       </div>
                       <div
@@ -105,7 +105,7 @@ export function TechnicalIndicators({ stock }: TechnicalIndicatorsProps) {
                 </div>
 
                 <div className="text-right">
-                  <div className="mb-1 text-lg text-[#1a365d]">
+                  <div className="text-brand-900 mb-1 text-lg">
                     {indicator.value}
                   </div>
                   <span
@@ -120,9 +120,9 @@ export function TechnicalIndicators({ stock }: TechnicalIndicatorsProps) {
         })}
       </div>
 
-      <div className="mt-6 rounded-xl border border-gray-100 bg-gradient-to-r from-gray-50 to-blue-50 p-4">
+      <div className="mt-6 rounded-xl border border-gray-100 bg-linear-to-r from-gray-50 to-blue-50 p-4">
         <p className="text-xs text-gray-700">
-          <strong className="text-[#1a365d]">Tín hiệu kỹ thuật:</strong> 2
+          <strong className="text-brand-900">Tín hiệu kỹ thuật:</strong> 2
           bullish, 2 neutral
         </p>
         <p className="mt-1 text-xs text-gray-600">

@@ -3,6 +3,7 @@
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
+
 import AuthLayout from "../components/AuthLayout";
 import LeftPanel from "../components/LeftPanel";
 import ForgotForm from "./components/ForgotForm";
@@ -31,7 +32,7 @@ export default function ForgotPasswordPage() {
         <div className="w-full max-w-md">
           <Link
             href="/login"
-            className="mb-8 inline-flex items-center space-x-2 text-gray-600 transition-colors hover:text-[#1a365d]"
+            className="hover:text-brand-900 mb-8 inline-flex items-center space-x-2 text-gray-600 transition-colors"
           >
             <ArrowLeft className="h-4 w-4" />
             <span>Quay lại đăng nhập</span>

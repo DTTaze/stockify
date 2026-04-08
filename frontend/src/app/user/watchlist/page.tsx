@@ -77,7 +77,7 @@ export default function WatchListPage() {
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="mb-2 text-3xl text-[#1a365d]">Watchlist của tôi</h1>
+          <h1 className="text-brand-900 mb-2 text-3xl">Watchlist của tôi</h1>
           <p className="text-gray-600">
             Theo dõi các cổ phiếu yêu thích của bạn
           </p>
@@ -90,10 +90,10 @@ export default function WatchListPage() {
               placeholder="Tìm cổ phiếu..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="rounded-lg border-2 border-gray-200 py-2 pr-4 pl-10 transition-all outline-none focus:border-[#d4af37] focus:ring-2 focus:ring-[#d4af37]"
+              className="focus:border-accent-500 focus:ring-accent-500 rounded-lg border-2 border-gray-200 py-2 pr-4 pl-10 transition-all outline-none focus:ring-2"
             />
           </div>
-          <button className="flex items-center space-x-2 rounded-lg bg-[#1a365d] px-4 py-2 text-white shadow-md transition-all hover:bg-[#2d4a7c] hover:shadow-lg">
+          <button className="bg-brand-900 hover:bg-brand-700 flex items-center space-x-2 rounded-lg px-4 py-2 text-white shadow-md transition-all hover:shadow-lg">
             <Plus className="h-5 w-5" />
             <span>Thêm</span>
           </button>
@@ -104,7 +104,7 @@ export default function WatchListPage() {
       <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
         <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
           <div className="mb-1 text-sm text-gray-600">Tổng cổ phiếu</div>
-          <div className="text-3xl text-[#1a365d]">{watchlist.length}</div>
+          <div className="text-brand-900 text-3xl">{watchlist.length}</div>
         </div>
         <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
           <div className="mb-1 text-sm text-gray-600">Tăng giá</div>
@@ -120,7 +120,7 @@ export default function WatchListPage() {
         </div>
         <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
           <div className="mb-1 text-sm text-gray-600">Tổng giá trị</div>
-          <div className="text-3xl text-[#1a365d]">
+          <div className="text-brand-900 text-3xl">
             {(watchlist.reduce((sum, w) => sum + w.price, 0) / 1000).toFixed(0)}
             K
           </div>
@@ -130,7 +130,7 @@ export default function WatchListPage() {
       {/* Watchlist Table */}
       <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
         <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gradient-to-r from-[#1a365d] to-[#2d4a7c] text-white">
+          <thead className="from-brand-900 to-brand-700 bg-linear-to-r text-white">
             <tr>
               <th className="px-6 py-4 text-left text-xs tracking-wider uppercase">
                 Cổ phiếu
@@ -157,9 +157,9 @@ export default function WatchListPage() {
               <tr key={item.id} className="transition-colors hover:bg-blue-50">
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="flex items-center space-x-3">
-                    <Star className="h-5 w-5 fill-[#d4af37] text-[#d4af37]" />
+                    <Star className="fill-accent-500 hover:text-accent-500 h-5 w-5" />
                     <div>
-                      <div className="text-sm text-[#1a365d]">
+                      <div className="text-brand-900 text-sm">
                         {item.symbol}
                       </div>
                       <div className="text-xs text-gray-500">{item.name}</div>
@@ -167,7 +167,7 @@ export default function WatchListPage() {
                   </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm text-[#1a365d]">
+                  <div className="text-brand-900 text-sm">
                     {item.price.toLocaleString("vi-VN")} ₫
                   </div>
                 </td>

@@ -30,7 +30,7 @@ export function MarketOverview() {
   }));
 
   return (
-    <div className="rounded-xl bg-linear-to-r from-[#1a365d] to-[#2d4a7c] p-6 text-white shadow-lg">
+    <div className="from-brand-900 to-brand-700 rounded-xl bg-linear-to-r p-6 text-white shadow-lg">
       <div className="mb-4 flex items-center justify-between">
         <h2 className="text-lg">Tổng quan thị trường</h2>
         <div className="text-sm text-blue-200">

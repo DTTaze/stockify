@@ -22,11 +22,11 @@ export function PredictionPanel({ stock }: PredictionPanelProps) {
     <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
       <div className="mb-6 flex items-center justify-between">
         <div className="flex items-center space-x-3">
-          <div className="rounded-lg bg-gradient-to-br from-[#1a365d] to-[#2d4a7c] p-3">
-            <Sparkles className="h-6 w-6 text-[#d4af37]" />
+          <div className="from-brand-900 to-brand-700 rounded-lg bg-linear-to-br p-3">
+            <Sparkles className="hover:text-accent-500 h-6 w-6" />
           </div>
           <div>
-            <h2 className="text-2xl text-[#1a365d]">Dự đoán AI</h2>
+            <h2 className="text-brand-900 text-2xl">Dự đoán AI</h2>
             <p className="text-sm text-gray-600">Powered by Machine Learning</p>
           </div>
         </div>
@@ -36,9 +36,9 @@ export function PredictionPanel({ stock }: PredictionPanelProps) {
         {predictions.map((pred, index) => (
           <div
             key={index}
-            className="group relative overflow-hidden rounded-xl border-2 border-gray-100 p-5 transition-all hover:border-[#d4af37] hover:shadow-md"
+            className="group hover:border-accent-500 relative overflow-hidden rounded-xl border-2 border-gray-100 p-5 transition-all hover:shadow-md"
           >
-            <div className="absolute top-0 right-0 h-32 w-32 rounded-bl-full bg-gradient-to-br from-[#1a365d]/5 to-transparent"></div>
+            <div className="from-brand-900/5 absolute top-0 right-0 h-32 w-32 rounded-bl-full bg-linear-to-br to-transparent"></div>
 
             <div className="relative">
               <div className="mb-3 flex items-center justify-between">
@@ -59,7 +59,7 @@ export function PredictionPanel({ stock }: PredictionPanelProps) {
                 </div>
               </div>
 
-              <div className="mb-2 text-3xl text-[#1a365d]">
+              <div className="text-brand-900 mb-2 text-3xl">
                 {pred.price.toLocaleString("vi-VN")} ₫
               </div>
 
@@ -72,7 +72,7 @@ export function PredictionPanel({ stock }: PredictionPanelProps) {
                 </div>
                 <div className="flex items-center space-x-1">
                   <div className="text-xs text-gray-500">Độ tin cậy:</div>
-                  <div className="text-sm text-[#1a365d]">
+                  <div className="text-brand-900 text-sm">
                     {pred.confidence}%
                   </div>
                 </div>
@@ -81,7 +81,7 @@ export function PredictionPanel({ stock }: PredictionPanelProps) {
               {/* Progress bar */}
               <div className="mt-3 h-1 overflow-hidden rounded-full bg-gray-100">
                 <div
-                  className="h-full bg-gradient-to-r from-[#1a365d] to-[#d4af37]"
+                  className="from-brand-900 to-accent-500 h-full bg-linear-to-r"
                   style={{ width: `${pred.confidence}%` }}
                 ></div>
               </div>
@@ -90,11 +90,11 @@ export function PredictionPanel({ stock }: PredictionPanelProps) {
         ))}
       </div>
 
-      <div className="rounded-xl border border-blue-100 bg-gradient-to-r from-blue-50 to-indigo-50 p-5">
+      <div className="rounded-xl border border-blue-100 bg-linear-to-r from-blue-50 to-indigo-50 p-5">
         <div className="flex items-start space-x-3">
-          <Sparkles className="mt-0.5 h-5 w-5 text-[#1a365d]" />
+          <Sparkles className="text-brand-900 mt-0.5 h-5 w-5" />
           <div>
-            <p className="mb-1 text-sm text-[#1a365d]">
+            <p className="text-brand-900 mb-1 text-sm">
               <strong>Xu hướng tổng quan:</strong> Tăng nhẹ trong ngắn hạn, có
               thể điều chỉnh trong dài hạn
             </p>

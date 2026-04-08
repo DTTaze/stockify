@@ -1,5 +1,6 @@
 "use client";
 
+import { Lock, Mail } from "lucide-react";
 import Link from "next/link";
 
 import { ButtonCustom } from "@/components/common/form/button";
@@ -10,7 +11,6 @@ import {
 import { Form } from "@/components/ui/Form";
 import { Label } from "@/components/ui/Label";
 import { cn } from "@/utils";
-import { Lock, Mail } from "lucide-react";
 import { useLogin } from "../hook";
 
 export default function LoginForm() {
@@ -25,7 +25,7 @@ export default function LoginForm() {
     <div className="flex flex-1 items-center justify-center bg-white p-8">
       <div className="w-full max-w-md">
         <div className="mb-12">
-          <h2 className="mb-3 text-4xl text-[#1a365d]">Đăng nhập</h2>
+          <h2 className="text-brand-900 mb-3 text-4xl">Đăng nhập</h2>
           <p className="text-gray-600">Truy cập vào tài khoản của bạn</p>
         </div>
 
@@ -57,7 +57,7 @@ export default function LoginForm() {
 
               <Link
                 href="/forgot-password"
-                className="text-[#1a365d] hover:text-[#d4af37]"
+                className="text-brand-900 hover:hover:text-accent-500"
               >
                 Quên mật khẩu?
               </Link>
@@ -69,7 +69,7 @@ export default function LoginForm() {
               loading={loading}
               className={cn(
                 "w-full rounded-lg py-4 text-white",
-                isDisabled ? "bg-gray-300" : "bg-[#1a365d] hover:bg-[#162c4a]",
+                isDisabled ? "bg-gray-300" : "bg-brand-900 hover:bg-brand-800",
               )}
             >
               {loading ? "Đang đăng nhập..." : "Đăng nhập"}
@@ -79,7 +79,7 @@ export default function LoginForm() {
 
         <p className="mt-8 text-center text-gray-600">
           Chưa có tài khoản?{" "}
-          <Link href="/register" className="text-[#1a365d]">
+          <Link href="/register" className="text-brand-900">
             Đăng ký ngay
           </Link>
         </p>

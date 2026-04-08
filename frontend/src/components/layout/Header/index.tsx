@@ -27,11 +27,11 @@ export default function Header() {
 
   return (
     <>
-      <header className="border-b border-[#2d4a7c] bg-[#1a365d] text-white">
+      <header className="border-brand-700 bg-brand-900 border-b text-white">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex h-20 items-center justify-between">
             <div className="flex items-center space-x-4">
-              <TrendingUp className="h-8 w-8 text-[#d4af37]" />
+              <TrendingUp className="hover:text-accent-500 h-8 w-8" />
 
               <div>
                 <div className="text-xl tracking-wide">DRAGON PREDICT</div>
@@ -46,7 +46,7 @@ export default function Header() {
               <button className="relative rounded-lg p-2 transition-colors hover:bg-white/10">
                 <Bell className="h-5 w-5" />
 
-                <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-[#d4af37]"></span>
+                <span className="bg-accent-500 absolute top-1 right-1 h-2 w-2 rounded-full"></span>
               </button>
 
               <div className="flex items-center space-x-3 rounded-lg bg-white/10 px-4 py-2">
@@ -95,8 +95,8 @@ export default function Header() {
                   href={item.path}
                   className={`flex items-center space-x-2 border-b-2 px-6 py-4 transition-all ${
                     isActive
-                      ? "border-[#d4af37] bg-blue-50 text-[#1a365d]"
-                      : "border-transparent text-gray-600 hover:bg-gray-50 hover:text-[#1a365d]"
+                      ? "border-accent-500 text-brand-900 bg-blue-50"
+                      : "hover:text-brand-900 border-transparent text-gray-600 hover:bg-gray-50"
                   }`}
                 >
                   <Icon className="h-5 w-5" />
@@ -110,7 +110,7 @@ export default function Header() {
       </nav>
 
       {mobileMenuOpen && (
-        <div className="bg-[#1a365d] p-4 text-white md:hidden">
+        <div className="bg-brand-900 p-4 text-white md:hidden">
           <div className="space-y-2">
             {navItems.map((item) => {
               const Icon = item.icon;

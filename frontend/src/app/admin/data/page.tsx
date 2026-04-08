@@ -99,7 +99,7 @@ export default function DataManagement() {
     <div className="space-y-6 p-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl text-[#1a365d]">Quản lý Dữ liệu</h1>
+          <h1 className="text-brand-900 text-3xl">Quản lý Dữ liệu</h1>
           <p className="mt-1 text-gray-600">
             Cập nhật và quản lý dữ liệu cổ phiếu
           </p>
@@ -108,7 +108,7 @@ export default function DataManagement() {
           <button
             onClick={updateAllData}
             disabled={updating !== null}
-            className="flex items-center space-x-2 rounded-lg bg-[#1a365d] px-4 py-2 text-white shadow-md transition-all hover:bg-[#2d4a7c] disabled:opacity-50"
+            className="bg-brand-900 hover:bg-brand-700 flex items-center space-x-2 rounded-lg px-4 py-2 text-white shadow-md transition-all disabled:opacity-50"
           >
             <RefreshCw
               className={`h-5 w-5 ${updating === "all" ? "animate-spin" : ""}`}
@@ -130,7 +130,7 @@ export default function DataManagement() {
       <div className="grid grid-cols-1 gap-6 md:grid-cols-4">
         <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
           <div className="mb-2 text-sm text-gray-600">Tổng cổ phiếu</div>
-          <div className="text-3xl text-[#1a365d]">{stockData.length}</div>
+          <div className="text-brand-900 text-3xl">{stockData.length}</div>
         </div>
         <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
           <div className="mb-2 text-sm text-gray-600">Đã cập nhật</div>
@@ -146,7 +146,7 @@ export default function DataManagement() {
         </div>
         <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
           <div className="mb-2 text-sm text-gray-600">Tổng records</div>
-          <div className="text-3xl text-[#1a365d]">
+          <div className="text-brand-900 text-3xl">
             {stockData.reduce((sum, s) => sum + s.records, 0).toLocaleString()}
           </div>
         </div>
@@ -155,7 +155,7 @@ export default function DataManagement() {
       {/* Data Table */}
       <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
         <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gradient-to-r from-[#1a365d] to-[#2d4a7c] text-white">
+          <thead className="from-brand-900 to-brand-700 bg-linear-to-r text-white">
             <tr>
               <th className="px-6 py-4 text-left text-xs tracking-wider uppercase">
                 Cổ phiếu
@@ -181,7 +181,7 @@ export default function DataManagement() {
                 className="transition-colors hover:bg-blue-50"
               >
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm text-[#1a365d]">{stock.symbol}</div>
+                  <div className="text-brand-900 text-sm">{stock.symbol}</div>
                   <div className="text-xs text-gray-500">{stock.name}</div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
@@ -218,7 +218,7 @@ export default function DataManagement() {
                   <button
                     onClick={() => updateStockData(stock.symbol)}
                     disabled={updating !== null}
-                    className="flex items-center space-x-2 rounded-lg bg-[#1a365d] px-3 py-2 text-white transition-all hover:bg-[#2d4a7c] disabled:opacity-50"
+                    className="bg-brand-900 hover:bg-brand-700 flex items-center space-x-2 rounded-lg px-3 py-2 text-white transition-all disabled:opacity-50"
                   >
                     <RefreshCw
                       className={`h-4 w-4 ${updating === stock.symbol ? "animate-spin" : ""}`}

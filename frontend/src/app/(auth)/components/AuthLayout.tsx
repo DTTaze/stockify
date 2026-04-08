@@ -10,7 +10,7 @@ type AuthLayoutProps = {
 export default function AuthLayout({ left, children }: AuthLayoutProps) {
   return (
     <div className="flex min-h-screen">
-      <div className="relative hidden flex-col justify-between overflow-hidden bg-linear-to-br from-[#1a365d] via-[#2d4a7c] to-[#1a365d] p-12 lg:flex lg:w-1/2">
+      <div className="from-brand-900 via-brand-700 to-brand-900 relative hidden flex-col justify-between overflow-hidden bg-linear-to-br p-12 lg:flex lg:w-1/2">
         {left}
       </div>
 

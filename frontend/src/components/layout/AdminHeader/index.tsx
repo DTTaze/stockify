@@ -23,12 +23,12 @@ export default function AdminHeader() {
   ];
   return (
     <div>
-      <header className="bg-gradient-to-r from-[#1a365d] via-[#2d4a7c] to-[#1a365d] text-white shadow-xl">
+      <header className="from-brand-900 via-brand-700 to-brand-900 bg-linear-to-r text-white shadow-xl">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex h-20 items-center justify-between">
             <div className="flex items-center space-x-4">
-              <div className="rounded-lg bg-[#d4af37] p-2.5">
-                <Shield className="h-7 w-7 text-[#1a365d]" />
+              <div className="bg-accent-500 rounded-lg p-2.5">
+                <Shield className="text-brand-900 h-7 w-7" />
               </div>
               <div>
                 <div className="text-xl tracking-wide">ADMIN PANEL</div>
@@ -38,7 +38,7 @@ export default function AdminHeader() {
 
             <div className="hidden items-center space-x-4 md:flex">
               <div className="flex items-center space-x-3 rounded-lg border border-white/20 bg-white/10 px-4 py-2 backdrop-blur-sm">
-                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#d4af37] text-sm text-[#1a365d]">
+                <div className="bg-accent-500 text-brand-900 flex h-8 w-8 items-center justify-center rounded-full text-sm">
                   A
                 </div>
                 <div>
@@ -83,8 +83,8 @@ export default function AdminHeader() {
                   href={item.path}
                   className={`flex items-center space-x-2 border-b-2 px-6 py-4 whitespace-nowrap transition-all ${
                     isActive
-                      ? "border-[#d4af37] bg-blue-50 text-[#1a365d]"
-                      : "border-transparent text-gray-600 hover:bg-gray-50 hover:text-[#1a365d]"
+                      ? "border-accent-500 text-brand-900 bg-blue-50"
+                      : "hover:text-brand-900 border-transparent text-gray-600 hover:bg-gray-50"
                   }`}
                 >
                   <Icon className="h-5 w-5" />

@@ -26,7 +26,7 @@ export const InputCustom = (props: InputCustomProps) => {
         "border-2 border-gray-200",
         "flex items-center",
         "p-4",
-        "focus-within:border-[#d4af37] focus-within:ring-2 focus-within:ring-[#d4af37]",
+        "focus-within:border-accent-500 focus-within:ring-accent-500 focus-within:ring-2",
         "transition-all",
         disabled
           ? "cursor-not-allowed border-0 bg-neutral-50"
