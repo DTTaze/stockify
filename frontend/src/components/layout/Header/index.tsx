@@ -1,7 +1,13 @@
 "use client";
 
 import { ButtonCustom } from "@/components/common/form/button";
+import { LoaderCircleCustom } from "@/components/common/ui/Feedback/LoaderCircle";
+import { useIsAuthenticated } from "@/hooks/common/useIsAuthenticated";
 import { useLogout } from "@/hooks/common/useLogout";
+import {
+  initialDataProfile,
+  useQueryProfile,
+} from "@/queries/users/QueryHooksUser";
 import {
   Bell,
   LayoutDashboard,
@@ -12,18 +18,37 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
 
 export default function Header() {
   const location = usePathname();
-
   const { handleLogout } = useLogout();
+  const isAuthenticated = useIsAuthenticated();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const {
+    data: profile = initialDataProfile,
+    isError,
+    isFetching,
+  } = useQueryProfile(isAuthenticated);
 
+  useEffect(() => {
+    if (!isError) return;
+
+    handleLogout();
+
+    toast.error("Unable to get user information, please log in again!");
+  }, [isError, handleLogout]);
+
+  if (isFetching || isAuthenticated === undefined) {
+    return <LoaderCircleCustom classNameWrapper="max-w-[233px]" />;
+  }
+
+  //TODO: UPDATE NAVBAR
   const navItems = [
     { path: "/user/dashboard", label: "Dashboard", icon: LayoutDashboard },
     { path: "/user/watchlist", label: "Watchlist", icon: Star },
   ];
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
     <>
@@ -53,7 +78,7 @@ export default function Header() {
                 <User className="h-5 w-5" />
 
                 <div>
-                  <div className="text-sm">User</div>
+                  <div className="text-sm">{profile.username}</div>
                   <div className="text-xs text-blue-200">Investor</div>
                 </div>
               </div>
