@@ -1,32 +1,35 @@
+"use client";
+
 import { TrendingDown, TrendingUp } from "lucide-react";
 
+import { MARKET_INDICES } from "@/constants/stock";
 import {
   initialStockData,
   useQueryIndexQuote,
 } from "@/queries/stocks/QueryHooksStocks";
+import { MarketType, TimePeriod } from "@/types/stock/stock.type";
 
 function useMarketIndices() {
-  const vnIndex = useQueryIndexQuote("vn-index");
-  const vn30 = useQueryIndexQuote("vn30");
-  const hnxIndex = useQueryIndexQuote("hnx-index");
-  const upcom = useQueryIndexQuote("upcom");
+  return MARKET_INDICES.map(({ label, symbol }) => {
+    const query = useQueryIndexQuote({
+      symbol,
+      type: MarketType.STOCK,
+      period: TimePeriod.ONE_DAY,
+    });
 
-  return [
-    { label: "VN-INDEX", data: vnIndex.data },
-    { label: "VN30", data: vn30.data },
-    { label: "HNX-INDEX", data: hnxIndex.data },
-    { label: "UPCOM", data: upcom.data },
-  ];
+    return {
+      label,
+      data: query.data ?? initialStockData,
+    };
+  });
 }
 
 export function MarketOverview() {
-  const rawIndices = useMarketIndices();
-
-  const indices = rawIndices.map(({ label, data = initialStockData }) => ({
+  const indices = useMarketIndices().map(({ label, data }) => ({
     name: label,
     value: data.price.toLocaleString(),
     change: data.change_percent,
-    trend: data.change >= 0 ? "up" : "down",
+    trend: data.change_percent >= 0 ? "up" : "down",
   }));
 
   return (

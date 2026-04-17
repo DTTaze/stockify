@@ -29,7 +29,10 @@ export enum publicRouteEnum {
   REGISTER = "/register",
 }
 
-export enum protectedRouteEnum {}
+export enum protectedRouteEnum {
+  DASHBOARD = "/user/dashboard",
+  WATCHLIST = "/user/watchlist",
+}
 
 export interface NavType {
   label: string;

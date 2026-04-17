@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { ACCESS_TOKEN } from "./constants/auth";
-import { publicRouteEnum } from "./types/route";
+import { protectedRouteEnum, publicRouteEnum } from "./types/route";
 
 export const PUBLIC_ROUTES = [
   publicRouteEnum.HOME_PAGE,
@@ -10,7 +10,10 @@ export const PUBLIC_ROUTES = [
   publicRouteEnum.FORGOT_PASSWORD,
 ];
 
-export const PROTECTED_ROUTES = [];
+export const PROTECTED_ROUTES = [
+  protectedRouteEnum.DASHBOARD,
+  protectedRouteEnum.WATCHLIST,
+];
 
 function isProtectedRoute(pathname: string) {
   return PROTECTED_ROUTES.some((route) => pathname.startsWith(route));

@@ -6,6 +6,7 @@ import { AuditModule } from '@modules/audit/audit.module';
 import { AuthModule } from '@modules/auth/auth.module';
 import { GlobalModule } from '@modules/global/global.module';
 import { MLModule } from '@modules/ml/ml.module';
+import { StockCompaniesModule } from '@modules/stock-companies/stock-companies.module';
 import { UserModule } from '@modules/user/user.module';
 
 @Module({
@@ -40,6 +41,7 @@ import { UserModule } from '@modules/user/user.module';
     UserModule,
     AuthModule,
     MLModule,
+    StockCompaniesModule,
   ],
 })
 export class AppModule {}

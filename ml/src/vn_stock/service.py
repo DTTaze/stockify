@@ -1,133 +1,230 @@
 import logging
 from datetime import datetime, timedelta
-from typing import Optional, Dict, Any, List
+from typing import List
+
+from matplotlib.dates import relativedelta
+import pandas as pd
 
 try:
-    from vnstock import Quote
+    from vnstock import Quote, Listing
 except ImportError:
     Quote = None
+    Listing = None
 
-from .constants import INDICES
-from .exceptions import (
-    IndexNotFoundException,
-    DataFetchException,
-)
+from .constants import FETCH_BUFFER, INDICES, PERIOD_MAPPING, VALID_PERIODS
+from .exceptions import IndexNotFoundException, DataFetchException
 from . import schemas
 
 logger = logging.getLogger(__name__)
 
 
 class StockService:
-    """Service for handling Vietnamese stock operations"""
-
-    VALID_PERIODS = ["1d", "5d", "1mo", "3mo", "6mo", "1y"]
+    """Service for Vietnamese stock & index"""
 
     def __init__(self):
-        """Initialize the service"""
         if Quote is None:
-            logger.warning(
-                "vnstock3 is not installed. Install it using: pip install vnstock3"
-            )
+            logger.warning("vnstock not installed")
             self.client = None
         else:
             self.client = Quote
-            logger.info("vnstock Quote client initialized")
 
-    def get_index_quote(self, index_code: str) -> schemas.IndexQuote:
-        """Get current quote for an index
-
-        Args:
-            index_code: The index code (e.g., 'vn-index', 'vn30')
-
-        Returns:
-            IndexQuote object with current data
-
-        Raises:
-            IndexNotFoundException if index is not found
-            DataFetchException if data fetching fails
-        """
+    def get_index_quote(self, index_code: str, period: str) -> schemas.MarketQuote:
         index_key = index_code.lower()
 
         if index_key not in INDICES:
             raise IndexNotFoundException(index_code)
 
-        index_info = INDICES[index_key]
+        return self._get_quote(INDICES[index_key]["code"], period)
+
+    def get_stock_quote(self, symbol: str, period: str) -> schemas.MarketQuote:
+        return self._get_quote(symbol.upper(), period)
+
+    def _prepare_df_by_period(self, df: pd.DataFrame, period: str) -> pd.DataFrame:
+        df["time"] = pd.to_datetime(df["time"], errors="coerce")
+        df = df.dropna(subset=["time"])
+        df = df.sort_values("time").reset_index(drop=True)
+
+        if df.empty:
+            return df
+
+        if period == "1d":
+            return df.tail(2)
+
+        days = PERIOD_MAPPING.get(period)
+        if not days:
+            return df
+
+        end_date = df["time"].max()
+        start_date = end_date - pd.Timedelta(days=days)
+
+        return df[df["time"] >= start_date]
+
+    def _get_first_and_latest(self, df: pd.DataFrame):
+        if df.empty:
+            return None, None
+
+        return df.iloc[0], df.iloc[-1]
+
+    def _get_quote(self, symbol: str, period: str):
+        if not self.client:
+            raise DataFetchException("Vnstock client not initialized")
+
+        if period not in VALID_PERIODS:
+            raise DataFetchException(f"Invalid period: {period}")
+
+        try:
+            quote = self.client(symbol=symbol, source="VCI")
+
+            end_date = datetime.now()
+
+            buffer_days = FETCH_BUFFER.get(period, 30)
+            start_date = end_date - timedelta(days=buffer_days)
+
+            df = quote.history(
+                start=start_date.strftime("%Y-%m-%d"),
+                end=end_date.strftime("%Y-%m-%d"),
+                interval="1D",
+            )
+
+            if df is None or df.empty:
+                raise DataFetchException(f"No data for {symbol}")
+
+            df = self._prepare_df_by_period(df, period)
+
+            first, latest = self._get_first_and_latest(df)
+
+            if first is None or latest is None:
+                raise DataFetchException(f"Not enough data for {symbol}")
+
+            close_price = float(latest.get("close", 0))
+            first_close_price = float(first.get("close", 0))
+
+            if first_close_price == 0:
+                change = 0
+                change_percent = 0
+            else:
+                change = close_price - first_close_price
+                change_percent = (change / first_close_price) * 100
+
+            return {
+                "symbol": symbol,
+                "price": round(close_price, 2),
+                "change_percent": round(change_percent, 2),
+                "volume": int(latest.get("volume", 0)),
+            }
+
+        except Exception as e:
+            logger.error(f"Quote error {symbol}: {e}", exc_info=True)
+            raise
+
+    def get_index_historical(
+        self, index_code: str, period: str
+    ) -> schemas.MarketHistoricalResponse:
+        index_key = index_code.lower()
+
+        if index_key not in INDICES:
+            raise IndexNotFoundException(index_code)
+
+        return self._get_historical(
+            INDICES[index_key]["code"], period, schemas.MarketType.INDEX
+        )
+
+    def get_stock_historical(
+        self, symbol: str, period: str
+    ) -> schemas.MarketHistoricalResponse:
+        return self._get_historical(symbol.upper(), period, schemas.MarketType.STOCK)
+
+    def _get_historical(
+        self,
+        symbol: str,
+        period: str,
+        market_type: schemas.MarketType,
+    ) -> schemas.MarketHistoricalResponse:
 
         if not self.client:
-            raise DataFetchException("Vnstock client is not initialized")
+            raise DataFetchException("Vnstock client not initialized")
+
+        if period not in VALID_PERIODS:
+            raise DataFetchException(f"Invalid period: {period}")
 
         try:
-            data = self._fetch_quote_from_vnstock(index_info["code"])
+            days = PERIOD_MAPPING[period]
 
-            if data:
-                return data
-            raise DataFetchException(f"Failed to fetch quote for {index_code}")
-        except Exception as e:
-            logger.error(f"Error fetching quote from vnstock: {e}")
-            raise DataFetchException(
-                f"Failed to fetch quote for {index_code}: {str(e)}"
+            quote = self.client(symbol=symbol, source="VCI")
+
+            end_date = datetime.now()
+            start_date = end_date - timedelta(days=days)
+
+            df = quote.history(
+                start=start_date.strftime("%Y-%m-%d"),
+                end=end_date.strftime("%Y-%m-%d"),
+                interval="1D",
             )
 
-    def _fetch_quote_from_vnstock(
-        self, index_code: str
-    ) -> Optional[schemas.IndexQuote]:
-        """Fetch current quote from vnstock using Quote API"""
-        try:
-            logger.info(f"Fetching quote for {index_code} from vnstock")
+            if df is None or len(df) == 0:
+                raise DataFetchException(f"No historical data for {symbol}")
 
-            quote = self.client(symbol=index_code, source="VCI")
+            data: List[schemas.HistoricalData] = []
 
-            end_date = datetime.now().strftime("%Y-%m-%d")
-            start_date = (datetime.now() - timedelta(days=5)).strftime("%Y-%m-%d")
-
-            history_data = quote.history(start=start_date, end=end_date, interval="1D")
-
-            if history_data is None or len(history_data) == 0:
-                logger.warning(f"No history data returned for {index_code}")
-                return None
-
-            logger.info(f"History data type: {type(history_data)}")
-
-            if hasattr(history_data, "iloc"):
-                latest = history_data.iloc[-1]
-                data_dict = (
-                    latest.to_dict() if hasattr(latest, "to_dict") else dict(latest)
-                )
-            else:
-                data_dict = (
-                    history_data[-1] if isinstance(history_data, list) else history_data
+            for _, row in df.iterrows():
+                data.append(
+                    schemas.HistoricalData(
+                        date=row.get("time"),
+                        close=float(row.get("close", 0)),
+                        volume=int(row.get("volume", 0)),
+                    )
                 )
 
-            logger.info(f"Latest data: {data_dict}")
-
-            if data_dict is None:
-                logger.warning(f"Empty data for {index_code}")
-                return None
-
-            close_price = float(data_dict.get("close", 0))
-            open_price = float(data_dict.get("open", close_price))
-            high_price = float(data_dict.get("high", close_price))
-            low_price = float(data_dict.get("low", close_price))
-
-            change = close_price - open_price
-            change_percent = (change / open_price * 100) if open_price != 0 else 0
-
-            return schemas.IndexQuote(
-                code=index_code,
-                name=data_dict.get("name", index_code),
-                price=round(close_price, 2),
-                change=round(change, 2),
-                change_percent=round(change_percent, 2),
-                high=round(high_price, 2),
-                low=round(low_price, 2),
-                open=round(open_price, 2),
-                volume=int(data_dict.get("volume", 0)),
-                timestamp=datetime.now(),
+            return schemas.MarketHistoricalResponse(
+                symbol=symbol,
+                name=symbol,
+                type=market_type,
+                period=period,
+                data=data,
             )
 
         except Exception as e:
-            logger.error(f"Error fetching quote for {index_code}: {e}", exc_info=True)
-            return None
+            logger.error(f"Historical error {symbol}: {e}", exc_info=True)
+            raise DataFetchException(str(e))
+
+    def get_indices(self) -> schemas.MarketListResponse:
+        items = [
+            schemas.MarketInfo(
+                symbol=v["code"],
+                name=v["name"],
+                description=v.get("description"),
+                type=schemas.MarketType.INDEX,
+            )
+            for v in INDICES.values()
+        ]
+
+        return schemas.MarketListResponse(items=items)
+
+    def get_stocks(self) -> schemas.MarketListResponse:
+        if Listing is None:
+            raise DataFetchException("Listing not available")
+
+        try:
+            listing = Listing(source="VCI")
+            df = listing.all_symbols()
+
+            items = []
+
+            for _, row in df.iterrows():
+                items.append(
+                    schemas.MarketInfo(
+                        symbol=row.get("symbol"),
+                        name=row.get("organ_name"),
+                        description=None,
+                        type=schemas.MarketType.STOCK,
+                    )
+                )
+
+            return schemas.MarketListResponse(items=items)
+
+        except Exception as e:
+            logger.error(f"Stock list error: {e}", exc_info=True)
+            raise DataFetchException(str(e))
 
 
 stock_service = StockService()

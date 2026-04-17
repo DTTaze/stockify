@@ -1,150 +1,81 @@
+"use client";
+
+import { useQueryQuoteHistorical } from "@/queries/stocks/QueryHooksStocks";
+import { MarketType, TimePeriod } from "@/types/stock/stock.type";
 import {
-  ComposedChart,
-  Bar,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
   Area,
   AreaChart,
+  CartesianGrid,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
 } from "recharts";
 
-interface StockChartProps {
-  stock: string;
-  timeRange: string;
+interface Props {
+  symbol: string;
+  period: TimePeriod;
 }
 
-// Mock data
-const generateMockData = (days: number) => {
-  const data = [];
-  const basePrice = 80000;
+export function StockChart(props: Props) {
+  const { symbol, period } = props;
+  const { data, isLoading } = useQueryQuoteHistorical({
+    symbol,
+    type: MarketType.STOCK,
+    period,
+  });
 
-  for (let i = 0; i < days; i++) {
-    const date = new Date();
-    date.setDate(date.getDate() - (days - i));
+  if (isLoading) return <div>Loading...</div>;
 
-    const open = basePrice + (Math.random() - 0.5) * 10000;
-    const close = open + (Math.random() - 0.5) * 5000;
-    const high = Math.max(open, close) + Math.random() * 2000;
-    const low = Math.min(open, close) - Math.random() * 2000;
-    const volume = Math.floor(Math.random() * 1000000) + 500000;
-
-    data.push({
-      date: date.toLocaleDateString("vi-VN", {
+  const chartData =
+    data?.map((item: any) => ({
+      date: new Date(item.date).toLocaleDateString("vi-VN", {
         month: "short",
         day: "numeric",
       }),
-      open: Math.round(open),
-      high: Math.round(high),
-      low: Math.round(low),
-      close: Math.round(close),
-      volume,
-    });
-  }
-
-  return data;
-};
-
-export function StockChart({ stock, timeRange }: StockChartProps) {
-  const days =
-    timeRange === "1D"
-      ? 1
-      : timeRange === "1W"
-        ? 7
-        : timeRange === "1M"
-          ? 30
-          : timeRange === "3M"
-            ? 90
-            : 365;
-  const data = generateMockData(days);
+      close: item.close,
+      volume: item.volume,
+    })) || [];
 
   return (
     <div className="space-y-8">
-      {/* Price Chart */}
-      <div>
-        <ResponsiveContainer width="100%" height={350}>
-          <AreaChart data={data}>
-            <defs>
-              <linearGradient id="colorPrice" x1="0" y1="0" x2="0" y2="1">
-                <stop
-                  offset="5%"
-                  stopColor="var(--color-brand-900)"
-                  stopOpacity={0.3}
-                />
-                <stop
-                  offset="95%"
-                  stopColor="var(--color-brand-900)"
-                  stopOpacity={0}
-                />
-              </linearGradient>
-            </defs>
-            <CartesianGrid
-              strokeDasharray="3 3"
-              stroke="var(--color-neutral-200)"
-            />
-            <XAxis
-              dataKey="time"
-              tick={{ fill: "var(--color-neutral-500)", fontSize: 12 }}
-              axisLine={{ stroke: "var(--color-neutral-200)" }}
-            />
-            <YAxis
-              tick={{ fill: "#64748b", fontSize: 12 }}
-              axisLine={{ stroke: "#e5e7eb" }}
-              tickFormatter={(value) => `${(value / 1000).toFixed(0)}K`}
-            />
-            <Tooltip
-              contentStyle={{
-                backgroundColor: "white",
-                border: "1px solid #e5e7eb",
-                borderRadius: "8px",
-                boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
-              }}
-            />
-            <Area
-              type="monotone"
-              dataKey="close"
-              stroke="var(--color-brand-900)"
-              strokeWidth={2}
-              fill="url(#colorPrice)"
-            />
-          </AreaChart>
-        </ResponsiveContainer>
+      <div className="mb-6 flex items-center justify-between">
+        <h2 className="text-brand-900 text-2xl">Biểu đồ giá</h2>
       </div>
 
-      {/* Volume Chart */}
-      <div>
-        <h3 className="text-brand-900 mb-4 text-lg">Khối lượng giao dịch</h3>
-        <ResponsiveContainer width="100%" height={150}>
-          <ComposedChart data={data}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-            <XAxis
-              dataKey="date"
-              tick={{ fill: "#64748b", fontSize: 12 }}
-              axisLine={{ stroke: "#e5e7eb" }}
-            />
-            <YAxis
-              tick={{ fill: "#64748b", fontSize: 12 }}
-              axisLine={{ stroke: "#e5e7eb" }}
-              tickFormatter={(value) => `${(value / 1000000).toFixed(1)}M`}
-            />
-            <Tooltip
-              contentStyle={{
-                backgroundColor: "white",
-                border: "1px solid #e5e7eb",
-                borderRadius: "8px",
-              }}
-            />
-            <Bar
-              dataKey="volume"
-              fill="var(--color-accent-500)"
-              radius={[4, 4, 0, 0]}
-            />
-          </ComposedChart>
-        </ResponsiveContainer>
-      </div>
+      <ResponsiveContainer width="100%" height={350}>
+        <AreaChart data={chartData}>
+          <defs>
+            <linearGradient id="colorPrice" x1="0" y1="0" x2="0" y2="1">
+              <stop
+                offset="5%"
+                stopColor="var(--color-brand-900)"
+                stopOpacity={0.3}
+              />
+              <stop
+                offset="95%"
+                stopColor="var(--color-brand-900)"
+                stopOpacity={0}
+              />
+            </linearGradient>
+          </defs>
+
+          <CartesianGrid strokeDasharray="3 3" />
+
+          <XAxis dataKey="date" />
+
+          <YAxis tickFormatter={(value) => `${value}`} />
+
+          <Tooltip />
+
+          <Area
+            type="monotone"
+            dataKey="close"
+            stroke="var(--color-brand-900)"
+            fill="url(#colorPrice)"
+          />
+        </AreaChart>
+      </ResponsiveContainer>
     </div>
   );
 }

@@ -1,9 +1,10 @@
 import { HttpResponse } from 'mvc-common-toolkit';
-import { appConfig } from 'src/configs/app.config';
 
 import { Controller, Get, Inject } from '@nestjs/common';
 import { ConfigType } from '@nestjs/config';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
+
+import appConfig from '@configs/app.config';
 
 @ApiTags('Health Check')
 @Controller('health')

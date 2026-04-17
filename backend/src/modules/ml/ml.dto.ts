@@ -1,17 +1,13 @@
+import { IsEnum, IsString } from 'class-validator';
+
 import { ApiProperty } from '@nestjs/swagger';
 
 export class IndexQuoteDto {
   @ApiProperty({
-    description: 'Index code',
-    example: 'VNINDEX',
+    description: 'Symbol',
+    example: 'VCB',
   })
-  code: string;
-
-  @ApiProperty({
-    description: 'Index name',
-    example: 'VN-INDEX',
-  })
-  name: string;
+  symbol: string;
 
   @ApiProperty({
     description: 'Current price',
@@ -20,30 +16,10 @@ export class IndexQuoteDto {
   price: number;
 
   @ApiProperty({
-    description: 'Price change',
-    example: 5.25,
-  })
-  change: number;
-
-  @ApiProperty({
     description: 'Percentage change',
     example: 0.41,
   })
   change_percent: number;
-
-  @ApiProperty({
-    description: 'Day high',
-    example: 1285.0,
-    required: false,
-  })
-  high?: number;
-
-  @ApiProperty({
-    description: 'Day low',
-    example: 1275.5,
-    required: false,
-  })
-  low?: number;
 
   @ApiProperty({
     description: 'Open price',
@@ -58,12 +34,43 @@ export class IndexQuoteDto {
     required: false,
   })
   volume?: number;
+}
+
+export enum MarketType {
+  STOCK = 'stock',
+  INDEX = 'index',
+}
+
+export enum TimePeriod {
+  ONE_DAY = '1d',
+  ONE_WEEK = '1w',
+  ONE_MONTH = '1mo',
+  THREE_MONTH = '3mo',
+  SIX_MONTH = '6mo',
+  ONE_YEAR = '1y',
+}
+
+export class MarketQuoteDto {
+  @ApiProperty({
+    description: 'Symbol of the market index',
+    example: 'VCB',
+  })
+  @IsString()
+  symbol: string;
 
   @ApiProperty({
-    description: 'Data timestamp',
-    example: '2026-04-03T10:30:00',
+    enum: MarketType,
+    example: MarketType.INDEX,
   })
-  timestamp: string;
+  @IsEnum(MarketType)
+  type: MarketType;
+
+  @ApiProperty({
+    enum: TimePeriod,
+    example: TimePeriod.ONE_DAY,
+  })
+  @IsEnum(TimePeriod)
+  period: TimePeriod;
 }
 
 export class MLDTO {}

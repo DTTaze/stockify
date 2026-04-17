@@ -10,7 +10,7 @@ import { ConfigService } from '@nestjs/config';
 import { ENV_KEY, INJECTION_TOKEN } from '@shared/constants';
 import { OutboundPartnerService } from '@shared/services/outbound-partner.service';
 
-import { IndexQuoteDto } from './ml.dto';
+import { IndexQuoteDto, MarketQuoteDto } from './ml.dto';
 
 @Injectable()
 export class MLService extends OutboundPartnerService {
@@ -32,13 +32,20 @@ export class MLService extends OutboundPartnerService {
     return this.configService.getOrThrow<string>(ENV_KEY.ML_SERVICE_URL);
   }
 
-  public async getIndexQuote(
-    indexCode: string,
+  public async getMarketQuote(
+    dto: MarketQuoteDto,
   ): Promise<OperationResult<IndexQuoteDto>> {
     try {
       const response = await this.httpService.send(
         'get',
-        this.baseUrl + `/indices/${indexCode}/quote`,
+        this.baseUrl + `/market/quote`,
+        {
+          query: {
+            symbol: dto.symbol,
+            type: dto.type,
+            period: dto.period,
+          },
+        },
       );
 
       if (response.success) {
@@ -48,7 +55,35 @@ export class MLService extends OutboundPartnerService {
         };
       }
     } catch (error) {
-      this.logger.error(`Failed to fetch index quote for ${indexCode}`);
+      this.logger.error(`Failed to fetch index quote for ${dto.symbol}`);
+      throw error;
+    }
+  }
+
+  public async getMarketHistory(
+    dto: MarketQuoteDto,
+  ): Promise<OperationResult<IndexQuoteDto>> {
+    try {
+      const response = await this.httpService.send(
+        'get',
+        this.baseUrl + `/market/historical`,
+        {
+          query: {
+            symbol: dto.symbol,
+            type: dto.type,
+            period: dto.period,
+          },
+        },
+      );
+
+      if (response.success) {
+        return {
+          success: true,
+          data: response.data.data,
+        };
+      }
+    } catch (error) {
+      this.logger.error(`Failed to fetch index quote for ${dto.symbol}`);
       throw error;
     }
   }

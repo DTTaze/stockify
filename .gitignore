@@ -70,3 +70,6 @@ frontend/dist/
 # =========================
 .DS_Store
 Thumbs.db
+
+dev.ps1
+format.ps1

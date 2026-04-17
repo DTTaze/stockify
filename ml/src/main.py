@@ -1,9 +1,3 @@
-"""
-Main FastAPI application for Vietnamese Stock Index API
-
-This module sets up the FastAPI application with all routes and middleware.
-"""
-
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -22,33 +16,12 @@ from ml.src.vn_stock.exceptions import (
 logger = setup_logging(__name__, vn_stock_config.log_level)
 
 
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    """
-    Manage the lifespan of the FastAPI application.
-
-    This runs startup code before the application starts serving requests,
-    and shutdown code when the application stops.
-    """
-
-    logger.info(
-        f"Starting {vn_stock_config.service_name} v{vn_stock_config.service_version}"
-    )
-    logger.info(f"Cache enabled: {vn_stock_config.cache_enabled}")
-    logger.info(f"Vnstock enabled: {vn_stock_config.vnstock_enabled}")
-
-    yield
-
-    logger.info(f"Shutting down {vn_stock_config.service_name}")
-
-
 app = FastAPI(
     title=vn_stock_config.service_name,
     description=vn_stock_config.service_description,
     version=vn_stock_config.service_version,
-    lifespan=lifespan,
-    docs_url="/api/v1/docs",
-    redoc_url="/api/v1/redoc",
+    docs_url="/docs",
+    redoc_url="/redoc",
     openapi_url="/api/v1/openapi.json",
 )
 
@@ -98,51 +71,6 @@ async def data_fetch_exception_handler(request, exc):
 
 
 app.include_router(router)
-
-
-@app.get(
-    "/",
-    tags=["Health"],
-    summary="Health check",
-    description="Check if the API is running",
-)
-async def root():
-    """
-    Health check endpoint.
-
-    Returns information about the API service.
-    """
-    return {
-        "service": vn_stock_config.service_name,
-        "version": vn_stock_config.service_version,
-        "status": "healthy",
-        "docs": "/api/v1/docs",
-        "redoc": "/api/v1/redoc",
-    }
-
-
-@app.get(
-    "/health",
-    tags=["Health"],
-    summary="Health status",
-    description="Get detailed health status",
-)
-async def health():
-    """
-    Get detailed health status of the API.
-
-    Returns information about service availability and configuration.
-    """
-    return {
-        "status": "healthy",
-        "service": vn_stock_config.service_name,
-        "version": vn_stock_config.service_version,
-        "features": {
-            "cache": vn_stock_config.cache_enabled,
-            "vnstock": vn_stock_config.vnstock_enabled,
-        },
-    }
-
 
 if __name__ == "__main__":
     import uvicorn
