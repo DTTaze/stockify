@@ -47,6 +47,9 @@ class AppConfig {
   @IsString()
   @IsOptional()
   redisPassword?: string;
+
+  @IsString()
+  mlServiceUrl: string;
 }
 
 export const appConfig = registerAs(CONFIG_KEY.APP, () => {
@@ -63,6 +66,7 @@ export const appConfig = registerAs(CONFIG_KEY.APP, () => {
     redisHost: process.env.REDIS_HOST || 'localhost',
     redisPort: parseInt(process.env.REDIS_PORT || '6379', 10),
     redisPassword: process.env.REDIS_PASSWORD,
+    mlServiceUrl: process.env.ML_SERVICE_URL || 'http://localhost:8000/api/v1',
   };
 
   validateConfig(config, AppConfig);

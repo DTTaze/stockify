@@ -8,6 +8,7 @@ import { GlobalModule } from '@modules/global/global.module';
 import { MLModule } from '@modules/ml/ml.module';
 import { StockCompaniesModule } from '@modules/stock-companies/stock-companies.module';
 import { UserModule } from '@modules/user/user.module';
+import { WatchlistModule } from '@modules/watchlist/watchlist.module';
 
 @Module({
   imports: [
@@ -42,6 +43,7 @@ import { UserModule } from '@modules/user/user.module';
     AuthModule,
     MLModule,
     StockCompaniesModule,
+    WatchlistModule,
   ],
 })
 export class AppModule {}
