@@ -5,14 +5,14 @@ import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 
 import { generateInternalServerResult } from '@shared/helpers/operation-result.helper';
 
-import { MarketQuoteDto } from './ml.dto';
+import { MarketListDto, MarketQuoteDto, PredictionDto, SupportedSymbolsDto } from './ml.dto';
 import { MLService } from './ml.service';
 
 @ApiTags('ML')
 @ApiBearerAuth()
 @Controller('ml')
 export class MLController {
-  constructor(protected mlService: MLService) {}
+  constructor(private readonly mlService: MLService) {}
 
   @Get('market/quote')
   @ApiOperation({
@@ -30,6 +30,18 @@ export class MLController {
       success: true,
       data: result.data,
     };
+  }
+
+  @Get('market/list')
+  @ApiOperation({ summary: 'Get market list', description: 'Retrieve list of available market symbols' })
+  async getMarketList(@Query() query: MarketListDto): Promise<HttpResponse> {
+    const result = await this.mlService.getMarketList(query.type);
+
+    if (!result.success) {
+      return generateInternalServerResult(result.message);
+    }
+
+    return { success: true, data: result.data };
   }
 
   @Get('market/history')

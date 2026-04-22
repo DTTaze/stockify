@@ -1,0 +1,60 @@
+import { Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { OperationResult } from 'mvc-common-toolkit';
+import { Repository } from 'typeorm';
+
+import { UserService } from '@modules/user/user.service';
+import { BaseCRUDService } from '@shared/services/base-crud.service';
+
+import { AddWatchlistDTO } from './watchlist.dto';
+import { WatchlistItem } from './watchlist.model';
+
+@Injectable()
+export class WatchlistService extends BaseCRUDService<WatchlistItem> {
+  constructor(
+    @InjectRepository(WatchlistItem)
+    protected repo: Repository<WatchlistItem>,
+    private readonly userService: UserService,
+  ) {
+    super(repo);
+  }
+
+  async getByUserId(userId: string): Promise<OperationResult<WatchlistItem[]>> {
+    const items = await this.findAll({ userId });
+    return { success: true, data: items };
+  }
+
+  async add(
+    userId: string,
+    dto: AddWatchlistDTO,
+  ): Promise<OperationResult<WatchlistItem>> {
+    const user = await this.userService.findByID(userId);
+
+    if (!user) {
+      return { success: false, message: 'User not found' };
+    }
+
+    const exists = await this.findOne({ userId, symbol: dto.symbol });
+
+    if (exists) {
+      return { success: false, message: 'Symbol already in watchlist' };
+    }
+
+    const item = await this.create({ userId, symbol: dto.symbol });
+    return { success: true, data: item };
+  }
+
+  async remove(
+    userId: string,
+    symbol: string,
+  ): Promise<OperationResult<void>> {
+    const exists = await this.findOne({ userId, symbol });
+
+    if (!exists) {
+      return { success: false, message: 'Symbol not found in watchlist' };
+    }
+
+    await this.deleteOne({ userId, symbol });
+    return { success: true };
+  }
+}

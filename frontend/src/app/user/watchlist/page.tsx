@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import {
   Plus,
   Search,
@@ -8,71 +9,70 @@ import {
   TrendingDown,
   TrendingUp,
 } from "lucide-react";
-import { useState } from "react";
+import { toast } from "sonner";
 
 import { ButtonCustom } from "@/components/common/form/button";
+import {
+  useAddToWatchlist,
+  useQueryMarketList,
+  useRemoveFromWatchlist,
+} from "@/queries/watchlist/QueryHooksWatchlist";
+import { useWatchlistWithQuotes } from "@/queries/watchlist/useWatchlistWithQuotes";
+import { MarketListItem } from "@/types/watchlist/watchlist.type";
+import { MarketType } from "@/types/stock/stock.type";
 
-interface WatchlistItem {
-  id: string;
-  symbol: string;
-  name: string;
-  price: number;
-  change: number;
-  volume: number;
-  prediction: string;
-}
+import { AddStockModal } from "./components/AddStockModal";
 
 export default function WatchListPage() {
-  const [watchlist, setWatchlist] = useState<WatchlistItem[]>([
-    {
-      id: "1",
-      symbol: "VNM",
-      name: "Vinamilk",
-      price: 80500,
-      change: 2.3,
-      volume: 1250000,
-      prediction: "Tăng",
-    },
-    {
-      id: "2",
-      symbol: "VCB",
-      name: "Vietcombank",
-      price: 95200,
-      change: -1.2,
-      volume: 2100000,
-      prediction: "Giảm",
-    },
-    {
-      id: "3",
-      symbol: "HPG",
-      name: "Hòa Phát",
-      price: 28700,
-      change: 3.5,
-      volume: 3500000,
-      prediction: "Tăng",
-    },
-    {
-      id: "4",
-      symbol: "FPT",
-      name: "FPT Corporation",
-      price: 125000,
-      change: 1.8,
-      volume: 980000,
-      prediction: "Tăng",
-    },
-  ]);
-
   const [searchTerm, setSearchTerm] = useState("");
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [addSearchTerm, setAddSearchTerm] = useState("");
+  const [removingSymbol, setRemovingSymbol] = useState<string | null>(null);
 
-  const removeFromWatchlist = (id: string) => {
-    setWatchlist(watchlist.filter((item) => item.id !== id));
-  };
+  const { watchlist, watchlistSymbols } = useWatchlistWithQuotes();
+  const { data: stockList = [] } = useQueryMarketList(
+    MarketType.STOCK,
+    showAddModal,
+  );
+  const addMutation = useAddToWatchlist();
+  const removeMutation = useRemoveFromWatchlist();
 
   const filteredWatchlist = watchlist.filter(
     (item) =>
       item.symbol.toLowerCase().includes(searchTerm.toLowerCase()) ||
       item.name.toLowerCase().includes(searchTerm.toLowerCase()),
   );
+
+  const filteredCompanies = stockList.filter(
+    (c: MarketListItem) =>
+      c.symbol.toLowerCase().includes(addSearchTerm.toLowerCase()) ||
+      (c.description ?? "").toLowerCase().includes(addSearchTerm.toLowerCase()),
+  );
+
+  const handleAdd = async (symbol: string) => {
+    try {
+      await addMutation.mutateAsync(symbol);
+      setShowAddModal(false);
+      setAddSearchTerm("");
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "Không thể thêm cổ phiếu",
+      );
+    }
+  };
+
+  const handleRemove = async (symbol: string) => {
+    setRemovingSymbol(symbol);
+    try {
+      await removeMutation.mutateAsync(symbol);
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "Không thể xóa cổ phiếu",
+      );
+    } finally {
+      setRemovingSymbol(null);
+    }
+  };
 
   return (
     <div className="space-y-6 p-6">
@@ -95,9 +95,13 @@ export default function WatchListPage() {
               className="focus:border-accent-500 focus:ring-accent-500 rounded-lg border-2 border-gray-200 py-2 pr-4 pl-10 transition-all outline-none focus:ring-2"
             />
           </div>
-          <ButtonCustom className="bg-brand-900 hover:bg-brand-700 flex items-center space-x-2 rounded-lg px-4 py-2 text-white shadow-md transition-all hover:shadow-lg">
-            <Plus className="h-5 w-5" />
-            <span>Thêm</span>
+          <ButtonCustom
+            onClick={() => setShowAddModal(true)}
+            prefixIcon={<Plus className="h-5 w-5" />}
+            bgColor="bg-brand-900 hover:bg-brand-700"
+            className="space-x-2 px-4 shadow-md hover:shadow-lg"
+          >
+            Thêm
           </ButtonCustom>
         </div>
       </div>
@@ -123,7 +127,9 @@ export default function WatchListPage() {
         <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
           <div className="mb-1 text-sm text-gray-600">Tổng giá trị</div>
           <div className="text-brand-900 text-3xl">
-            {(watchlist.reduce((sum, w) => sum + w.price, 0) / 1000).toFixed(0)}
+            {(watchlist.reduce((sum, w) => sum + w.price, 0) / 1000).toFixed(
+              0,
+            )}
             K
           </div>
         </div>
@@ -188,7 +194,7 @@ export default function WatchListPage() {
                     )}
                     <span className="text-sm">
                       {item.change >= 0 ? "+" : ""}
-                      {item.change}%
+                      {item.change.toFixed(2)}%
                     </span>
                   </div>
                 </td>
@@ -208,10 +214,14 @@ export default function WatchListPage() {
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <ButtonCustom
-                    onClick={() => removeFromWatchlist(item.id)}
-                    className="rounded-lg p-2 text-red-600 transition-colors hover:bg-red-50"
+                    onClick={() => handleRemove(item.symbol)}
+                    disabled={removingSymbol === item.symbol}
+                    bgColor="bg-transparent hover:bg-red-50"
+                    transition="transition-colors"
+                    className="rounded-lg p-2 text-red-600 disabled:opacity-50"
+                    prefixIcon={<Trash2 className="h-5 w-5" />}
                   >
-                    <Trash2 className="h-5 w-5" />
+                    {null}
                   </ButtonCustom>
                 </td>
               </tr>
@@ -224,10 +234,29 @@ export default function WatchListPage() {
         <div className="rounded-xl border border-gray-200 bg-white p-12 text-center shadow-sm">
           <Star className="mx-auto mb-4 h-16 w-16 text-gray-300" />
           <h3 className="mb-2 text-xl text-gray-600">
-            Không tìm thấy cổ phiếu
+            {searchTerm ? "Không tìm thấy cổ phiếu" : "Watchlist trống"}
           </h3>
-          <p className="text-gray-500">Thử tìm kiếm với từ khóa khác</p>
+          <p className="text-gray-500">
+            {searchTerm
+              ? "Thử tìm kiếm với từ khóa khác"
+              : "Nhấn + Thêm để bắt đầu theo dõi cổ phiếu"}
+          </p>
         </div>
+      )}
+
+      {showAddModal && (
+        <AddStockModal
+          addSearchTerm={addSearchTerm}
+          setAddSearchTerm={setAddSearchTerm}
+          onClose={() => {
+            setShowAddModal(false);
+            setAddSearchTerm("");
+          }}
+          filteredCompanies={filteredCompanies}
+          watchlistSymbols={watchlistSymbols}
+          handleAdd={handleAdd}
+          isPending={addMutation.isPending}
+        />
       )}
     </div>
   );
