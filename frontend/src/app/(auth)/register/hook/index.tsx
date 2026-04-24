@@ -1,5 +1,6 @@
 "use client";
 
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -8,7 +9,7 @@ import { toast } from "sonner";
 import { handleShowMessage } from "@/helpers/error-code";
 import { signUpHandlers } from "@/services/auth/authHandlers";
 import { RegisterFormPayload } from "@/types/auth/auth.payload";
-import { zodResolver } from "@hookform/resolvers/zod";
+
 import { registerFormSchema } from "../validationSchema";
 
 export function useRegister() {

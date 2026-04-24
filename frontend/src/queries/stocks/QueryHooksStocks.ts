@@ -6,6 +6,7 @@ import {
   StockDataType,
   StockHistoricalDataType,
 } from "@/types/stock/stock.type";
+
 import {
   getIndexQuoteQueryFn,
   getQuoteHistoricalQueryFn,
@@ -28,7 +29,13 @@ export const initialStockData: StockDataType = {
 
 export const useQueryIndexQuote = (params: MarketQuoteParams) =>
   useQuery<StockDataType>({
-    queryKey: [QueryKeysStocks.ROOT, QueryKeysStocks.QUOTE, params.symbol, params.type, params.period],
+    queryKey: [
+      QueryKeysStocks.ROOT,
+      QueryKeysStocks.QUOTE,
+      params.symbol,
+      params.type,
+      params.period,
+    ],
     queryFn: () => getIndexQuoteQueryFn(params),
     placeholderData: initialStockData,
     refetchOnMount: true,
@@ -36,7 +43,13 @@ export const useQueryIndexQuote = (params: MarketQuoteParams) =>
 
 export const useQueryQuoteHistorical = (params: MarketQuoteParams) =>
   useQuery<StockHistoricalDataType[]>({
-    queryKey: [QueryKeysStocks.ROOT, QueryKeysStocks.HISTORICAL, params.symbol, params.type, params.period],
+    queryKey: [
+      QueryKeysStocks.ROOT,
+      QueryKeysStocks.HISTORICAL,
+      params.symbol,
+      params.type,
+      params.period,
+    ],
     queryFn: () => getQuoteHistoricalQueryFn(params),
     refetchOnMount: true,
   });

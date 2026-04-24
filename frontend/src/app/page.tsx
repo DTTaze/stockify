@@ -121,7 +121,7 @@ export default function Home() {
                     (height, i) => (
                       <div
                         key={i}
-                        className="from-brand-900 to-accent-500 flex-1 rounded-t bg-gradient-to-t"
+                        className="from-brand-900 to-accent-500 flex-1 rounded-t bg-linear-to-t"
                         style={{ height: `${height}%` }}
                       ></div>
                     ),
@@ -238,7 +238,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Stats Section */}
       <section className="px-4 py-20 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-7xl">
           <div className="from-primary to-brand-700 relative overflow-hidden rounded-3xl bg-linear-to-br p-12 lg:p-16">
@@ -285,7 +284,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* CTA Section */}
       <section className="px-4 py-20 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-4xl text-center">
           <h2 className="text-primary mb-6 text-4xl">

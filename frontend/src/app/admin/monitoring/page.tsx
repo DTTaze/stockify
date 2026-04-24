@@ -1,22 +1,22 @@
 "use client";
 
-import { useState } from "react";
 import {
   Activity,
+  AlertTriangle,
   Cpu,
   HardDrive,
-  Zap,
-  AlertTriangle,
   Info,
+  Zap,
 } from "lucide-react";
+import { useState } from "react";
 import {
-  LineChart,
+  CartesianGrid,
   Line,
+  LineChart,
+  ResponsiveContainer,
+  Tooltip,
   XAxis,
   YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
 } from "recharts";
 
 export default function SystemMonitoring() {

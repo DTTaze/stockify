@@ -5,6 +5,7 @@ import {
   StockDataType,
   StockHistoricalDataType,
 } from "@/types/stock/stock.type";
+
 import { stockServices } from ".";
 
 export const getIndexQuoteHandlers = async (

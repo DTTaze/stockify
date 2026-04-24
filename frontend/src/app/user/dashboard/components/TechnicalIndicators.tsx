@@ -1,4 +1,4 @@
-import { Activity, BarChart3, TrendingUp, ChevronRight } from "lucide-react";
+import { Activity, BarChart3, ChevronRight, TrendingUp } from "lucide-react";
 
 interface TechnicalIndicatorsProps {
   stock: string;

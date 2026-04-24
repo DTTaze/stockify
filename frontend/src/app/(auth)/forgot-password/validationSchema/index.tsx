@@ -1,4 +1,5 @@
 import { z } from "zod";
+
 import { emailRegex } from "@/utils/regex";
 
 export const forgotPasswordSchema = z.object({

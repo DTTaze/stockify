@@ -1,14 +1,14 @@
 "use client";
 
-import { useState } from "react";
 import {
-  Star,
-  TrendingUp,
-  TrendingDown,
   Plus,
-  Trash2,
   Search,
+  Star,
+  Trash2,
+  TrendingDown,
+  TrendingUp,
 } from "lucide-react";
+import { useState } from "react";
 
 interface WatchlistItem {
   id: string;

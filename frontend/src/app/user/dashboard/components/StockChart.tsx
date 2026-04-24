@@ -1,7 +1,5 @@
 "use client";
 
-import { useQueryQuoteHistorical } from "@/queries/stocks/QueryHooksStocks";
-import { MarketType, TimePeriod } from "@/types/stock/stock.type";
 import {
   Area,
   AreaChart,
@@ -11,6 +9,9 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+
+import { useQueryQuoteHistorical } from "@/queries/stocks/QueryHooksStocks";
+import { MarketType, TimePeriod } from "@/types/stock/stock.type";
 
 interface Props {
   symbol: string;

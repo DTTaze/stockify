@@ -1,5 +1,7 @@
-import { ProfileType } from "@/types/user/user.type";
 import { useQuery } from "@tanstack/react-query";
+
+import { ProfileType } from "@/types/user/user.type";
+
 import { getProfileQueryFn } from "./QueryFnsUser";
 import { QueryKeysUser } from "./QueryKeysUser";
 

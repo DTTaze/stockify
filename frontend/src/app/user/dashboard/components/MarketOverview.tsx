@@ -1,27 +1,30 @@
 "use client";
 
+import { useQueries } from "@tanstack/react-query";
 import { TrendingDown, TrendingUp } from "lucide-react";
 
 import { MARKET_INDICES } from "@/constants/stock";
-import {
-  initialStockData,
-  useQueryIndexQuote,
-} from "@/queries/stocks/QueryHooksStocks";
+import { getIndexQuoteQueryFn } from "@/queries/stocks/QueryFnsStocks";
+import { initialStockData } from "@/queries/stocks/QueryHooksStocks";
 import { MarketType, TimePeriod } from "@/types/stock/stock.type";
 
 function useMarketIndices() {
-  return MARKET_INDICES.map(({ label, symbol }) => {
-    const query = useQueryIndexQuote({
-      symbol,
-      type: MarketType.STOCK,
-      period: TimePeriod.ONE_DAY,
-    });
-
-    return {
-      label,
-      data: query.data ?? initialStockData,
-    };
+  const queries = useQueries({
+    queries: MARKET_INDICES.map(({ symbol }) => ({
+      queryKey: ["index-quote", symbol],
+      queryFn: () =>
+        getIndexQuoteQueryFn({
+          symbol,
+          type: MarketType.STOCK,
+          period: TimePeriod.ONE_DAY,
+        }),
+    })),
   });
+
+  return MARKET_INDICES.map(({ label }, index) => ({
+    label,
+    data: queries[index].data ?? initialStockData,
+  }));
 }
 
 export function MarketOverview() {

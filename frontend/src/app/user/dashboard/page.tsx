@@ -3,6 +3,7 @@
 import { useState } from "react";
 
 import { TimePeriod } from "@/types/stock/stock.type";
+
 import { MarketOverview } from "./components/MarketOverview";
 import { PredictionPanel } from "./components/PredictionPanel";
 import { StockChart } from "./components/StockChart";

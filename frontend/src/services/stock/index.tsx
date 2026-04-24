@@ -1,6 +1,7 @@
 import { AxiosResponse } from "axios";
 
 import { MarketQuoteParams } from "@/types/stock/stock.type";
+
 import axiosClient from "..";
 
 export const stockServices = {

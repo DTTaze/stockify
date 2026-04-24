@@ -1,4 +1,4 @@
-import { TrendingUp, TrendingDown, Calendar, Sparkles } from "lucide-react";
+import { Calendar, Sparkles, TrendingDown, TrendingUp } from "lucide-react";
 
 interface PredictionPanelProps {
   stock: string;

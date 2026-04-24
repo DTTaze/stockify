@@ -1,10 +1,11 @@
+import { Activity, Search, TrendingDown, TrendingUp } from "lucide-react";
+
 import {
   useQueryIndexQuote,
   useQueryStockCompanies,
 } from "@/queries/stocks/QueryHooksStocks";
 import { MarketType, TimePeriod } from "@/types/stock/stock.type";
 import { formatPrice } from "@/utils/string";
-import { Activity, Search, TrendingDown, TrendingUp } from "lucide-react";
 
 const TIME_RANGE_MAP: Record<string, TimePeriod> = {
   "1D": TimePeriod.ONE_DAY,

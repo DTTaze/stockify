@@ -6,6 +6,7 @@ import { ButtonCustom } from "@/components/common/form/button";
 import { FormInputText } from "@/components/common/form/input/FormInput";
 import { Form } from "@/components/ui/Form";
 import { cn } from "@/utils";
+
 import { useForgotPassword } from "../hook";
 
 export default function ForgotForm({ onSuccess }: any) {

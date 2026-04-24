@@ -1,7 +1,7 @@
 "use client";
 
+import { Calendar, Lock, Mail, Search, Unlock } from "lucide-react";
 import { useState } from "react";
-import { Search, Lock, Unlock, Mail, Calendar } from "lucide-react";
 
 interface User {
   id: string;

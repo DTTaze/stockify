@@ -1,13 +1,5 @@
 "use client";
 
-import { ButtonCustom } from "@/components/common/form/button";
-import { LoaderCircleCustom } from "@/components/common/ui/Feedback/LoaderCircle";
-import { useIsAuthenticated } from "@/hooks/common/useIsAuthenticated";
-import { useLogout } from "@/hooks/common/useLogout";
-import {
-  initialDataProfile,
-  useQueryProfile,
-} from "@/queries/users/QueryHooksUser";
 import {
   Bell,
   LayoutDashboard,
@@ -20,6 +12,15 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
+
+import { ButtonCustom } from "@/components/common/form/button";
+import { LoaderCircleCustom } from "@/components/common/ui/Feedback/LoaderCircle";
+import { useIsAuthenticated } from "@/hooks/common/useIsAuthenticated";
+import { useLogout } from "@/hooks/common/useLogout";
+import {
+  initialDataProfile,
+  useQueryProfile,
+} from "@/queries/users/QueryHooksUser";
 
 export default function Header() {
   const location = usePathname();
