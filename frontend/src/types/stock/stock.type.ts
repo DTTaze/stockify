@@ -1,3 +1,5 @@
+import { TrendingUp } from "lucide-react";
+
 export interface StockDataType {
   symbol: string;
   price: number;
@@ -34,4 +36,18 @@ export interface MarketQuoteParams {
   symbol: string;
   type: MarketType;
   period: TimePeriod;
+}
+
+export enum IndicatorStatus {
+  BULLISH = "bullish",
+  BEARISH = "bearish",
+  NEUTRAL = "neutral",
+}
+
+export interface IndicatorItem {
+  name: string;
+  value: string;
+  status: IndicatorStatus;
+  icon: typeof TrendingUp;
+  description: string;
 }

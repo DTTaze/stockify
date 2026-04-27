@@ -1,130 +1,185 @@
 import { Activity, BarChart3, ChevronRight, TrendingUp } from "lucide-react";
+import { useMemo } from "react";
 
-export function TechnicalIndicators() {
-  const indicators = [
-    {
-      name: "MA(20)",
-      value: "80,500",
-      status: "neutral",
-      icon: TrendingUp,
-      description: "Moving Average",
-    },
-    {
-      name: "EMA(50)",
-      value: "79,800",
-      status: "bullish",
-      icon: TrendingUp,
-      description: "Exponential MA",
-    },
-    {
-      name: "RSI(14)",
-      value: "58.2",
-      status: "neutral",
-      icon: Activity,
-      description: "Relative Strength",
-    },
-    {
-      name: "MACD",
-      value: "+125",
-      status: "bullish",
-      icon: BarChart3,
-      description: "Momentum",
-    },
-  ];
+import { TechnicalIndicatorsSkeleton } from "@/app/user/dashboard/components/TechnicalIndicatorsSkeleton";
+import { useQueryQuoteHistorical } from "@/queries/stocks/QueryHooksStocks";
+import {
+  IndicatorItem,
+  IndicatorStatus,
+  MarketType,
+  TimePeriod,
+} from "@/types/stock/stock.type";
+import {
+  calculateEMA,
+  calculateMACD,
+  calculateRSI,
+  calculateSMA,
+  getStatusColor,
+  getStatusDot,
+  getStatusText,
+} from "@/utils/technicalIndicator";
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "bullish":
-        return "bg-green-50 text-green-700 border-green-200";
-      case "bearish":
-        return "bg-red-50 text-red-700 border-red-200";
-      default:
-        return "bg-yellow-50 text-yellow-700 border-yellow-200";
-    }
-  };
+interface TechnicalIndicatorsProps {
+  stock: string;
+}
 
-  const getStatusText = (status: string) => {
-    switch (status) {
-      case "bullish":
-        return "Tăng";
-      case "bearish":
-        return "Giảm";
-      default:
-        return "Trung tính";
-    }
-  };
+export function TechnicalIndicators(props: TechnicalIndicatorsProps) {
+  const { stock } = props;
+  const { data = [], isLoading } = useQueryQuoteHistorical({
+    symbol: stock,
+    type: MarketType.STOCK,
+    period: TimePeriod.THREE_MONTH,
+  });
 
-  const getStatusDot = (status: string) => {
-    switch (status) {
-      case "bullish":
-        return "bg-green-500";
-      case "bearish":
-        return "bg-red-500";
-      default:
-        return "bg-yellow-500";
-    }
-  };
+  const indicators = useMemo(() => {
+    const prices = data.map((item) => item.close);
+
+    if (!prices.length) return [];
+
+    const latestPrice = prices[prices.length - 1];
+
+    const ma20 = calculateSMA(prices, 20);
+    const ema50 = calculateEMA(prices, 50);
+    const rsi14 = calculateRSI(prices, 14);
+    const macd = calculateMACD(prices);
+
+    const result: IndicatorItem[] = [
+      {
+        name: "MA(20)",
+        value: ma20?.toFixed(2) ?? "--",
+        status:
+          ma20 === null
+            ? IndicatorStatus.NEUTRAL
+            : latestPrice > ma20
+              ? IndicatorStatus.BULLISH
+              : IndicatorStatus.BEARISH,
+        icon: TrendingUp,
+        description: "Moving Average",
+      },
+      {
+        name: "EMA(50)",
+        value: ema50?.toFixed(2) ?? "--",
+        status:
+          ema50 === null
+            ? IndicatorStatus.NEUTRAL
+            : latestPrice > ema50
+              ? IndicatorStatus.BULLISH
+              : IndicatorStatus.BEARISH,
+        icon: TrendingUp,
+        description: "Exponential MA",
+      },
+      {
+        name: "RSI(14)",
+        value: rsi14?.toFixed(2) ?? "--",
+        status:
+          rsi14 === null
+            ? IndicatorStatus.NEUTRAL
+            : rsi14 > 70
+              ? IndicatorStatus.BEARISH
+              : rsi14 < 30
+                ? IndicatorStatus.BULLISH
+                : IndicatorStatus.NEUTRAL,
+        icon: Activity,
+        description: "Relative Strength",
+      },
+      {
+        name: "MACD",
+        value: macd?.toFixed(2) ?? "--",
+        status:
+          macd === null
+            ? IndicatorStatus.NEUTRAL
+            : macd > 0
+              ? IndicatorStatus.BULLISH
+              : IndicatorStatus.BEARISH,
+        icon: BarChart3,
+        description: "Momentum",
+      },
+    ];
+
+    return result;
+  }, [data]);
+
+  const bullishCount = indicators.filter(
+    (item) => item.status === IndicatorStatus.BULLISH,
+  ).length;
+
+  const neutralCount = indicators.filter(
+    (item) => item.status === IndicatorStatus.NEUTRAL,
+  ).length;
 
   return (
     <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
       <div className="mb-6 flex items-center justify-between">
-        <h2 className="text-brand-900 text-2xl">Chỉ báo kỹ thuật</h2>
+        <h2 className="text-brand-900 text-2xl">Chỉ báo kỹ thuật - {stock}</h2>
+
         <ChevronRight className="h-5 w-5 text-gray-400" />
       </div>
 
-      <div className="space-y-3">
-        {indicators.map((indicator, index) => {
-          const Icon = indicator.icon;
-          return (
-            <div
-              key={index}
-              className="group hover:border-accent-500 relative overflow-hidden rounded-xl border-2 border-gray-100 p-4 transition-all hover:shadow-sm"
-            >
-              <div className="flex items-center justify-between">
-                <div className="flex flex-1 items-center space-x-3">
-                  <div className="from-brand-900 to-brand-700 rounded-lg bg-linear-to-br p-2.5">
-                    <Icon className="hover:text-accent-500 h-5 w-5" />
-                  </div>
-                  <div className="flex-1">
-                    <div className="flex items-center space-x-2">
-                      <div className="text-brand-900 text-sm">
-                        {indicator.name}
+      {isLoading ? (
+        <TechnicalIndicatorsSkeleton />
+      ) : (
+        <>
+          <div className="space-y-3">
+            {indicators.map((indicator) => {
+              const Icon = indicator.icon;
+
+              return (
+                <div
+                  key={indicator.name}
+                  className="rounded-xl border-2 border-gray-100 p-4"
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-3">
+                      <div className="rounded-lg bg-gray-100 p-2">
+                        <Icon className="h-5 w-5" />
                       </div>
-                      <div
-                        className={`h-2 w-2 rounded-full ${getStatusDot(indicator.status)}`}
-                      ></div>
+
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span>{indicator.name}</span>
+
+                          <span
+                            className={`h-2 w-2 rounded-full ${getStatusDot(
+                              indicator.status,
+                            )}`}
+                          />
+                        </div>
+
+                        <div className="text-xs text-gray-500">
+                          {indicator.description}
+                        </div>
+                      </div>
                     </div>
-                    <div className="text-xs text-gray-500">
-                      {indicator.description}
+
+                    <div className="text-right">
+                      <div>{indicator.value}</div>
+
+                      <span
+                        className={`rounded-full border px-2 py-1 text-xs ${getStatusColor(
+                          indicator.status,
+                        )}`}
+                      >
+                        {getStatusText(indicator.status)}
+                      </span>
                     </div>
                   </div>
                 </div>
+              );
+            })}
+          </div>
 
-                <div className="text-right">
-                  <div className="text-brand-900 mb-1 text-lg">
-                    {indicator.value}
-                  </div>
-                  <span
-                    className={`rounded-full border px-2 py-1 text-xs ${getStatusColor(indicator.status)}`}
-                  >
-                    {getStatusText(indicator.status)}
-                  </span>
-                </div>
-              </div>
-            </div>
-          );
-        })}
-      </div>
+          <div className="mt-6 rounded-xl border bg-gray-50 p-4 text-xs">
+            <p>
+              <strong>Tín hiệu kỹ thuật:</strong> {bullishCount} bullish,{" "}
+              {neutralCount} neutral
+            </p>
 
-      <div className="mt-6 rounded-xl border border-gray-100 bg-linear-to-r from-gray-50 to-blue-50 p-4">
-        <p className="text-xs text-gray-700">
-          <strong className="text-brand-900">Tín hiệu kỹ thuật:</strong> 2
-          bullish, 2 neutral
-        </p>
-        <p className="mt-1 text-xs text-gray-600">
-          Các chỉ báo được cập nhật theo thời gian thực
-        </p>
-      </div>
+            <p className="mt-1 text-gray-500">
+              Các chỉ báo được cập nhật từ dữ liệu lịch sử
+            </p>
+          </div>
+        </>
+      )}
     </div>
   );
 }

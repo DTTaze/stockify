@@ -32,7 +32,7 @@ export default function DashBoardPage() {
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <div className="lg:col-span-2">
-          <PredictionPanel stock={stock} />
+          <PredictionPanel />
         </div>
         <div>
           <TechnicalIndicators stock={stock} />
