@@ -9,7 +9,12 @@ import { cn } from "@/utils";
 
 import { useForgotPassword } from "../hook";
 
-export default function ForgotForm({ onSuccess }: any) {
+interface ForgotFormProps {
+  onSuccess: (email: string) => void;
+}
+
+export default function ForgotForm(props: ForgotFormProps) {
+  const { onSuccess } = props;
   const { form, onSubmit, loading, email } = useForgotPassword(onSuccess);
 
   const { control, handleSubmit, formState } = form;

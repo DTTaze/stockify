@@ -1,6 +1,15 @@
 import { CheckCircle } from "lucide-react";
 
-export default function ForgotSuccess({ email, onRetry }: any) {
+import { ButtonCustom } from "@/components/common/form/button";
+
+interface ForgotSuccessProps {
+  email: string;
+  onRetry: () => void;
+}
+
+export default function ForgotSuccess(props: ForgotSuccessProps) {
+  const { email, onRetry } = props;
+
   return (
     <div className="text-center">
       <div className="mb-6 flex justify-center">
@@ -17,12 +26,12 @@ export default function ForgotSuccess({ email, onRetry }: any) {
 
       <div className="text-brand-900 mb-6 rounded-lg bg-blue-50 p-4 text-sm">
         Không nhận được email? Kiểm tra spam hoặc{" "}
-        <button
+        <ButtonCustom
           onClick={onRetry}
           className="hover:text-accent-500 hover:underline"
         >
           thử lại
-        </button>
+        </ButtonCustom>
       </div>
     </div>
   );

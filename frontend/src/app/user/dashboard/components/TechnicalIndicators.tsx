@@ -1,10 +1,6 @@
 import { Activity, BarChart3, ChevronRight, TrendingUp } from "lucide-react";
 
-interface TechnicalIndicatorsProps {
-  stock: string;
-}
-
-export function TechnicalIndicators({ stock }: TechnicalIndicatorsProps) {
+export function TechnicalIndicators() {
   const indicators = [
     {
       name: "MA(20)",

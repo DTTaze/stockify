@@ -1,10 +1,6 @@
 import { Calendar, Sparkles, TrendingDown, TrendingUp } from "lucide-react";
 
-interface PredictionPanelProps {
-  stock: string;
-}
-
-export function PredictionPanel({ stock }: PredictionPanelProps) {
+export function PredictionPanel() {
   const predictions = [
     { day: "Ngày mai", price: 82500, change: 2.3, trend: "UP", confidence: 92 },
     { day: "+3 ngày", price: 84200, change: 4.5, trend: "UP", confidence: 88 },

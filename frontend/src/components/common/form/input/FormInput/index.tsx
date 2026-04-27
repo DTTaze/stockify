@@ -27,7 +27,6 @@ export interface PropsFormInput<T extends FieldValues> {
   labelClassName?: string;
   messageClassName?: string;
   defaultValue?: FieldPathValue<T, FieldPath<T>>;
-  // eslint-disable-next-line no-unused-vars
   children?: (field: ControllerRenderProps<T, FieldPath<T>>) => ReactNode;
 }
 

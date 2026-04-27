@@ -9,7 +9,7 @@ import { forgotPasswordSchema } from "../validationSchema";
 
 type ForgotFormValues = z.infer<typeof forgotPasswordSchema>;
 
-export function useForgotPassword(onSuccess?: () => void) {
+export function useForgotPassword(onSuccess?: (email: string) => void) {
   const [loading, setLoading] = useState(false);
 
   const form = useForm<ForgotFormValues>({
@@ -30,7 +30,7 @@ export function useForgotPassword(onSuccess?: () => void) {
 
       console.log("Send reset link:", data.email);
 
-      onSuccess?.();
+      onSuccess?.(data.email);
     } finally {
       setLoading(false);
     }

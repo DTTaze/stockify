@@ -1,4 +1,3 @@
-/* eslint-disable no-unused-vars */
 export enum SocialAuthEnum {
   SOCIAL_AUTH_ERROR = "SOCIAL_AUTH_ERROR",
   SOCIAL_AUTH_SUCCESS = "SOCIAL_AUTH_SUCCESS",

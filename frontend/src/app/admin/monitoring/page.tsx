@@ -19,6 +19,8 @@ import {
   YAxis,
 } from "recharts";
 
+import { ButtonCustom } from "@/components/common/form/button";
+
 export default function SystemMonitoring() {
   const [selectedMetric, setSelectedMetric] = useState<
     "cpu" | "memory" | "requests"
@@ -198,7 +200,7 @@ export default function SystemMonitoring() {
             <p className="mt-1 text-sm text-gray-600">Real-time monitoring</p>
           </div>
           <div className="flex space-x-2">
-            <button
+            <ButtonCustom
               onClick={() => setSelectedMetric("cpu")}
               className={`rounded-lg px-4 py-2 text-sm transition-all ${
                 selectedMetric === "cpu"
@@ -207,8 +209,8 @@ export default function SystemMonitoring() {
               }`}
             >
               CPU
-            </button>
-            <button
+            </ButtonCustom>
+            <ButtonCustom
               onClick={() => setSelectedMetric("memory")}
               className={`rounded-lg px-4 py-2 text-sm transition-all ${
                 selectedMetric === "memory"
@@ -217,8 +219,8 @@ export default function SystemMonitoring() {
               }`}
             >
               Memory
-            </button>
-            <button
+            </ButtonCustom>
+            <ButtonCustom
               onClick={() => setSelectedMetric("requests")}
               className={`rounded-lg px-4 py-2 text-sm transition-all ${
                 selectedMetric === "requests"
@@ -227,7 +229,7 @@ export default function SystemMonitoring() {
               }`}
             >
               Requests
-            </button>
+            </ButtonCustom>
           </div>
         </div>
 

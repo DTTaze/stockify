@@ -1,5 +1,4 @@
 export enum SocialProviderEnum {
-  // eslint-disable-next-line no-unused-vars
   GOOGLE = "google",
 }
 

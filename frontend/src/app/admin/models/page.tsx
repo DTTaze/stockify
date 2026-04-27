@@ -10,6 +10,8 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 
+import { ButtonCustom } from "@/components/common/form/button";
+
 interface Model {
   id: string;
   name: string;
@@ -103,7 +105,7 @@ export default function ModelManagement() {
 
   const handleRollback = (modelId: string) => {
     // Simulate rollback to previous version
-    alert(`Rollback model ${modelId} to previous version`);
+    alert(`Rollback model ${modelId} to previous version ${trainingModel}`);
   };
 
   return (
@@ -113,9 +115,9 @@ export default function ModelManagement() {
           <h1 className="text-brand-900 text-3xl">Quản lý Model</h1>
           <p className="mt-1 text-gray-600">Quản lý và triển khai AI models</p>
         </div>
-        <button className="bg-brand-900 hover:bg-brand-700 rounded-lg px-4 py-2 text-white shadow-md transition-all">
+        <ButtonCustom className="bg-brand-900 hover:bg-brand-700 rounded-lg px-4 py-2 text-white shadow-md transition-all">
           Thêm Model mới
-        </button>
+        </ButtonCustom>
       </div>
 
       {/* Stats */}
@@ -219,41 +221,41 @@ export default function ModelManagement() {
             </div>
 
             <div className="flex items-center space-x-3">
-              <button
+              <ButtonCustom
                 onClick={() => handleTrain(model.id)}
                 disabled={model.status === "training"}
                 className="flex items-center space-x-2 rounded-lg border border-blue-200 bg-blue-50 px-4 py-2 text-blue-700 transition-all hover:bg-blue-100 disabled:opacity-50"
               >
                 <Cpu className="h-4 w-4" />
                 <span>Train</span>
-              </button>
+              </ButtonCustom>
 
               {model.status === "running" ? (
-                <button
+                <ButtonCustom
                   onClick={() => handleStop(model.id)}
                   className="flex items-center space-x-2 rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-red-700 transition-all hover:bg-red-100"
                 >
                   <Square className="h-4 w-4" />
                   <span>Stop</span>
-                </button>
+                </ButtonCustom>
               ) : (
-                <button
+                <ButtonCustom
                   onClick={() => handleDeploy(model.id)}
                   disabled={model.status === "training"}
                   className="flex items-center space-x-2 rounded-lg border border-green-200 bg-green-50 px-4 py-2 text-green-700 transition-all hover:bg-green-100 disabled:opacity-50"
                 >
                   <Play className="h-4 w-4" />
                   <span>Deploy</span>
-                </button>
+                </ButtonCustom>
               )}
 
-              <button
+              <ButtonCustom
                 onClick={() => handleRollback(model.id)}
                 className="flex items-center space-x-2 rounded-lg border border-gray-200 bg-gray-50 px-4 py-2 text-gray-700 transition-all hover:bg-gray-100"
               >
                 <RotateCcw className="h-4 w-4" />
                 <span>Rollback</span>
-              </button>
+              </ButtonCustom>
             </div>
           </div>
         ))}

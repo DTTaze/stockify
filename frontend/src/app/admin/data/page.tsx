@@ -10,6 +10,8 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 
+import { ButtonCustom } from "@/components/common/form/button";
+
 interface StockData {
   symbol: string;
   name: string;
@@ -105,7 +107,7 @@ export default function DataManagement() {
           </p>
         </div>
         <div className="flex items-center space-x-3">
-          <button
+          <ButtonCustom
             onClick={updateAllData}
             disabled={updating !== null}
             className="bg-brand-900 hover:bg-brand-700 flex items-center space-x-2 rounded-lg px-4 py-2 text-white shadow-md transition-all disabled:opacity-50"
@@ -114,15 +116,15 @@ export default function DataManagement() {
               className={`h-5 w-5 ${updating === "all" ? "animate-spin" : ""}`}
             />
             <span>Cập nhật tất cả</span>
-          </button>
-          <button className="flex items-center space-x-2 rounded-lg border-2 border-gray-200 bg-white px-4 py-2 text-gray-700 transition-all hover:bg-gray-50">
+          </ButtonCustom>
+          <ButtonCustom className="flex items-center space-x-2 rounded-lg border-2 border-gray-200 bg-white px-4 py-2 text-gray-700 transition-all hover:bg-gray-50">
             <Download className="h-5 w-5" />
             <span>Export</span>
-          </button>
-          <button className="flex items-center space-x-2 rounded-lg border-2 border-gray-200 bg-white px-4 py-2 text-gray-700 transition-all hover:bg-gray-50">
+          </ButtonCustom>
+          <ButtonCustom className="flex items-center space-x-2 rounded-lg border-2 border-gray-200 bg-white px-4 py-2 text-gray-700 transition-all hover:bg-gray-50">
             <Upload className="h-5 w-5" />
             <span>Import</span>
-          </button>
+          </ButtonCustom>
         </div>
       </div>
 
@@ -215,7 +217,7 @@ export default function DataManagement() {
                   </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <button
+                  <ButtonCustom
                     onClick={() => updateStockData(stock.symbol)}
                     disabled={updating !== null}
                     className="bg-brand-900 hover:bg-brand-700 flex items-center space-x-2 rounded-lg px-3 py-2 text-white transition-all disabled:opacity-50"
@@ -224,7 +226,7 @@ export default function DataManagement() {
                       className={`h-4 w-4 ${updating === stock.symbol ? "animate-spin" : ""}`}
                     />
                     <span>Cập nhật</span>
-                  </button>
+                  </ButtonCustom>
                 </td>
               </tr>
             ))}

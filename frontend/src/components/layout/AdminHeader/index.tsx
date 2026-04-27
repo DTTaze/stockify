@@ -12,6 +12,8 @@ import {
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
+import { ButtonCustom } from "@/components/common/form/button";
+
 export default function AdminHeader() {
   const location = usePathname();
   const navItems = [
@@ -47,16 +49,16 @@ export default function AdminHeader() {
                 </div>
               </div>
 
-              <button
+              <ButtonCustom
                 // onClick={handleLogout}
                 className="flex items-center space-x-2 rounded-lg border border-white/20 bg-white/10 px-4 py-2 backdrop-blur-sm transition-all hover:bg-white/20"
               >
                 <LogOut className="h-4 w-4" />
                 <span className="text-sm">Đăng xuất</span>
-              </button>
+              </ButtonCustom>
             </div>
 
-            <button
+            <ButtonCustom
               //   onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               className="rounded-lg p-2 hover:bg-white/10 md:hidden"
             >
@@ -64,8 +66,8 @@ export default function AdminHeader() {
                 <X className="h-6 w-6" />
               ) : (
                 <Menu className="h-6 w-6" />
-              )} */}
-            </button>
+              )} */}{" "}
+            </ButtonCustom>
           </div>
         </div>
       </header>

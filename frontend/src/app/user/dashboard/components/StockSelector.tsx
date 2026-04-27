@@ -1,5 +1,6 @@
 import { Activity, Search, TrendingDown, TrendingUp } from "lucide-react";
 
+import { ButtonCustom } from "@/components/common/form/button";
 import {
   useQueryIndexQuote,
   useQueryStockCompanies,
@@ -85,7 +86,7 @@ export function StockSelector(props: StockSelectorProps) {
 
       <div className="flex flex-wrap gap-2">
         {Object.entries(TIME_RANGE_MAP).map(([label, valuePeriod]) => (
-          <button
+          <ButtonCustom
             key={label}
             onClick={() => onChangePeriod(valuePeriod)}
             className={`rounded-lg px-4 py-2 text-sm transition ${
@@ -95,7 +96,7 @@ export function StockSelector(props: StockSelectorProps) {
             }`}
           >
             {label}
-          </button>
+          </ButtonCustom>
         ))}
       </div>
     </div>

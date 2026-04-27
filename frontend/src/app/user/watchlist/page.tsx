@@ -10,6 +10,8 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 
+import { ButtonCustom } from "@/components/common/form/button";
+
 interface WatchlistItem {
   id: string;
   symbol: string;
@@ -93,10 +95,10 @@ export default function WatchListPage() {
               className="focus:border-accent-500 focus:ring-accent-500 rounded-lg border-2 border-gray-200 py-2 pr-4 pl-10 transition-all outline-none focus:ring-2"
             />
           </div>
-          <button className="bg-brand-900 hover:bg-brand-700 flex items-center space-x-2 rounded-lg px-4 py-2 text-white shadow-md transition-all hover:shadow-lg">
+          <ButtonCustom className="bg-brand-900 hover:bg-brand-700 flex items-center space-x-2 rounded-lg px-4 py-2 text-white shadow-md transition-all hover:shadow-lg">
             <Plus className="h-5 w-5" />
             <span>Thêm</span>
-          </button>
+          </ButtonCustom>
         </div>
       </div>
 
@@ -205,12 +207,12 @@ export default function WatchListPage() {
                   </span>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <button
+                  <ButtonCustom
                     onClick={() => removeFromWatchlist(item.id)}
                     className="rounded-lg p-2 text-red-600 transition-colors hover:bg-red-50"
                   >
                     <Trash2 className="h-5 w-5" />
-                  </button>
+                  </ButtonCustom>
                 </td>
               </tr>
             ))}

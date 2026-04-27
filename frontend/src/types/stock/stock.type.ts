@@ -1,20 +1,12 @@
 export interface StockDataType {
-  code: string;
-  name: string;
+  symbol: string;
   price: number;
-  change: number;
   change_percent: number;
-  high: number;
-  low: number;
-  open: number;
   volume: number;
-  timestamp: string;
 }
 
 export interface StockHistoricalDataType {
   date: string;
-  open: number;
-  low: number;
   close: number;
   volume: number;
 }

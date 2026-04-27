@@ -3,6 +3,8 @@
 import { Calendar, Lock, Mail, Search, Unlock } from "lucide-react";
 import { useState } from "react";
 
+import { ButtonCustom } from "@/components/common/form/button";
+
 interface User {
   id: string;
   email: string;
@@ -162,7 +164,7 @@ export default function UserManagement() {
                   </span>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <button
+                  <ButtonCustom
                     onClick={() => toggleUserStatus(user.id)}
                     className={`flex items-center space-x-2 rounded-lg px-3 py-2 text-sm transition-all ${
                       user.status === "active"
@@ -181,7 +183,7 @@ export default function UserManagement() {
                         <span>Mở khóa</span>
                       </>
                     )}
-                  </button>
+                  </ButtonCustom>
                 </td>
               </tr>
             ))}

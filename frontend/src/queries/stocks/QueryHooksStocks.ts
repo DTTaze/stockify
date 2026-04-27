@@ -15,16 +15,10 @@ import {
 import { QueryKeysStocks } from "./QueryKeysStocks";
 
 export const initialStockData: StockDataType = {
-  code: "",
-  name: "",
+  symbol: "",
   price: 0,
-  change: 0,
   change_percent: 0,
-  high: 0,
-  low: 0,
-  open: 0,
   volume: 0,
-  timestamp: "",
 };
 
 export const useQueryIndexQuote = (params: MarketQuoteParams) =>
