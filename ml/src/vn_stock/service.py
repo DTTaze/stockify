@@ -112,7 +112,8 @@ class StockService:
                 "change_percent": round(change_percent, 2),
                 "volume": int(latest.get("volume", 0)),
             }
-
+        except SystemExit as e:
+            raise DataFetchException("VNStock rate limit exceeded")
         except Exception as e:
             logger.error(f"Quote error {symbol}: {e}", exc_info=True)
             raise

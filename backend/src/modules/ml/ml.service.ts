@@ -54,6 +54,11 @@ export class MLService extends OutboundPartnerService {
           data: response.data,
         };
       }
+
+      return {
+        success: false,
+        message: response.message || 'internal server error',
+      };
     } catch (error) {
       this.logger.error(`Failed to fetch index quote for ${dto.symbol}`);
       throw error;
@@ -82,6 +87,11 @@ export class MLService extends OutboundPartnerService {
           data: response.data.data,
         };
       }
+
+      return {
+        success: false,
+        message: response.message || 'internal server error',
+      };
     } catch (error) {
       this.logger.error(`Failed to fetch index quote for ${dto.symbol}`);
       throw error;
