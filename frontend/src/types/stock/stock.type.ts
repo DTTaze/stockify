@@ -51,3 +51,24 @@ export interface IndicatorItem {
   icon: typeof TrendingUp;
   description: string;
 }
+
+export interface StockPrediction {
+  symbol: string;
+  current_price: number;
+
+  tomorrow: number;
+  tomorrow_confidence: number;
+
+  day3: number;
+  day3_confidence: number;
+
+  day7: number;
+  day7_confidence: number;
+
+  day14: number;
+  day14_confidence: number;
+}
+
+export interface SupportedSymbolsType {
+  symbols: string[];
+}

@@ -12,7 +12,7 @@ import { TechnicalIndicators } from "./components/TechnicalIndicators";
 import TradingVolumeChart from "./components/TradingVolumeChart";
 
 export default function DashBoardPage() {
-  const [stock, setSelectedStock] = useState("FPT");
+  const [stock, setSelectedStock] = useState("VCB");
   const [period, setPeriod] = useState(TimePeriod.ONE_DAY);
 
   return (
@@ -32,7 +32,7 @@ export default function DashBoardPage() {
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <div className="lg:col-span-2">
-          <PredictionPanel />
+          <PredictionPanel stock={stock} />
         </div>
         <div>
           <TechnicalIndicators stock={stock} />

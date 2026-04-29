@@ -40,6 +40,9 @@ saved_models/
 *.pth
 *.pkl
 
+ml/src/saved_models
+ml/src/data/processed
+
 # =========================
 # Logs
 # =========================

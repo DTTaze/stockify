@@ -10,7 +10,12 @@ import { ConfigService } from '@nestjs/config';
 import { ENV_KEY, INJECTION_TOKEN } from '@shared/constants';
 import { OutboundPartnerService } from '@shared/services/outbound-partner.service';
 
-import { IndexQuoteDto, MarketQuoteDto } from './ml.dto';
+import {
+  IndexQuoteDto,
+  MarketQuoteDto,
+  PredictionDto,
+  SupportedSymbolsDto,
+} from './ml.dto';
 
 @Injectable()
 export class MLService extends OutboundPartnerService {
@@ -95,6 +100,66 @@ export class MLService extends OutboundPartnerService {
     } catch (error) {
       this.logger.error(`Failed to fetch index quote for ${dto.symbol}`);
       throw error;
+    }
+  }
+
+  public async getPrediction(
+    symbol: string,
+  ): Promise<OperationResult<PredictionDto>> {
+    try {
+      const response = await this.httpService.send(
+        'get',
+        this.baseUrl + `/prediction/${symbol.toUpperCase()}`,
+      );
+
+      if (response.success && response.data) {
+        return {
+          success: true,
+          data: response.data,
+        };
+      }
+
+      return {
+        success: false,
+        message: response.message || 'Failed to fetch prediction',
+      };
+    } catch (error) {
+      this.logger.error(`Failed to fetch prediction for ${symbol}`);
+      return {
+        success: false,
+        message: 'Failed to fetch prediction',
+      };
+    }
+  }
+
+  public async getSupportedSymbols(): Promise<
+    OperationResult<SupportedSymbolsDto>
+  > {
+    try {
+      const response = await this.httpService.send(
+        'get',
+        this.baseUrl + `/prediction/symbols`,
+      );
+
+      if (response.success && response.data) {
+        return {
+          success: true,
+          data: response.data,
+        };
+      }
+
+      return {
+        success: false,
+        message: response.message || 'Failed to fetch supported symbols',
+        data: { symbols: [] },
+      };
+    } catch (error) {
+      this.logger.error('Failed to fetch supported symbols');
+      return {
+        success: false,
+        message: 'Failed to fetch supported symbols',
+        data: { symbols: [] },
+      };
     }
   }
 }

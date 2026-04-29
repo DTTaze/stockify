@@ -17,4 +17,10 @@ export const stockServices = {
 
   getStockCompanies: (): Promise<AxiosResponse> =>
     axiosClient.get(`stock-companies`),
+
+  getPrediction: (symbol: string): Promise<AxiosResponse> =>
+    axiosClient.get(`ml/prediction/${symbol}`),
+
+  getSupportedSymbols: (): Promise<AxiosResponse> =>
+    axiosClient.get(`ml/prediction/symbols`),
 };

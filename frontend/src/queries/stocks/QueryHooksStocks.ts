@@ -5,12 +5,16 @@ import {
   StockCompaniesDataType,
   StockDataType,
   StockHistoricalDataType,
+  StockPrediction,
+  SupportedSymbolsType,
 } from "@/types/stock/stock.type";
 
 import {
   getIndexQuoteQueryFn,
+  getPredictionQueryFn,
   getQuoteHistoricalQueryFn,
   getStockCompaniesQueryFn,
+  getSupportedSymbolsQueryFn,
 } from "./QueryFnsStocks";
 import { QueryKeysStocks } from "./QueryKeysStocks";
 
@@ -52,5 +56,20 @@ export const useQueryStockCompanies = () =>
   useQuery<StockCompaniesDataType[]>({
     queryKey: [QueryKeysStocks.ROOT, QueryKeysStocks.COMPANIES],
     queryFn: () => getStockCompaniesQueryFn(),
+    refetchOnMount: true,
+  });
+
+export const useQueryPrediction = (symbol: string, enabled?: boolean) =>
+  useQuery<StockPrediction>({
+    queryKey: [QueryKeysStocks.ROOT, QueryKeysStocks.PREDICTION, symbol],
+    queryFn: () => getPredictionQueryFn(symbol),
+    enabled: enabled !== undefined ? enabled : !!symbol,
+    refetchOnMount: true,
+  });
+
+export const useQuerySupportedSymbols = () =>
+  useQuery<SupportedSymbolsType>({
+    queryKey: [QueryKeysStocks.ROOT, QueryKeysStocks.SUPPORTED_SYMBOLS],
+    queryFn: () => getSupportedSymbolsQueryFn(),
     refetchOnMount: true,
   });

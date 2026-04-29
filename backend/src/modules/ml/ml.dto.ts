@@ -73,4 +73,49 @@ export class MarketQuoteDto {
   period: TimePeriod;
 }
 
+export class PredictionDto {
+  @ApiProperty({
+    description: 'Stock symbol',
+    example: 'VCB',
+  })
+  symbol: string;
+
+  @ApiProperty({
+    description: 'Predicted price for tomorrow',
+    example: 91200,
+    required: false,
+  })
+  tomorrow?: number;
+
+  @ApiProperty({
+    description: 'Predicted price for 3 days ahead',
+    example: 91800,
+    required: false,
+  })
+  day3?: number;
+
+  @ApiProperty({
+    description: 'Predicted price for 7 days ahead',
+    example: 93000,
+    required: false,
+  })
+  day7?: number;
+
+  @ApiProperty({
+    description: 'Predicted price for 14 days ahead',
+    example: 94500,
+    required: false,
+  })
+  day14?: number;
+}
+
+export class SupportedSymbolsDto {
+  @ApiProperty({
+    description: 'List of supported stock symbols for prediction',
+    example: ['VCB', 'VIC', 'VNM'],
+    type: [String],
+  })
+  symbols: string[];
+}
+
 export class MLDTO {}

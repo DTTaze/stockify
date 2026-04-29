@@ -1,11 +1,11 @@
 import { HttpResponse } from 'mvc-common-toolkit';
 
-import { Controller, Get, Query } from '@nestjs/common';
+import { Controller, Get, Param, Query } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 
 import { generateInternalServerResult } from '@shared/helpers/operation-result.helper';
 
-import { MarketQuoteDto } from './ml.dto';
+import { MarketQuoteDto, PredictionDto, SupportedSymbolsDto } from './ml.dto';
 import { MLService } from './ml.service';
 
 @ApiTags('ML')
@@ -41,6 +41,44 @@ export class MLController {
     @Query() query: MarketQuoteDto,
   ): Promise<HttpResponse> {
     const result = await this.mlService.getMarketHistory(query);
+
+    if (!result.success) {
+      return generateInternalServerResult(result.message);
+    }
+
+    return {
+      success: true,
+      data: result.data,
+    };
+  }
+
+  @Get('prediction/symbols')
+  @ApiOperation({
+    summary: 'Get supported symbols',
+    description:
+      'Get list of stock symbols with available trained models for predictions',
+  })
+  async getSupportedSymbols(): Promise<HttpResponse> {
+    const result = await this.mlService.getSupportedSymbols();
+
+    if (!result.success) {
+      return generateInternalServerResult(result.message);
+    }
+
+    return {
+      success: true,
+      data: result.data,
+    };
+  }
+
+  @Get('prediction/:symbol')
+  @ApiOperation({
+    summary: 'Get AI price prediction',
+    description:
+      'Get AI predicted prices for tomorrow, 3 days, 7 days, and 14 days ahead',
+  })
+  async getPrediction(@Param('symbol') symbol: string): Promise<HttpResponse> {
+    const result = await this.mlService.getPrediction(symbol);
 
     if (!result.success) {
       return generateInternalServerResult(result.message);
