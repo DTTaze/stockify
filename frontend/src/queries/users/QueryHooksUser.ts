@@ -1,8 +1,9 @@
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-import { ProfileType } from "@/types/user/user.type";
+import { updateUserStatusHandler } from "@/services/user/userHandlers";
+import { AdminUserItem, ProfileType, UserStatus } from "@/types/user/user.type";
 
-import { getProfileQueryFn } from "./QueryFnsUser";
+import { getUsersQueryFn, getProfileQueryFn } from "./QueryFnsUser";
 import { QueryKeysUser } from "./QueryKeysUser";
 
 export const initialDataProfile: ProfileType = {
@@ -20,3 +21,23 @@ export const useQueryProfile = (isAuthenticated?: boolean) =>
     staleTime: Infinity,
     enabled: !!isAuthenticated,
   });
+
+export const useQueryAdminUsers = () =>
+  useQuery<AdminUserItem[]>({
+    queryKey: [QueryKeysUser.USER, QueryKeysUser.USER_LIST],
+    queryFn: getUsersQueryFn,
+  });
+
+export const useMutateUserStatus = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, status }: { id: string; status: UserStatus }) =>
+      updateUserStatusHandler(id, status),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: [QueryKeysUser.USER, QueryKeysUser.USER_LIST],
+        exact: true,
+      });
+    },
+  });
+};
