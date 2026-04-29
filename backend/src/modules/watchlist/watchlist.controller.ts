@@ -28,7 +28,7 @@ export class WatchlistController {
 
   @Get()
   async getWatchlist(@RequestUser() user: User): Promise<HttpResponse> {
-    const result = await this.watchlistService.getByUserId(user.id);
+    const result = await this.watchlistService.getWatchlistByUserId(user.id);
 
     if (!result.success) {
       return generateInternalServerResult(result.message);
@@ -42,7 +42,7 @@ export class WatchlistController {
     @RequestUser() user: User,
     @Body() dto: AddWatchlistDTO,
   ): Promise<HttpResponse> {
-    const result = await this.watchlistService.add(user.id, dto);
+    const result = await this.watchlistService.addToWatchlist(user.id, dto);
 
     if (!result.success) {
       return generateInternalServerResult(result.message);

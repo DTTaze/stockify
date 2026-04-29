@@ -1,12 +1,10 @@
 import { ApiResponse } from "@/types/api";
+import {
+  MarketListItem,
+  WatchlistItemRaw,
+} from "@/types/watchlist/watchlist.type";
 
 import { watchlistServices } from ".";
-
-export type WatchlistItemRaw = {
-  id: string;
-  symbol: string;
-  userId: string;
-};
 
 export const getWatchlistHandlers = async (): Promise<
   ApiResponse<WatchlistItemRaw[]>
@@ -15,21 +13,19 @@ export const getWatchlistHandlers = async (): Promise<
   return response.data;
 };
 
-export const addToWatchlistHandlers = async (
-  symbol: string,
-): Promise<ApiResponse<void>> => {
-  const response = await watchlistServices.addToWatchlist(symbol);
-  return response.data;
+export const addToWatchlistHandlers = async (symbol: string): Promise<void> => {
+  const data = (await watchlistServices.addToWatchlist(symbol)).data;
+  if (!data.success) {
+    throw new Error(data.message);
+  }
 };
 
-export const removeFromWatchlistHandlers = async (
-  symbol: string,
-): Promise<ApiResponse<void>> => {
-  const response = await watchlistServices.removeFromWatchlist(symbol);
-  return response.data;
+export const removeFromWatchlistHandlers = async (symbol: string): Promise<void> => {
+  const data = (await watchlistServices.removeFromWatchlist(symbol)).data;
+  if (!data.success) {
+    throw new Error(data.message);
+  }
 };
-
-export type MarketListItem = { symbol: string; description: string | null };
 
 export const getMarketListHandlers = async (
   type: string,

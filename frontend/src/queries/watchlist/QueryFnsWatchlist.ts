@@ -1,9 +1,11 @@
 import {
   getMarketListHandlers,
   getWatchlistHandlers,
+} from "@/services/watchlist/watchlistHandlers";
+import {
   MarketListItem,
   WatchlistItemRaw,
-} from "@/services/watchlist/watchlistHandlers";
+} from "@/types/watchlist/watchlist.type";
 
 export const getWatchlistQueryFn = async (): Promise<WatchlistItemRaw[]> => {
   const response = await getWatchlistHandlers();

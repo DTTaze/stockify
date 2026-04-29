@@ -19,12 +19,12 @@ export class WatchlistService extends BaseCRUDService<WatchlistItem> {
     super(repo);
   }
 
-  async getByUserId(userId: string): Promise<OperationResult<WatchlistItem[]>> {
+  async getWatchlistByUserId(userId: string): Promise<OperationResult<WatchlistItem[]>> {
     const items = await this.findAll({ userId });
     return { success: true, data: items };
   }
 
-  async add(
+  async addToWatchlist(
     userId: string,
     dto: AddWatchlistDTO,
   ): Promise<OperationResult<WatchlistItem>> {

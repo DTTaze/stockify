@@ -2,10 +2,12 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import {
   addToWatchlistHandlers,
-  MarketListItem,
   removeFromWatchlistHandlers,
-  WatchlistItemRaw,
 } from "@/services/watchlist/watchlistHandlers";
+import {
+  MarketListItem,
+  WatchlistItemRaw,
+} from "@/types/watchlist/watchlist.type";
 
 import { getMarketListQueryFn, getWatchlistQueryFn } from "./QueryFnsWatchlist";
 import { QueryKeysWatchlist } from "./QueryKeysWatchlist";
@@ -28,7 +30,7 @@ export const useAddToWatchlist = () => {
   return useMutation({
     mutationFn: (symbol: string) => addToWatchlistHandlers(symbol),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [QueryKeysWatchlist.ROOT] });
+      queryClient.invalidateQueries({ queryKey: [QueryKeysWatchlist.ROOT], exact: true });
     },
   });
 };
@@ -38,7 +40,7 @@ export const useRemoveFromWatchlist = () => {
   return useMutation({
     mutationFn: (symbol: string) => removeFromWatchlistHandlers(symbol),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [QueryKeysWatchlist.ROOT] });
+      queryClient.invalidateQueries({ queryKey: [QueryKeysWatchlist.ROOT], exact: true });
     },
   });
 };
