@@ -8,7 +8,17 @@ export type WatchlistItemRaw = {
 
 export type MarketListItem = {
   symbol: string;
-  description: string | null;
+  description: string;
 };
 
 export type WatchlistMutationResponse = ApiResponse<void>;
+
+export interface WatchlistQuoteItem {
+  id: string;
+  symbol: string;
+  name: string;
+  price: number;
+  change: number;
+  volume: number;
+  prediction: string;
+}

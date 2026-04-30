@@ -46,7 +46,7 @@ export default function WatchListPage() {
   const filteredCompanies = stockList.filter(
     (c: MarketListItem) =>
       c.symbol.toLowerCase().includes(addSearchTerm.toLowerCase()) ||
-      (c.description ?? "").toLowerCase().includes(addSearchTerm.toLowerCase()),
+      c.description.toLowerCase().includes(addSearchTerm.toLowerCase()),
   );
 
   const handleAdd = async (symbol: string) => {
@@ -55,9 +55,7 @@ export default function WatchListPage() {
       setShowAddModal(false);
       setAddSearchTerm("");
     } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : "Không thể thêm cổ phiếu",
-      );
+      toast.error((error as Error).message);
     }
   };
 
@@ -66,9 +64,7 @@ export default function WatchListPage() {
     try {
       await removeMutation.mutateAsync(symbol);
     } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : "Không thể xóa cổ phiếu",
-      );
+      toast.error((error as Error).message);
     } finally {
       setRemovingSymbol(null);
     }
@@ -219,9 +215,8 @@ export default function WatchListPage() {
                     bgColor="bg-transparent hover:bg-red-50"
                     transition="transition-colors"
                     className="rounded-lg p-2 text-red-600 disabled:opacity-50"
-                    prefixIcon={<Trash2 className="h-5 w-5" />}
                   >
-                    {null}
+                    <Trash2 className="h-5 w-5" />
                   </ButtonCustom>
                 </td>
               </tr>

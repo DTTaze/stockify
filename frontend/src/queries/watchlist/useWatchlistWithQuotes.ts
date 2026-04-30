@@ -4,17 +4,16 @@ import { getIndexQuoteQueryFn } from "@/queries/stocks/QueryFnsStocks";
 import { QueryKeysStocks } from "@/queries/stocks/QueryKeysStocks";
 import { MarketType, StockDataType, TimePeriod } from "@/types/stock/stock.type";
 
+import { WatchlistQuoteItem } from "@/types/watchlist/watchlist.type";
+
 import { useQueryWatchlist } from "./QueryHooksWatchlist";
 
-export interface WatchlistQuoteItem {
-  id: string;
-  symbol: string;
-  name: string;
-  price: number;
-  change: number;
-  volume: number;
-  prediction: string;
-}
+export const initialDataQuote: StockDataType = {
+  symbol: "",
+  price: 0,
+  change_percent: 0,
+  volume: 0,
+};
 
 export function useWatchlistWithQuotes() {
   const { data: watchlistItems = [] } = useQueryWatchlist();
@@ -34,27 +33,16 @@ export function useWatchlistWithQuotes() {
           type: MarketType.STOCK,
           period: TimePeriod.ONE_DAY,
         }),
-      initialData: {
-        code: item.symbol,
-        name: item.symbol,
-        price: 0,
-        change: 0,
-        change_percent: 0,
-        high: 0,
-        low: 0,
-        open: 0,
-        volume: 0,
-        timestamp: "",
-      } satisfies StockDataType,
+      initialData: initialDataQuote,
     })),
   });
 
   const watchlist: WatchlistQuoteItem[] = watchlistItems.map((item, i) => {
-    const quote = quoteQueries[i].data;
+    const quote = quoteQueries[i].data ?? initialDataQuote;
     return {
       id: item.id,
       symbol: item.symbol,
-      name: quote.name,
+      name: quote.symbol,
       price: quote.price,
       change: quote.change_percent,
       volume: quote.volume,

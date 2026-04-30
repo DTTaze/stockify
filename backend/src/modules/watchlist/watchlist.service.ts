@@ -44,7 +44,7 @@ export class WatchlistService extends BaseCRUDService<WatchlistItem> {
     return { success: true, data: item };
   }
 
-  async remove(
+  async removeFromWatchlist(
     userId: string,
     symbol: string,
   ): Promise<OperationResult<void>> {

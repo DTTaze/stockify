@@ -1,5 +1,7 @@
-import { Search, X } from "lucide-react";
+import { X } from "lucide-react";
 
+import { ButtonCustom } from "@/components/common/form/button";
+import { InputSearch } from "@/components/common/form/input/InputCustom/InputSearch";
 import { MarketListItem } from "@/types/watchlist/watchlist.type";
 
 export type AddStockModalProps = {
@@ -26,24 +28,23 @@ export function AddStockModal({
       <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl">
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-brand-900 text-xl">Thêm cổ phiếu</h2>
-          <button
+          <ButtonCustom
             onClick={onClose}
-            className="rounded-lg p-1 text-gray-400 hover:bg-gray-100"
+            bgColor="bg-transparent hover:bg-gray-100"
+            transition="transition-colors"
+            height="h-auto"
+            className="rounded-lg p-1 text-gray-400"
           >
             <X className="h-5 w-5" />
-          </button>
+          </ButtonCustom>
         </div>
-        <div className="relative mb-4">
-          <Search className="absolute top-1/2 left-3 h-5 w-5 -translate-y-1/2 text-gray-400" />
-          <input
-            type="text"
-            placeholder="Tìm mã cổ phiếu..."
-            value={addSearchTerm}
-            onChange={(e) => setAddSearchTerm(e.target.value)}
-            autoFocus
-            className="w-full rounded-lg border-2 border-gray-200 py-2 pr-4 pl-10 outline-none focus:border-blue-500"
-          />
-        </div>
+        <InputSearch
+          placeholder="Tìm mã cổ phiếu..."
+          value={addSearchTerm}
+          onChange={(e) => setAddSearchTerm(e.target.value)}
+          autoFocus
+          classNameWrapper="mb-4"
+        />
         <div className="max-h-72 overflow-y-auto">
           {filteredCompanies.slice(0, 50).map((company) => {
             const inWatchlist = watchlistSymbols.has(company.symbol);
@@ -57,16 +58,19 @@ export function AddStockModal({
                     {company.symbol}
                   </div>
                   <div className="text-xs text-gray-500">
-                    {company.description ?? ""}
+                    {company.description}
                   </div>
                 </div>
-                <button
+                <ButtonCustom
                   onClick={() => handleAdd(company.symbol)}
                   disabled={inWatchlist || isPending}
-                  className="rounded-lg px-3 py-1 text-xs font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-40 bg-brand-900 text-white hover:bg-brand-700"
+                  bgColor="bg-brand-900 hover:bg-brand-700"
+                  transition="transition-colors"
+                  height="h-auto"
+                  className="rounded-lg px-3 py-1 text-xs font-medium text-white disabled:cursor-not-allowed disabled:opacity-40"
                 >
                   {inWatchlist ? "Đã thêm" : "Thêm"}
-                </button>
+                </ButtonCustom>
               </div>
             );
           })}

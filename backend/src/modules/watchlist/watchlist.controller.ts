@@ -56,7 +56,7 @@ export class WatchlistController {
     @RequestUser() user: User,
     @Param('symbol') symbol: string,
   ): Promise<HttpResponse> {
-    const result = await this.watchlistService.remove(user.id, symbol);
+    const result = await this.watchlistService.removeFromWatchlist(user.id, symbol);
 
     if (!result.success) {
       return generateInternalServerResult(result.message);

@@ -1,4 +1,3 @@
-import { ApiResponse } from "@/types/api";
 import {
   MarketListItem,
   WatchlistItemRaw,
@@ -6,11 +5,12 @@ import {
 
 import { watchlistServices } from ".";
 
-export const getWatchlistHandlers = async (): Promise<
-  ApiResponse<WatchlistItemRaw[]>
-> => {
-  const response = await watchlistServices.getWatchlist();
-  return response.data;
+export const getWatchlistHandlers = async (): Promise<WatchlistItemRaw[]> => {
+  const data = (await watchlistServices.getWatchlist()).data;
+  if (!data.success) {
+    throw new Error(data.message);
+  }
+  return data.data;
 };
 
 export const addToWatchlistHandlers = async (symbol: string): Promise<void> => {
@@ -29,7 +29,10 @@ export const removeFromWatchlistHandlers = async (symbol: string): Promise<void>
 
 export const getMarketListHandlers = async (
   type: string,
-): Promise<ApiResponse<MarketListItem[]>> => {
-  const response = await watchlistServices.getMarketList(type);
-  return response.data;
+): Promise<MarketListItem[]> => {
+  const data = (await watchlistServices.getMarketList(type)).data;
+  if (!data.success) {
+    throw new Error(data.message);
+  }
+  return data.data;
 };
