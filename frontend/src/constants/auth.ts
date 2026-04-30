@@ -1,6 +1,7 @@
 import { ErrorType } from "@/types/common";
 
 export const ACCESS_TOKEN = "accessToken";
+export const ROLE = "role";
 export const VERIFICATION_TOKEN_KEY = "token";
 
 export const responseError: ErrorType[] = [
@@ -54,3 +55,8 @@ export const responseError: ErrorType[] = [
     message: "Account is deactivated",
   },
 ];
+
+export enum ROLE_NAME {
+  USER = "user",
+  ADMIN = "admin",
+}

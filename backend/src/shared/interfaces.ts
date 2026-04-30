@@ -17,6 +17,7 @@ export interface UserAuthProfile {
   id: string;
   username: string;
   email: string;
+  roles: string[];
 }
 
 export interface SystemUserAuthProfile {

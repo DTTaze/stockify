@@ -1,4 +1,4 @@
-import { User } from '@modules/user/user.model';
+import { User } from '@modules/user/entities/user.entity';
 
 export const extractUserInfo = (user: User) => {
   return {

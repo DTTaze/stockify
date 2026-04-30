@@ -4,8 +4,9 @@ import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 
-import { User } from '@modules/user/user.model';
-import { UserService } from '@modules/user/user.service';
+import { User } from '@modules/user/entities/user.entity';
+import { UserRolesService } from '@modules/user/services/user-role.service';
+import { UserService } from '@modules/user/services/user.service';
 
 import { LogId } from '@shared/decorators/logging.decorator';
 import { RequestUser } from '@shared/decorators/request-user.decorator';
@@ -23,7 +24,7 @@ export class AuthController {
   constructor(
     private authService: AuthService,
     protected userService: UserService,
-
+    protected userRolesService: UserRolesService,
     private jwtService: JwtService,
   ) {}
 
@@ -91,10 +92,14 @@ export class AuthController {
   @ApiBearerAuth()
   @UseGuards(AuthGuard)
   @Get('whoami')
-  public whoami(@RequestUser() user: User): HttpResponse {
+  public async whoami(@RequestUser() user: User): Promise<HttpResponse> {
+    const roles = await this.userRolesService.getRoleNamesByUserId(user.id);
     return {
       success: true,
-      data: extractUserInfo(user),
+      data: {
+        ...extractUserInfo(user),
+        roles,
+      },
     };
   }
 

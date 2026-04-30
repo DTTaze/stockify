@@ -7,9 +7,9 @@ import {
 } from 'mvc-common-toolkit';
 
 import { Inject, Injectable, Logger } from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
 
-import { UserService } from '@modules/user/user.service';
+import { UserRolesService } from '@modules/user/services/user-role.service';
+import { UserService } from '@modules/user/services/user.service';
 
 import {
   APP_ACTION,
@@ -34,7 +34,7 @@ export class AuthService {
 
   constructor(
     private userService: UserService,
-    private jwtService: JwtService,
+    private userRolesService: UserRolesService,
 
     @Inject(INJECTION_TOKEN.AUDIT_SERVICE)
     protected auditService: AuditService,
@@ -55,12 +55,12 @@ export class AuthService {
         data: user,
       };
     } catch (error) {
-      this.logger.error(error.message, error.stack);
+      this.logger.error(error);
 
       this.auditService.emitLog(
         new ErrorLog({
           logId,
-          message: error.message,
+          message: error,
           payload: JSON.stringify(dto, stringUtils.maskFn),
           action: APP_ACTION.REGISTER,
         }),
@@ -110,17 +110,22 @@ export class AuthService {
         );
       }
 
+      const roles = await this.userRolesService.getRoleNamesByUserId(user.id);
+
       return {
         success: true,
-        data: extractUserInfo(user),
+        data: {
+          ...extractUserInfo(user),
+          roles,
+        },
       };
     } catch (error) {
-      this.logger.error(error.message, error.stack);
+      this.logger.error(error);
 
       this.auditService.emitLog(
         new ErrorLog({
-          logId: logId,
-          message: error.message,
+          logId,
+          message: error,
           payload: JSON.stringify(data, stringUtils.maskFn),
           action: APP_ACTION.LOGIN,
         }),

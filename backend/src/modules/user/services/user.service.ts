@@ -4,11 +4,11 @@ import { Repository } from 'typeorm';
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 
+import { VerifyUniquenessUserDTO } from '@modules/user/dto/user.dto';
+import { User } from '@modules/user/entities/user.entity';
+
 import { ENTITY_STATUS, ERR_CODE } from '@shared/constants';
 import { generateConflictResult } from '@shared/helpers/operation-result.helper';
-
-import { VerifyUniquenessUserDTO } from './user.dto';
-import { User } from './user.model';
 
 @Injectable()
 export class UserService {

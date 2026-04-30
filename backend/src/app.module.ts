@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
+import { AdminModule } from '@modules/admin/admin.module';
 import { AuditModule } from '@modules/audit/audit.module';
 import { AuthModule } from '@modules/auth/auth.module';
 import { GlobalModule } from '@modules/global/global.module';
@@ -40,6 +41,7 @@ import { UserModule } from '@modules/user/user.module';
     AuditModule,
     UserModule,
     AuthModule,
+    AdminModule,
     MLModule,
     StockCompaniesModule,
   ],

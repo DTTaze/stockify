@@ -1,4 +1,4 @@
-import { IsEmail, IsOptional } from 'class-validator';
+import { IsEmail, IsNumber, IsOptional, IsString } from 'class-validator';
 
 import {
   OnlyTextAndNumbers,
@@ -20,4 +20,12 @@ export class VerifyUniquenessUserDTO {
   })
   @TrimAndLowercase()
   username: string;
+}
+
+export class AssignRoleDTO {
+  @IsString()
+  userId: string;
+
+  @IsNumber()
+  roleId: number;
 }

@@ -100,3 +100,8 @@ export enum PARTNER_AUTH_TYPE {
   MASTER_TOKEN = 'masterToken',
   API_KEY = 'apiKey',
 }
+
+export enum ROLE_NAME {
+  USER = 'user',
+  ADMIN = 'admin',
+}

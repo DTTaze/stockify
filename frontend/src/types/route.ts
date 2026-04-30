@@ -30,6 +30,11 @@ export enum publicRouteEnum {
 export enum protectedRouteEnum {
   DASHBOARD = "/user/dashboard",
   WATCHLIST = "/user/watchlist",
+  ADMIN_DASHBOARD = "/admin/dashboard",
+  USERS = "/admin/users",
+  DATA = "/admin/data",
+  MODELS = "/admin/models",
+  MONITORING = "/admin/monitoring",
 }
 
 export interface NavType {
