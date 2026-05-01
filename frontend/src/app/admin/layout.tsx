@@ -1,9 +1,9 @@
-import AdminLayout from "@/components/layout/AdminLayout";
+import MainLayout from "@/components/layout/MainLayout";
 
 export default function UserLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  return <AdminLayout>{children}</AdminLayout>;
+  return <MainLayout>{children}</MainLayout>;
 }

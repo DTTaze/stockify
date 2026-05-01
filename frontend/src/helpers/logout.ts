@@ -28,13 +28,14 @@ export const clearZustand = () => {
 
 export const logout = () => {
   try {
+    console.log("trigger logout");
     clearCookies();
 
     clearUserQueries();
 
     clearZustand();
 
-    // window.location.reload();
+    window.location.reload();
   } catch (error) {
     console.log(error);
     toast.error("Logout failed");

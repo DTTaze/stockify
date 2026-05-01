@@ -9,6 +9,7 @@ export const initialDataProfile: ProfileType = {
   id: "",
   email: "",
   username: "",
+  roles: [],
 };
 
 export const useQueryProfile = (isAuthenticated?: boolean) =>
