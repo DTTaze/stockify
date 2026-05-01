@@ -1,10 +1,11 @@
 "use client";
 
-import { Calendar, Lock, Mail, Search, Unlock } from "lucide-react";
+import { Calendar, Lock, Mail, Unlock } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
 import { ButtonCustom } from "@/components/common/form/button";
+import { InputSearch } from "@/components/common/form/input/InputCustom/InputSearch";
 import { useQueryAdminUsers, useMutateUserStatus } from "@/queries/users/QueryHooksUser";
 import { UserStatus } from "@/types/user/user.type";
 
@@ -22,9 +23,7 @@ export default function UserManagement() {
     try {
       await statusMutation.mutateAsync({ id, status: nextStatus });
     } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : "Không thể cập nhật trạng thái",
-      );
+      toast.error((error as Error).message);
     } finally {
       setTogglingId(null);
     }
@@ -43,18 +42,11 @@ export default function UserManagement() {
           <h1 className="text-brand-900 text-3xl">Quản lý User</h1>
           <p className="mt-1 text-gray-600">Quản lý tài khoản người dùng</p>
         </div>
-        <div className="flex items-center space-x-4">
-          <div className="relative">
-            <Search className="absolute top-1/2 left-3 h-5 w-5 -translate-y-1/2 transform text-gray-400" />
-            <input
-              type="text"
-              placeholder="Tìm kiếm user..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="focus:border-accent-500 focus:ring-accent-500 rounded-lg border-2 border-gray-200 py-2 pr-4 pl-10 transition-all outline-none focus:ring-2"
-            />
-          </div>
-        </div>
+        <InputSearch
+          placeholder="Tìm kiếm user..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+        />
       </div>
 
       {/* Stats */}
