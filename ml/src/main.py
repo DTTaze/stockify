@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from contextlib import asynccontextmanager
 
+from ml.src.data_management import router as data_management_router
 from ml.src.vn_stock import router as vn_stock_router
 from ml.src.prediction import router as prediction_router
 
@@ -73,6 +74,7 @@ async def data_fetch_exception_handler(request, exc):
 
 app.include_router(vn_stock_router)
 app.include_router(prediction_router.router)
+app.include_router(data_management_router.router)
 
 if __name__ == "__main__":
     import uvicorn

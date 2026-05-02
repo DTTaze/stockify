@@ -1,238 +1,90 @@
 "use client";
 
-import {
-  AlertCircle,
-  Calendar,
-  Check,
-  Download,
-  RefreshCw,
-  Upload,
-} from "lucide-react";
 import { useState } from "react";
 
-import { ButtonCustom } from "@/components/common/form/button";
-
-interface StockData {
-  symbol: string;
-  name: string;
-  lastUpdate: string;
-  records: number;
-  status: "updated" | "outdated";
-}
+import { DataManagementActions } from "@/app/admin/data/components/DataManagementActions";
+import { DataManagementError } from "@/app/admin/data/components/DataManagementError";
+import { DataManagementHeader } from "@/app/admin/data/components/DataManagementHeader";
+import { DataManagementStats } from "@/app/admin/data/components/DataManagementStats";
+import { DataManagementTable } from "@/app/admin/data/components/DataManagementTable";
+import { EMPTY_TEMPLATE_STRING } from "@/constants/common";
+import {
+  useQueryDataManagementStocks,
+  useQueryDataManagementSummary,
+  useUpdateDataManagementAll,
+  useUpdateDataManagementSymbol,
+} from "@/queries/data-management/QueryHooksDataManagement";
 
 export default function DataManagement() {
-  const [stockData, setStockData] = useState<StockData[]>([
-    {
-      symbol: "VNM",
-      name: "Vinamilk",
-      lastUpdate: "2026-03-20 09:00",
-      records: 1250,
-      status: "updated",
-    },
-    {
-      symbol: "VCB",
-      name: "Vietcombank",
-      lastUpdate: "2026-03-20 09:00",
-      records: 1250,
-      status: "updated",
-    },
-    {
-      symbol: "HPG",
-      name: "Hòa Phát",
-      lastUpdate: "2026-03-19 15:00",
-      records: 1248,
-      status: "outdated",
-    },
-    {
-      symbol: "FPT",
-      name: "FPT Corporation",
-      lastUpdate: "2026-03-20 09:00",
-      records: 1250,
-      status: "updated",
-    },
-    {
-      symbol: "VHM",
-      name: "Vinhomes",
-      lastUpdate: "2026-03-19 12:00",
-      records: 1247,
-      status: "outdated",
-    },
-  ]);
+  const [updatingStock, setUpdatingStock] = useState<string | null>(null);
 
-  const [updating, setUpdating] = useState<string | null>(null);
+  const summaryQuery = useQueryDataManagementSummary();
+  const stocksQuery = useQueryDataManagementStocks();
 
-  const updateStockData = async (symbol: string) => {
-    setUpdating(symbol);
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 2000));
+  const updateSymbolMutation = useUpdateDataManagementSymbol();
+  const updateAllMutation = useUpdateDataManagementAll();
 
-    setStockData(
-      stockData.map((stock) =>
-        stock.symbol === symbol
-          ? {
-              ...stock,
-              lastUpdate: new Date().toLocaleString("vi-VN"),
-              status: "updated",
-              records: stock.records + 1,
-            }
-          : stock,
-      ),
-    );
-    setUpdating(null);
+  const summary = summaryQuery.data;
+  const stocks = stocksQuery.data?.stocks ?? [];
+
+  const hasError = summaryQuery.isError || stocksQuery.isError;
+
+  const isBusy =
+    summaryQuery.isLoading ||
+    stocksQuery.isLoading ||
+    updateAllMutation.status === "pending" ||
+    updateSymbolMutation.status === "pending";
+
+  const handleUpdateStock = async (symbol: string) => {
+    setUpdatingStock(symbol);
+
+    try {
+      await updateSymbolMutation.mutateAsync(symbol);
+    } finally {
+      setUpdatingStock(null);
+    }
   };
 
-  const updateAllData = async () => {
-    setUpdating("all");
-    await new Promise((resolve) => setTimeout(resolve, 3000));
+  const handleUpdateAll = async () => {
+    setUpdatingStock("all");
 
-    const now = new Date().toLocaleString("vi-VN");
-    setStockData(
-      stockData.map((stock) => ({
-        ...stock,
-        lastUpdate: now,
-        status: "updated",
-        records: stock.records + 1,
-      })),
-    );
-    setUpdating(null);
+    try {
+      await updateAllMutation.mutateAsync();
+    } finally {
+      setUpdatingStock(null);
+    }
   };
 
   return (
     <div className="space-y-6 p-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-brand-900 text-3xl">Quản lý Dữ liệu</h1>
-          <p className="mt-1 text-gray-600">
-            Cập nhật và quản lý dữ liệu cổ phiếu
-          </p>
-        </div>
-        <div className="flex items-center space-x-3">
-          <ButtonCustom
-            onClick={updateAllData}
-            disabled={updating !== null}
-            className="bg-brand-900 hover:bg-brand-700 flex items-center space-x-2 rounded-lg px-4 py-2 text-white shadow-md transition-all disabled:opacity-50"
-          >
-            <RefreshCw
-              className={`h-5 w-5 ${updating === "all" ? "animate-spin" : ""}`}
-            />
-            <span>Cập nhật tất cả</span>
-          </ButtonCustom>
-          <ButtonCustom className="flex items-center space-x-2 rounded-lg border-2 border-gray-200 bg-white px-4 py-2 text-gray-700 transition-all hover:bg-gray-50">
-            <Download className="h-5 w-5" />
-            <span>Export</span>
-          </ButtonCustom>
-          <ButtonCustom className="flex items-center space-x-2 rounded-lg border-2 border-gray-200 bg-white px-4 py-2 text-gray-700 transition-all hover:bg-gray-50">
-            <Upload className="h-5 w-5" />
-            <span>Import</span>
-          </ButtonCustom>
-        </div>
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <DataManagementHeader />
+
+        <DataManagementActions
+          isBusy={isBusy}
+          updatingStock={updatingStock}
+          onUpdateAll={handleUpdateAll}
+        />
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-4">
-        <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-          <div className="mb-2 text-sm text-gray-600">Tổng cổ phiếu</div>
-          <div className="text-brand-900 text-3xl">{stockData.length}</div>
-        </div>
-        <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-          <div className="mb-2 text-sm text-gray-600">Đã cập nhật</div>
-          <div className="text-3xl text-green-600">
-            {stockData.filter((s) => s.status === "updated").length}
-          </div>
-        </div>
-        <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-          <div className="mb-2 text-sm text-gray-600">Cần cập nhật</div>
-          <div className="text-3xl text-orange-600">
-            {stockData.filter((s) => s.status === "outdated").length}
-          </div>
-        </div>
-        <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-          <div className="mb-2 text-sm text-gray-600">Tổng records</div>
-          <div className="text-brand-900 text-3xl">
-            {stockData.reduce((sum, s) => sum + s.records, 0).toLocaleString()}
-          </div>
-        </div>
-      </div>
+      {hasError && <DataManagementError />}
 
-      {/* Data Table */}
-      <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="from-brand-900 to-brand-700 bg-linear-to-r text-white">
-            <tr>
-              <th className="px-6 py-4 text-left text-xs tracking-wider uppercase">
-                Cổ phiếu
-              </th>
-              <th className="px-6 py-4 text-left text-xs tracking-wider uppercase">
-                Cập nhật lần cuối
-              </th>
-              <th className="px-6 py-4 text-left text-xs tracking-wider uppercase">
-                Số lượng records
-              </th>
-              <th className="px-6 py-4 text-left text-xs tracking-wider uppercase">
-                Trạng thái
-              </th>
-              <th className="px-6 py-4 text-left text-xs tracking-wider uppercase">
-                Hành động
-              </th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-200 bg-white">
-            {stockData.map((stock) => (
-              <tr
-                key={stock.symbol}
-                className="transition-colors hover:bg-blue-50"
-              >
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-brand-900 text-sm">{stock.symbol}</div>
-                  <div className="text-xs text-gray-500">{stock.name}</div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="flex items-center space-x-2 text-sm text-gray-600">
-                    <Calendar className="h-4 w-4" />
-                    <span>{stock.lastUpdate}</span>
-                  </div>
-                </td>
-                <td className="px-6 py-4 text-sm whitespace-nowrap text-gray-600">
-                  {stock.records.toLocaleString()}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="flex items-center space-x-2">
-                    {stock.status === "updated" ? (
-                      <>
-                        <div className="rounded bg-green-500 p-1">
-                          <Check className="h-3 w-3 text-white" />
-                        </div>
-                        <span className="text-sm text-green-600">Mới nhất</span>
-                      </>
-                    ) : (
-                      <>
-                        <div className="rounded bg-orange-500 p-1">
-                          <AlertCircle className="h-3 w-3 text-white" />
-                        </div>
-                        <span className="text-sm text-orange-600">
-                          Cần cập nhật
-                        </span>
-                      </>
-                    )}
-                  </div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <ButtonCustom
-                    onClick={() => updateStockData(stock.symbol)}
-                    disabled={updating !== null}
-                    className="bg-brand-900 hover:bg-brand-700 flex items-center space-x-2 rounded-lg px-3 py-2 text-white transition-all disabled:opacity-50"
-                  >
-                    <RefreshCw
-                      className={`h-4 w-4 ${updating === stock.symbol ? "animate-spin" : ""}`}
-                    />
-                    <span>Cập nhật</span>
-                  </ButtonCustom>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      <DataManagementStats
+        totalStocks={summary?.total_stocks ?? EMPTY_TEMPLATE_STRING}
+        updated={summary?.updated ?? EMPTY_TEMPLATE_STRING}
+        needsUpdate={summary?.needs_update ?? EMPTY_TEMPLATE_STRING}
+        totalRecords={
+          summary?.total_records?.toLocaleString() ?? EMPTY_TEMPLATE_STRING
+        }
+      />
+
+      <DataManagementTable
+        stocks={stocks}
+        isLoading={summaryQuery.isLoading || stocksQuery.isLoading}
+        isBusy={isBusy}
+        updatingStock={updatingStock}
+        onUpdateStock={handleUpdateStock}
+      />
     </div>
   );
 }

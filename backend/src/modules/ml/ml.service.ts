@@ -11,6 +11,10 @@ import { ENV_KEY, INJECTION_TOKEN } from '@shared/constants';
 import { OutboundPartnerService } from '@shared/services/outbound-partner.service';
 
 import {
+  DataManagementStockDto,
+  DataManagementSummaryDto,
+  DataUpdateAllResponseDto,
+  DataUpdateResponseDto,
   IndexQuoteDto,
   MarketQuoteDto,
   PredictionDto,
@@ -159,6 +163,124 @@ export class MLService extends OutboundPartnerService {
         success: false,
         message: 'Failed to fetch supported symbols',
         data: { symbols: [] },
+      };
+    }
+  }
+
+  public async getDataManagementSummary(): Promise<
+    OperationResult<DataManagementSummaryDto>
+  > {
+    try {
+      const response = await this.request<DataManagementSummaryDto>(
+        'get',
+        '/data-management/summary',
+      );
+
+      if (response.success && response.data) {
+        return {
+          success: true,
+          data: response.data,
+        };
+      }
+
+      return {
+        success: false,
+        message: response.message || 'Failed to fetch data management summary',
+      };
+    } catch (error) {
+      this.logger.error('Failed to fetch data management summary');
+      return {
+        success: false,
+        message: 'Failed to fetch data management summary',
+      };
+    }
+  }
+
+  public async getDataManagementStocks(): Promise<
+    OperationResult<DataManagementStockDto[]>
+  > {
+    try {
+      const response = await this.request<DataManagementStockDto[]>(
+        'get',
+        '/data-management/stocks',
+      );
+
+      if (response.success && response.data) {
+        return {
+          success: true,
+          data: response.data,
+        };
+      }
+
+      return {
+        success: false,
+        message: response.message || 'Failed to fetch data management stocks',
+        data: [],
+      };
+    } catch (error) {
+      this.logger.error('Failed to fetch data management stocks');
+      return {
+        success: false,
+        message: 'Failed to fetch data management stocks',
+        data: [],
+      };
+    }
+  }
+
+  public async updateStockData(
+    symbol: string,
+  ): Promise<OperationResult<DataUpdateResponseDto>> {
+    try {
+      const response = await this.request<DataUpdateResponseDto>(
+        'post',
+        `/data-management/update/${symbol.toUpperCase()}`,
+      );
+
+      if (response.success && response.data) {
+        return {
+          success: true,
+          data: response.data,
+        };
+      }
+
+      return {
+        success: false,
+        message: response.message || 'Failed to update stock data',
+      };
+    } catch (error) {
+      this.logger.error(`Failed to update stock data for ${symbol}`);
+      return {
+        success: false,
+        message: 'Failed to update stock data',
+      };
+    }
+  }
+
+  public async updateAllStockData(): Promise<
+    OperationResult<DataUpdateAllResponseDto>
+  > {
+    try {
+      const response = await this.request<DataUpdateAllResponseDto>(
+        'post',
+        '/data-management/update-all',
+      );
+
+      if (response.success && response.data) {
+        return {
+          success: true,
+          data: response.data,
+        };
+      }
+
+      return {
+        success: false,
+        message: response.message || 'Failed to update all stock data',
+      };
+    } catch (error) {
+      this.logger.error('Failed to update all stock data');
+      return {
+        success: false,
+        message: 'Failed to update all stock data',
       };
     }
   }

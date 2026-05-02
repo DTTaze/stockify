@@ -4,3 +4,8 @@ export const MARKET_INDICES = [
   { label: "HNX-INDEX", symbol: "hnxindex" },
   { label: "UPCOM", symbol: "UPCOMINDEX" },
 ];
+
+export enum StockStatus {
+  UPDATED = "updated",
+  NEEDS_UPDATE = "needs_update",
+}

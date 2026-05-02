@@ -1,6 +1,6 @@
 import { HttpResponse } from 'mvc-common-toolkit';
 
-import { Controller, Get, Param, Query } from '@nestjs/common';
+import { Controller, Get, Param, Post, Query } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 
 import { generateInternalServerResult } from '@shared/helpers/operation-result.helper';
@@ -60,6 +60,80 @@ export class MLController {
   })
   async getSupportedSymbols(): Promise<HttpResponse> {
     const result = await this.mlService.getSupportedSymbols();
+
+    if (!result.success) {
+      return generateInternalServerResult(result.message);
+    }
+
+    return {
+      success: true,
+      data: result.data,
+    };
+  }
+
+  @Get('data-management/summary')
+  @ApiOperation({
+    summary: 'Get data management summary',
+    description: 'Get dashboard statistics for ML processed stock data',
+  })
+  async getDataManagementSummary(): Promise<HttpResponse> {
+    const result = await this.mlService.getDataManagementSummary();
+
+    if (!result.success) {
+      return generateInternalServerResult(result.message);
+    }
+
+    return {
+      success: true,
+      data: result.data,
+    };
+  }
+
+  @Get('data-management/stocks')
+  @ApiOperation({
+    summary: 'Get data management stock list',
+    description: 'Get list of stock symbols and processed data status',
+  })
+  async getDataManagementStocks(): Promise<HttpResponse> {
+    const result = await this.mlService.getDataManagementStocks();
+
+    if (!result.success) {
+      return generateInternalServerResult(result.message);
+    }
+
+    return {
+      success: true,
+      data: result.data,
+    };
+  }
+
+  @Post('data-management/update/:symbol')
+  @ApiOperation({
+    summary: 'Update data for a single symbol',
+    description: 'Refresh data processing for a specific stock symbol',
+  })
+  async updateStockData(
+    @Param('symbol') symbol: string,
+  ): Promise<HttpResponse> {
+    const result = await this.mlService.updateStockData(symbol);
+
+    if (!result.success) {
+      return generateInternalServerResult(result.message);
+    }
+
+    return {
+      success: true,
+      data: result.data,
+    };
+  }
+
+  @Post('data-management/update-all')
+  @ApiOperation({
+    summary: 'Update data for all symbols',
+    description: 'Refresh data processing for all supported stock symbols',
+  })
+  async updateAllStockData(): Promise<HttpResponse> {
+    const result = await this.mlService.updateAllStockData();
 
     if (!result.success) {
       return generateInternalServerResult(result.message);
