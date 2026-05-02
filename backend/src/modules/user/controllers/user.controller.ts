@@ -1,6 +1,6 @@
 import { HttpResponse } from 'mvc-common-toolkit';
 
-import { Body, Controller, Get, Param, Patch, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Logger, Param, Patch, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 
 import { AdminAuthGuard } from '@shared/guards/admin.guard';
@@ -14,6 +14,8 @@ import { UserService } from '../services/user.service';
 @UseGuards(AdminAuthGuard)
 @Controller('user')
 export class UserController {
+  protected logger = new Logger(UserController.name);
+
   constructor(protected userService: UserService) {}
 
   @Get()
@@ -24,6 +26,7 @@ export class UserController {
       return { success: true, data: users };
     } catch (error) {
       const message = (error as Error).message;
+      this.logger.error(message);
       return generateInternalServerResult(message);
     }
   }
@@ -43,6 +46,7 @@ export class UserController {
       return { success: true, data: null };
     } catch (error) {
       const message = (error as Error).message;
+      this.logger.error(message);
       return generateInternalServerResult(message);
     }
   }
