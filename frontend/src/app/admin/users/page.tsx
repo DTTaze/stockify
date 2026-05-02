@@ -17,8 +17,8 @@ export default function UserManagement() {
   const statusMutation = useMutateUserStatus();
 
   const handleToggleStatus = async (id: string, currentStatus: UserStatus) => {
-    const nextStatus: UserStatus =
-      currentStatus === "active" ? "suspended" : "active";
+    const nextStatus =
+      currentStatus === UserStatus.ACTIVE ? UserStatus.SUSPENDED : UserStatus.ACTIVE;
     setTogglingId(id);
     try {
       await statusMutation.mutateAsync({ id, status: nextStatus });
@@ -58,13 +58,13 @@ export default function UserManagement() {
         <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
           <div className="mb-2 text-sm text-gray-600">Đang hoạt động</div>
           <div className="text-3xl text-green-600">
-            {users.filter((u) => u.status === "active").length}
+            {users.filter((u) => u.status === UserStatus.ACTIVE).length}
           </div>
         </div>
         <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
           <div className="mb-2 text-sm text-gray-600">Bị khóa</div>
           <div className="text-3xl text-red-600">
-            {users.filter((u) => u.status === "suspended").length}
+            {users.filter((u) => u.status === UserStatus.SUSPENDED).length}
           </div>
         </div>
       </div>
@@ -119,12 +119,12 @@ export default function UserManagement() {
                 <td className="px-6 py-4 whitespace-nowrap">
                   <span
                     className={`rounded-full border-2 px-3 py-1 text-xs ${
-                      user.status === "active"
+                      user.status === UserStatus.ACTIVE
                         ? "border-green-200 bg-green-50 text-green-700"
                         : "border-red-200 bg-red-50 text-red-700"
                     }`}
                   >
-                    {user.status === "active" ? "Hoạt động" : "Bị khóa"}
+                    {user.status === UserStatus.ACTIVE ? "Hoạt động" : "Bị khóa"}
                   </span>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
@@ -132,12 +132,12 @@ export default function UserManagement() {
                     onClick={() => handleToggleStatus(user.id, user.status)}
                     disabled={togglingId === user.id}
                     className={`flex items-center space-x-2 rounded-lg px-3 py-2 text-sm transition-all disabled:opacity-50 ${
-                      user.status === "active"
+                      user.status === UserStatus.ACTIVE
                         ? "border border-red-200 bg-red-50 text-red-700 hover:bg-red-100"
                         : "border border-green-200 bg-green-50 text-green-700 hover:bg-green-100"
                     }`}
                   >
-                    {user.status === "active" ? (
+                    {user.status === UserStatus.ACTIVE ? (
                       <>
                         <Lock className="h-4 w-4" />
                         <span>Khóa</span>

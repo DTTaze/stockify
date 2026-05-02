@@ -23,7 +23,7 @@ export class UserController {
       const users = await this.userService.findAll();
       return { success: true, data: users };
     } catch (error) {
-      const message = error instanceof Error ? error.message : undefined;
+      const message = (error as Error).message;
       return generateInternalServerResult(message);
     }
   }
@@ -42,7 +42,7 @@ export class UserController {
       await this.userService.updateByID(id, { status: dto.status });
       return { success: true, data: null };
     } catch (error) {
-      const message = error instanceof Error ? error.message : undefined;
+      const message = (error as Error).message;
       return generateInternalServerResult(message);
     }
   }

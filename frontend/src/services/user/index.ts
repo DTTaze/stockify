@@ -12,6 +12,6 @@ export const userServices = {
   updateUserStatus: (
     id: string,
     status: UserStatus,
-  ): Promise<AxiosResponse<ApiResponse<null>>> =>
+  ): Promise<AxiosResponse<ApiResponse<void>>> =>
     axiosClient.patch(`user/${id}/status`, { status }),
 };

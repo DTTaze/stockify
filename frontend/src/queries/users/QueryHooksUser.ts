@@ -28,11 +28,18 @@ export const useQueryAdminUsers = () =>
     queryFn: getUsersQueryFn,
   });
 
+interface UpdateUserStatusParams {
+  id: string;
+  status: UserStatus;
+}
+
 export const useMutateUserStatus = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, status }: { id: string; status: UserStatus }) =>
-      updateUserStatusHandler(id, status),
+    mutationFn: async ({ id, status }: UpdateUserStatusParams) => {
+      const response = await updateUserStatusHandler(id, status);
+      if (!response.success) throw new Error(response.message);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: [QueryKeysUser.USER, QueryKeysUser.USER_LIST],
