@@ -1,5 +1,6 @@
 import { useQueries } from "@tanstack/react-query";
 
+import { PredictionTrend } from "@/constants/stock";
 import { getIndexQuoteQueryFn } from "@/queries/stocks/QueryFnsStocks";
 import { QueryKeysStocks } from "@/queries/stocks/QueryKeysStocks";
 import { MarketType, StockDataType, TimePeriod } from "@/types/stock/stock.type";
@@ -38,7 +39,7 @@ export function useWatchlistWithQuotes() {
   });
 
   const watchlist: WatchlistQuoteItem[] = watchlistItems.map((item, i) => {
-    const quote = quoteQueries[i].data ?? initialDataQuote;
+    const quote = quoteQueries[i].data;
     return {
       id: item.id,
       symbol: item.symbol,
@@ -46,7 +47,7 @@ export function useWatchlistWithQuotes() {
       price: quote.price,
       change: quote.change_percent,
       volume: quote.volume,
-      prediction: quote.change_percent >= 0 ? "Tăng" : "Giảm",
+      prediction: quote.change_percent >= 0 ? PredictionTrend.UP : PredictionTrend.DOWN,
     };
   });
 

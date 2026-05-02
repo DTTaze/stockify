@@ -1,3 +1,5 @@
+import { PredictionTrend } from "@/constants/stock";
+
 import { ApiResponse } from "@/types/api";
 
 export type WatchlistItemRaw = {
@@ -20,5 +22,5 @@ export interface WatchlistQuoteItem {
   price: number;
   change: number;
   volume: number;
-  prediction: string;
+  prediction: PredictionTrend;
 }

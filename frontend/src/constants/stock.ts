@@ -1,3 +1,8 @@
+export enum PredictionTrend {
+  UP = "Tăng",
+  DOWN = "Giảm",
+}
+
 export const MARKET_INDICES = [
   { label: "VN-INDEX", symbol: "vnindex" },
   { label: "VN30", symbol: "vn30" },
