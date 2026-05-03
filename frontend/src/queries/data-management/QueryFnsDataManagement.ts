@@ -3,7 +3,7 @@ import {
   getDataManagementSummaryHandlers,
   updateAllDataHandlers,
   updateStockDataHandlers,
-} from "@/services/ml/dataManagementHandlers";
+} from "@/services/data-management/dataManagementHandlers";
 import {
   DataManagementStocksType,
   DataManagementSummaryType,

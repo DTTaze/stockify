@@ -9,3 +9,9 @@ export enum StockStatus {
   UPDATED = "updated",
   NEEDS_UPDATE = "needs_update",
 }
+
+export enum ModelStatus {
+  RUNNING = "running",
+  STOPPED = "stopped",
+  TRAINING = "training",
+}

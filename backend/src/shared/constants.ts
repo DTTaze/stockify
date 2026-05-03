@@ -105,3 +105,17 @@ export enum ROLE_NAME {
   USER = 'user',
   ADMIN = 'admin',
 }
+
+export enum MarketType {
+  STOCK = 'stock',
+  INDEX = 'index',
+}
+
+export enum TimePeriod {
+  ONE_DAY = '1d',
+  ONE_WEEK = '1w',
+  ONE_MONTH = '1mo',
+  THREE_MONTH = '3mo',
+  SIX_MONTH = '6mo',
+  ONE_YEAR = '1y',
+}

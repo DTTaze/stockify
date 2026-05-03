@@ -5,8 +5,10 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { AdminModule } from '@modules/admin/admin.module';
 import { AuditModule } from '@modules/audit/audit.module';
 import { AuthModule } from '@modules/auth/auth.module';
+import { DataManagementModule } from '@modules/data-management/data-management.module';
 import { GlobalModule } from '@modules/global/global.module';
 import { MLModule } from '@modules/ml/ml.module';
+import { ModelManagementModule } from '@modules/model-management/model-management.module';
 import { StockCompaniesModule } from '@modules/stock-companies/stock-companies.module';
 import { UserModule } from '@modules/user/user.module';
 
@@ -43,6 +45,8 @@ import { UserModule } from '@modules/user/user.module';
     AuthModule,
     AdminModule,
     MLModule,
+    DataManagementModule,
+    ModelManagementModule,
     StockCompaniesModule,
   ],
 })
