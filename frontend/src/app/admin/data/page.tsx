@@ -14,6 +14,7 @@ import {
   useUpdateDataManagementAll,
   useUpdateDataManagementSymbol,
 } from "@/queries/data-management/QueryHooksDataManagement";
+import { cn } from "@/utils";
 
 export default function DataManagement() {
   const [updatingStock, setUpdatingStock] = useState<string | null>(null);
@@ -56,8 +57,13 @@ export default function DataManagement() {
   };
 
   return (
-    <div className="space-y-6 p-6">
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+    <div className={cn("p-6", "space-y-6")}>
+      <div
+        className={cn(
+          "flex flex-col gap-4",
+          "md:flex-row md:items-center md:justify-between",
+        )}
+      >
         <DataManagementHeader />
 
         <DataManagementActions

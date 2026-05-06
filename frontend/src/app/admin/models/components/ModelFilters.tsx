@@ -2,6 +2,7 @@ import { Filter, Search } from "lucide-react";
 
 import { Input } from "@/components/ui/Input";
 import { ModelStatus } from "@/constants/stock";
+import { cn } from "@/utils";
 
 interface ModelFiltersProps {
   searchTerm: string;
@@ -14,20 +15,29 @@ export function ModelFilters(props: ModelFiltersProps) {
   const { searchTerm, setSearchTerm, statusFilter, setStatusFilter } = props;
 
   return (
-    <div className="flex items-center gap-4">
-      <div className="relative w-full">
-        <Search className="absolute top-3 left-3 h-4 w-4 text-gray-400" />
+    <div className={cn("flex items-center gap-4")}>
+      <div className={cn("relative w-full")}>
+        <Search
+          className={cn("absolute top-3 left-3", "h-4 w-4", "text-gray-400")}
+        />
         <Input
           placeholder="Tìm kiếm model"
-          className="pl-10"
+          className={cn("pl-10")}
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
         />
       </div>
-      <div className="flex items-center space-x-2">
-        <Filter className="h-4 w-4 text-gray-500" />
+
+      <div className={cn("flex items-center space-x-2")}>
+        <Filter className={cn("h-4 w-4", "text-gray-500")} />
+        {/*Chuyển sang sử dụng Componet Select */}
         <select
-          className="focus:border-brand-500 rounded-md border border-gray-300 p-2 text-sm focus:outline-hidden"
+          className={cn(
+            "rounded-md border border-gray-300",
+            "p-2",
+            "text-sm",
+            "focus:border-brand-500 focus:outline-hidden",
+          )}
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
         >
