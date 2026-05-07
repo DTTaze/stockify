@@ -70,6 +70,23 @@ export class MLService extends OutboundPartnerService {
     }
   }
 
+  public async getMarketList(type: string): Promise<OperationResult<any[]>> {
+    try {
+      const response = await this.httpService.send(
+        'get',
+        this.baseUrl + `/market/list`,
+        { query: { type } },
+      );
+
+      if (response.success) {
+        return { success: true, data: response.data.items ?? [] };
+      }
+    } catch (error) {
+      this.logger.error(`Failed to fetch market list`);
+      throw error;
+    }
+  }
+
   public async getMarketHistory(
     dto: MarketQuoteDto,
   ): Promise<OperationResult<IndexQuoteDto>> {

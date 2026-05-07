@@ -2,8 +2,6 @@ import { IsEnum, IsString } from 'class-validator';
 
 import { ApiProperty } from '@nestjs/swagger';
 
-import { MarketType, TimePeriod } from '@shared/constants';
-
 export class IndexQuoteDto {
   @ApiProperty({
     description: 'Symbol',
@@ -36,6 +34,20 @@ export class IndexQuoteDto {
     required: false,
   })
   volume?: number;
+}
+
+export enum MarketType {
+  STOCK = 'stock',
+  INDEX = 'index',
+}
+
+export enum TimePeriod {
+  ONE_DAY = '1d',
+  ONE_WEEK = '1w',
+  ONE_MONTH = '1mo',
+  THREE_MONTH = '3mo',
+  SIX_MONTH = '6mo',
+  ONE_YEAR = '1y',
 }
 
 export class MarketQuoteDto {
@@ -105,3 +117,11 @@ export class SupportedSymbolsDto {
   })
   symbols: string[];
 }
+
+export class MarketListDto {
+  @ApiProperty({ enum: MarketType, example: MarketType.STOCK })
+  @IsEnum(MarketType)
+  type: MarketType;
+}
+
+export class MLDTO {}
