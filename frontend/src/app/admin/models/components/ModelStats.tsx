@@ -1,6 +1,7 @@
 import { cn } from "@/utils";
 
 interface ModelStatsProps {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   models: any[];
   isSummaryLoading: boolean;
 }

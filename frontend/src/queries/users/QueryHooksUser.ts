@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { updateUserStatusHandler } from "@/services/user/userHandlers";
 import { AdminUserItem, ProfileType, UserStatus } from "@/types/user/user.type";
 
-import { getUsersQueryFn, getProfileQueryFn } from "./QueryFnsUser";
+import { getProfileQueryFn, getUsersQueryFn } from "./QueryFnsUser";
 import { QueryKeysUser } from "./QueryKeysUser";
 
 export const initialDataProfile: ProfileType = {

@@ -3,7 +3,9 @@ import { AdminUserItem, UserStatus } from "@/types/user/user.type";
 
 import { userServices } from ".";
 
-export const getUsersHandler = async (): Promise<ApiResponse<AdminUserItem[]>> => {
+export const getUsersHandler = async (): Promise<
+  ApiResponse<AdminUserItem[]>
+> => {
   const response = await userServices.getUsers();
   return response.data;
 };

@@ -1,11 +1,13 @@
-import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
 import { OperationResult } from 'mvc-common-toolkit';
 import { Repository } from 'typeorm';
 
-import { UserService } from '@modules/user/user.service';
+import { Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+
+
 import { BaseCRUDService } from '@shared/services/base-crud.service';
 
+import { UserService } from '@modules/user/services/user.service';
 import { AddWatchlistDTO } from './watchlist.dto';
 import { WatchlistItem } from './watchlist.model';
 
@@ -14,13 +16,16 @@ export class WatchlistService extends BaseCRUDService<WatchlistItem> {
   constructor(
     @InjectRepository(WatchlistItem)
     protected repo: Repository<WatchlistItem>,
-    private readonly userService: UserService,
+    protected userService: UserService,
   ) {
     super(repo);
   }
 
-  async getWatchlistByUserId(userId: string): Promise<OperationResult<WatchlistItem[]>> {
+  async getWatchlistByUserId(
+    userId: string,
+  ): Promise<OperationResult<WatchlistItem[]>> {
     const items = await this.findAll({ userId });
+
     return { success: true, data: items };
   }
 
@@ -31,17 +36,32 @@ export class WatchlistService extends BaseCRUDService<WatchlistItem> {
     const user = await this.userService.findByID(userId);
 
     if (!user) {
-      return { success: false, message: 'User not found' };
+      return {
+        success: false,
+        message: 'User not found'
+      };
     }
 
     const exists = await this.findOne({ userId, symbol: dto.symbol });
 
     if (exists) {
-      return { success: false, message: 'Symbol already in watchlist' };
+      return {
+        success: false,
+        message: 'Symbol already in watchlist'
+      };
     }
 
-    const item = await this.create({ userId, symbol: dto.symbol });
-    return { success: true, data: item };
+    const item = await this.create(
+      {
+        userId,
+        symbol: dto.symbol
+      }
+    );
+
+    return {
+      success: true,
+      data: item
+    };
   }
 
   async removeFromWatchlist(
@@ -55,6 +75,9 @@ export class WatchlistService extends BaseCRUDService<WatchlistItem> {
     }
 
     await this.deleteOne({ userId, symbol });
-    return { success: true };
+
+    return {
+      success: true
+    };
   }
 }

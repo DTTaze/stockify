@@ -1,3 +1,5 @@
+import { HttpResponse } from 'mvc-common-toolkit';
+
 import {
   Body,
   Controller,
@@ -8,14 +10,13 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import { HttpResponse } from 'mvc-common-toolkit';
 
-import { User } from '@modules/user/user.model';
 
 import { RequestUser } from '@shared/decorators/request-user.decorator';
 import { AuthGuard } from '@shared/guards/auth.guard';
 import { generateInternalServerResult } from '@shared/helpers/operation-result.helper';
 
+import { User } from '@modules/user/entities/user.entity';
 import { AddWatchlistDTO } from './watchlist.dto';
 import { WatchlistService } from './watchlist.service';
 
@@ -24,7 +25,7 @@ import { WatchlistService } from './watchlist.service';
 @UseGuards(AuthGuard)
 @Controller('watchlist')
 export class WatchlistController {
-  constructor(private readonly watchlistService: WatchlistService) {}
+  constructor(protected watchlistService: WatchlistService) { }
 
   @Get()
   async getWatchlist(@RequestUser() user: User): Promise<HttpResponse> {
@@ -34,7 +35,10 @@ export class WatchlistController {
       return generateInternalServerResult(result.message);
     }
 
-    return { success: true, data: result.data };
+    return {
+      success: true,
+      data: result.data
+    };
   }
 
   @Post()
@@ -48,7 +52,10 @@ export class WatchlistController {
       return generateInternalServerResult(result.message);
     }
 
-    return { success: true, data: result.data };
+    return {
+      success: true,
+      data: result.data
+    };
   }
 
   @Delete(':symbol')
@@ -56,12 +63,17 @@ export class WatchlistController {
     @RequestUser() user: User,
     @Param('symbol') symbol: string,
   ): Promise<HttpResponse> {
-    const result = await this.watchlistService.removeFromWatchlist(user.id, symbol);
+    const result = await this.watchlistService.removeFromWatchlist(
+      user.id,
+      symbol,
+    );
 
     if (!result.success) {
       return generateInternalServerResult(result.message);
     }
 
-    return { success: true };
+    return {
+      success: true
+    };
   }
 }

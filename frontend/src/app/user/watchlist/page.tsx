@@ -1,27 +1,21 @@
 "use client";
 
 import { useState } from "react";
-import {
-  Plus,
-  Search,
-  Star,
-  Trash2,
-  TrendingDown,
-  TrendingUp,
-} from "lucide-react";
-import { toast } from "sonner";
 
-import { ButtonCustom } from "@/components/common/form/button";
 import {
   useAddToWatchlist,
   useQueryMarketList,
   useRemoveFromWatchlist,
 } from "@/queries/watchlist/QueryHooksWatchlist";
 import { useWatchlistWithQuotes } from "@/queries/watchlist/useWatchlistWithQuotes";
-import { MarketListItem } from "@/types/watchlist/watchlist.type";
 import { MarketType } from "@/types/stock/stock.type";
+import { MarketListItem } from "@/types/watchlist/watchlist.type";
 
 import { AddStockModal } from "./components/AddStockModal";
+import { WatchlistEmptyState } from "./components/WatchlistEmptyState";
+import { WatchlistHeader } from "./components/WatchlistHeader";
+import { WatchlistSummary } from "./components/WatchlistSummary";
+import { WatchlistTable } from "./components/WatchlistTable";
 
 export default function WatchListPage() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -50,21 +44,15 @@ export default function WatchListPage() {
   );
 
   const handleAdd = async (symbol: string) => {
-    try {
-      await addMutation.mutateAsync(symbol);
-      setShowAddModal(false);
-      setAddSearchTerm("");
-    } catch (error) {
-      toast.error((error as Error).message);
-    }
+    await addMutation.mutateAsync(symbol);
+    setShowAddModal(false);
+    setAddSearchTerm("");
   };
 
   const handleRemove = async (symbol: string) => {
     setRemovingSymbol(symbol);
     try {
       await removeMutation.mutateAsync(symbol);
-    } catch (error) {
-      toast.error((error as Error).message);
     } finally {
       setRemovingSymbol(null);
     }
@@ -72,171 +60,22 @@ export default function WatchListPage() {
 
   return (
     <div className="space-y-6 p-6">
-      {/* Header */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-brand-900 mb-2 text-3xl">Watchlist của tôi</h1>
-          <p className="text-gray-600">
-            Theo dõi các cổ phiếu yêu thích của bạn
-          </p>
-        </div>
-        <div className="flex items-center space-x-3">
-          <div className="relative">
-            <Search className="absolute top-1/2 left-3 h-5 w-5 -translate-y-1/2 transform text-gray-400" />
-            <input
-              type="text"
-              placeholder="Tìm cổ phiếu..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="focus:border-accent-500 focus:ring-accent-500 rounded-lg border-2 border-gray-200 py-2 pr-4 pl-10 transition-all outline-none focus:ring-2"
-            />
-          </div>
-          <ButtonCustom
-            onClick={() => setShowAddModal(true)}
-            prefixIcon={<Plus className="h-5 w-5" />}
-            bgColor="bg-brand-900 hover:bg-brand-700"
-            className="space-x-2 px-4 shadow-md hover:shadow-lg"
-          >
-            Thêm
-          </ButtonCustom>
-        </div>
-      </div>
+      <WatchlistHeader
+        searchTerm={searchTerm}
+        onSearchTermChange={setSearchTerm}
+        onOpenAddModal={() => setShowAddModal(true)}
+      />
 
-      {/* Stats */}
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
-        <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
-          <div className="mb-1 text-sm text-gray-600">Tổng cổ phiếu</div>
-          <div className="text-brand-900 text-3xl">{watchlist.length}</div>
-        </div>
-        <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
-          <div className="mb-1 text-sm text-gray-600">Tăng giá</div>
-          <div className="text-3xl text-green-600">
-            {watchlist.filter((w) => w.change > 0).length}
-          </div>
-        </div>
-        <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
-          <div className="mb-1 text-sm text-gray-600">Giảm giá</div>
-          <div className="text-3xl text-red-600">
-            {watchlist.filter((w) => w.change < 0).length}
-          </div>
-        </div>
-        <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
-          <div className="mb-1 text-sm text-gray-600">Tổng giá trị</div>
-          <div className="text-brand-900 text-3xl">
-            {(watchlist.reduce((sum, w) => sum + w.price, 0) / 1000).toFixed(
-              0,
-            )}
-            K
-          </div>
-        </div>
-      </div>
+      <WatchlistSummary watchlist={watchlist} />
 
-      {/* Watchlist Table */}
-      <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="from-brand-900 to-brand-700 bg-linear-to-r text-white">
-            <tr>
-              <th className="px-6 py-4 text-left text-xs tracking-wider uppercase">
-                Cổ phiếu
-              </th>
-              <th className="px-6 py-4 text-left text-xs tracking-wider uppercase">
-                Giá hiện tại
-              </th>
-              <th className="px-6 py-4 text-left text-xs tracking-wider uppercase">
-                Thay đổi
-              </th>
-              <th className="px-6 py-4 text-left text-xs tracking-wider uppercase">
-                Khối lượng
-              </th>
-              <th className="px-6 py-4 text-left text-xs tracking-wider uppercase">
-                Dự đoán
-              </th>
-              <th className="px-6 py-4 text-left text-xs tracking-wider uppercase">
-                Hành động
-              </th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-200 bg-white">
-            {filteredWatchlist.map((item) => (
-              <tr key={item.id} className="transition-colors hover:bg-blue-50">
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="flex items-center space-x-3">
-                    <Star className="fill-accent-500 hover:text-accent-500 h-5 w-5" />
-                    <div>
-                      <div className="text-brand-900 text-sm">
-                        {item.symbol}
-                      </div>
-                      <div className="text-xs text-gray-500">{item.name}</div>
-                    </div>
-                  </div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-brand-900 text-sm">
-                    {item.price.toLocaleString("vi-VN")} ₫
-                  </div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div
-                    className={`flex items-center space-x-2 ${item.change >= 0 ? "text-green-600" : "text-red-600"}`}
-                  >
-                    {item.change >= 0 ? (
-                      <div className="rounded bg-green-100 p-1.5">
-                        <TrendingUp className="h-4 w-4" />
-                      </div>
-                    ) : (
-                      <div className="rounded bg-red-100 p-1.5">
-                        <TrendingDown className="h-4 w-4" />
-                      </div>
-                    )}
-                    <span className="text-sm">
-                      {item.change >= 0 ? "+" : ""}
-                      {item.change.toFixed(2)}%
-                    </span>
-                  </div>
-                </td>
-                <td className="px-6 py-4 text-sm whitespace-nowrap text-gray-600">
-                  {item.volume.toLocaleString("vi-VN")}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <span
-                    className={`rounded-full border px-3 py-1 text-xs ${
-                      item.prediction === "Tăng"
-                        ? "border-green-200 bg-green-50 text-green-700"
-                        : "border-red-200 bg-red-50 text-red-700"
-                    }`}
-                  >
-                    {item.prediction}
-                  </span>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <ButtonCustom
-                    onClick={() => handleRemove(item.symbol)}
-                    disabled={removingSymbol === item.symbol}
-                    bgColor="bg-transparent hover:bg-red-50"
-                    transition="transition-colors"
-                    className="rounded-lg p-2 text-red-600 disabled:opacity-50"
-                  >
-                    <Trash2 className="h-5 w-5" />
-                  </ButtonCustom>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      <WatchlistTable
+        watchlist={filteredWatchlist}
+        removingSymbol={removingSymbol}
+        onRemove={handleRemove}
+      />
 
       {filteredWatchlist.length === 0 && (
-        <div className="rounded-xl border border-gray-200 bg-white p-12 text-center shadow-sm">
-          <Star className="mx-auto mb-4 h-16 w-16 text-gray-300" />
-          <h3 className="mb-2 text-xl text-gray-600">
-            {searchTerm ? "Không tìm thấy cổ phiếu" : "Watchlist trống"}
-          </h3>
-          <p className="text-gray-500">
-            {searchTerm
-              ? "Thử tìm kiếm với từ khóa khác"
-              : "Nhấn + Thêm để bắt đầu theo dõi cổ phiếu"}
-          </p>
-        </div>
+        <WatchlistEmptyState searchTerm={searchTerm} />
       )}
 
       {showAddModal && (

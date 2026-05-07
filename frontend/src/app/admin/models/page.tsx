@@ -30,7 +30,7 @@ export default function ModelManagement() {
     try {
       await deployMutation.mutateAsync(id);
       toast.success("Model deployed successfully");
-    } catch (error) {
+    } catch {
       toast.error("Failed to deploy model");
     }
   };
@@ -44,7 +44,7 @@ export default function ModelManagement() {
       try {
         await rollbackMutation.mutateAsync(id);
         toast.success("Model rolled back successfully");
-      } catch (error) {
+      } catch {
         toast.error("Failed to rollback model");
       }
     }
@@ -54,7 +54,7 @@ export default function ModelManagement() {
     try {
       await restartMutation.mutateAsync(id);
       toast.success("Model restarted successfully");
-    } catch (error) {
+    } catch {
       toast.error("Failed to restart model");
     }
   };
@@ -68,7 +68,7 @@ export default function ModelManagement() {
       try {
         await deleteMutation.mutateAsync(id);
         toast.success("Model deleted successfully");
-      } catch (error) {
+      } catch {
         toast.error("Failed to delete model");
       }
     }

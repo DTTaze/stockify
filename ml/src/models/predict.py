@@ -124,14 +124,10 @@ def predict_future_prices(
                 predictions["day14"] = round(pred_actual, 2)
                 predictions["day14_confidence"] = confidence
 
-            last_features = current_sequence[
-                :, -1, :
-            ].copy()
+            last_features = current_sequence[:, -1, :].copy()
             last_features[0, 3] = pred[0, 0]
 
-            new_timestep = last_features.reshape(
-                1, 1, -1
-            )
+            new_timestep = last_features.reshape(1, 1, -1)
             current_sequence = current_sequence[:, 1:, :]
             current_sequence = np.concatenate([current_sequence, new_timestep], axis=1)
 

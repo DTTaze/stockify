@@ -14,20 +14,23 @@ export type AddStockModalProps = {
   isPending: boolean;
 };
 
-export function AddStockModal({
-  addSearchTerm,
-  setAddSearchTerm,
-  onClose,
-  filteredCompanies,
-  watchlistSymbols,
-  handleAdd,
-  isPending,
-}: AddStockModalProps) {
+export function AddStockModal(props: AddStockModalProps) {
+  const {
+    addSearchTerm,
+    setAddSearchTerm,
+    onClose,
+    filteredCompanies,
+    watchlistSymbols,
+    handleAdd,
+    isPending,
+  } = props;
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
       <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl">
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-brand-900 text-xl">Thêm cổ phiếu</h2>
+
           <ButtonCustom
             onClick={onClose}
             bgColor="bg-transparent hover:bg-gray-100"
@@ -38,6 +41,7 @@ export function AddStockModal({
             <X className="h-5 w-5" />
           </ButtonCustom>
         </div>
+
         <InputSearch
           placeholder="Tìm mã cổ phiếu..."
           value={addSearchTerm}
@@ -45,9 +49,11 @@ export function AddStockModal({
           autoFocus
           classNameWrapper="mb-4"
         />
+
         <div className="max-h-72 overflow-y-auto">
           {filteredCompanies.slice(0, 50).map((company) => {
             const inWatchlist = watchlistSymbols.has(company.symbol);
+
             return (
               <div
                 key={company.symbol}
@@ -57,10 +63,12 @@ export function AddStockModal({
                   <div className="text-brand-900 text-sm font-medium">
                     {company.symbol}
                   </div>
+
                   <div className="text-xs text-gray-500">
                     {company.description}
                   </div>
                 </div>
+
                 <ButtonCustom
                   onClick={() => handleAdd(company.symbol)}
                   disabled={inWatchlist || isPending}
@@ -74,6 +82,7 @@ export function AddStockModal({
               </div>
             );
           })}
+
           {filteredCompanies.length === 0 && (
             <p className="py-8 text-center text-sm text-gray-500">
               Không tìm thấy cổ phiếu

@@ -30,7 +30,10 @@ export const useAddToWatchlist = () => {
   return useMutation({
     mutationFn: (symbol: string) => addToWatchlistHandlers(symbol),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [QueryKeysWatchlist.ROOT], exact: true });
+      queryClient.invalidateQueries({
+        queryKey: [QueryKeysWatchlist.ROOT],
+        exact: true,
+      });
     },
   });
 };
@@ -40,7 +43,10 @@ export const useRemoveFromWatchlist = () => {
   return useMutation({
     mutationFn: (symbol: string) => removeFromWatchlistHandlers(symbol),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [QueryKeysWatchlist.ROOT], exact: true });
+      queryClient.invalidateQueries({
+        queryKey: [QueryKeysWatchlist.ROOT],
+        exact: true,
+      });
     },
   });
 };

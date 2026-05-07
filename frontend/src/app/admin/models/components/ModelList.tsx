@@ -14,6 +14,7 @@ import { ModelStatus } from "@/constants/stock";
 import { cn } from "@/utils";
 
 interface ModelTableProps {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   models: any[];
   isLoading: boolean;
   onDeploy: (id: string) => void;

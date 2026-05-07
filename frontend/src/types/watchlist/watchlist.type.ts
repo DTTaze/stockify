@@ -1,5 +1,4 @@
 import { PredictionTrend } from "@/constants/stock";
-
 import { ApiResponse } from "@/types/api";
 
 export type WatchlistItemRaw = {

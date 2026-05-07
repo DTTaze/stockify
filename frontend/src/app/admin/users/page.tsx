@@ -6,7 +6,10 @@ import { toast } from "sonner";
 
 import { ButtonCustom } from "@/components/common/form/button";
 import { InputSearch } from "@/components/common/form/input/InputCustom/InputSearch";
-import { useQueryAdminUsers, useMutateUserStatus } from "@/queries/users/QueryHooksUser";
+import {
+  useMutateUserStatus,
+  useQueryAdminUsers,
+} from "@/queries/users/QueryHooksUser";
 import { UserStatus } from "@/types/user/user.type";
 
 export default function UserManagement() {
@@ -18,7 +21,9 @@ export default function UserManagement() {
 
   const handleToggleStatus = async (id: string, currentStatus: UserStatus) => {
     const nextStatus =
-      currentStatus === UserStatus.ACTIVE ? UserStatus.SUSPENDED : UserStatus.ACTIVE;
+      currentStatus === UserStatus.ACTIVE
+        ? UserStatus.SUSPENDED
+        : UserStatus.ACTIVE;
     setTogglingId(id);
     try {
       await statusMutation.mutateAsync({ id, status: nextStatus });
@@ -110,7 +115,9 @@ export default function UserManagement() {
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="flex items-center space-x-2 text-sm text-gray-600">
                     <Calendar className="h-4 w-4" />
-                    <span>{new Date(user.createdAt).toLocaleDateString("vi-VN")}</span>
+                    <span>
+                      {new Date(user.createdAt).toLocaleDateString("vi-VN")}
+                    </span>
                   </div>
                 </td>
                 <td className="px-6 py-4 text-sm whitespace-nowrap text-gray-600">
@@ -124,7 +131,9 @@ export default function UserManagement() {
                         : "border-red-200 bg-red-50 text-red-700"
                     }`}
                   >
-                    {user.status === UserStatus.ACTIVE ? "Hoạt động" : "Bị khóa"}
+                    {user.status === UserStatus.ACTIVE
+                      ? "Hoạt động"
+                      : "Bị khóa"}
                   </span>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">

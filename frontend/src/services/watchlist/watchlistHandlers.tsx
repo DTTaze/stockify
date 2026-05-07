@@ -23,7 +23,9 @@ export const addToWatchlistHandlers = async (symbol: string): Promise<void> => {
   }
 };
 
-export const removeFromWatchlistHandlers = async (symbol: string): Promise<void> => {
+export const removeFromWatchlistHandlers = async (
+  symbol: string,
+): Promise<void> => {
   const data = (await watchlistServices.removeFromWatchlist(symbol)).data;
 
   if (!data.success) {
