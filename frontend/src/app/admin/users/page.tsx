@@ -1,66 +1,37 @@
 "use client";
 
-import { Calendar, Lock, Mail, Search, Unlock } from "lucide-react";
+import { Calendar, Lock, Mail, Unlock } from "lucide-react";
 import { useState } from "react";
+import { toast } from "sonner";
 
 import { ButtonCustom } from "@/components/common/form/button";
-
-interface User {
-  id: string;
-  email: string;
-  name: string;
-  role: string;
-  status: "active" | "locked";
-  joinedDate: string;
-  lastLogin: string;
-}
+import { InputSearch } from "@/components/common/form/input/InputCustom/InputSearch";
+import { useQueryAdminUsers, useMutateUserStatus } from "@/queries/users/QueryHooksUser";
+import { UserStatus } from "@/types/user/user.type";
 
 export default function UserManagement() {
-  const [users, setUsers] = useState<User[]>([
-    {
-      id: "1",
-      email: "nguyenvana@example.com",
-      name: "Nguyễn Văn A",
-      role: "user",
-      status: "active",
-      joinedDate: "2024-01-15",
-      lastLogin: "2026-03-20 09:30",
-    },
-    {
-      id: "2",
-      email: "tranthib@example.com",
-      name: "Trần Thị B",
-      role: "user",
-      status: "active",
-      joinedDate: "2024-02-20",
-      lastLogin: "2026-03-19 14:22",
-    },
-    {
-      id: "3",
-      email: "levanc@example.com",
-      name: "Lê Văn C",
-      role: "user",
-      status: "locked",
-      joinedDate: "2024-03-10",
-      lastLogin: "2026-03-15 11:05",
-    },
-  ]);
-
   const [searchTerm, setSearchTerm] = useState("");
+  const [togglingId, setTogglingId] = useState<string | null>(null);
 
-  const toggleUserStatus = (userId: string) => {
-    setUsers(
-      users.map((user) =>
-        user.id === userId
-          ? { ...user, status: user.status === "active" ? "locked" : "active" }
-          : user,
-      ),
-    );
+  const { data: users = [] } = useQueryAdminUsers();
+  const statusMutation = useMutateUserStatus();
+
+  const handleToggleStatus = async (id: string, currentStatus: UserStatus) => {
+    const nextStatus =
+      currentStatus === UserStatus.ACTIVE ? UserStatus.SUSPENDED : UserStatus.ACTIVE;
+    setTogglingId(id);
+    try {
+      await statusMutation.mutateAsync({ id, status: nextStatus });
+    } catch (error) {
+      toast.error((error as Error).message);
+    } finally {
+      setTogglingId(null);
+    }
   };
 
   const filteredUsers = users.filter(
     (user) =>
-      user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
       user.email.toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
@@ -71,18 +42,11 @@ export default function UserManagement() {
           <h1 className="text-brand-900 text-3xl">Quản lý User</h1>
           <p className="mt-1 text-gray-600">Quản lý tài khoản người dùng</p>
         </div>
-        <div className="flex items-center space-x-4">
-          <div className="relative">
-            <Search className="absolute top-1/2 left-3 h-5 w-5 -translate-y-1/2 transform text-gray-400" />
-            <input
-              type="text"
-              placeholder="Tìm kiếm user..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="focus:border-accent-500 focus:ring-accent-500 rounded-lg border-2 border-gray-200 py-2 pr-4 pl-10 transition-all outline-none focus:ring-2"
-            />
-          </div>
-        </div>
+        <InputSearch
+          placeholder="Tìm kiếm user..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+        />
       </div>
 
       {/* Stats */}
@@ -94,13 +58,13 @@ export default function UserManagement() {
         <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
           <div className="mb-2 text-sm text-gray-600">Đang hoạt động</div>
           <div className="text-3xl text-green-600">
-            {users.filter((u) => u.status === "active").length}
+            {users.filter((u) => u.status === UserStatus.ACTIVE).length}
           </div>
         </div>
         <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
           <div className="mb-2 text-sm text-gray-600">Bị khóa</div>
           <div className="text-3xl text-red-600">
-            {users.filter((u) => u.status === "locked").length}
+            {users.filter((u) => u.status === UserStatus.SUSPENDED).length}
           </div>
         </div>
       </div>
@@ -134,8 +98,8 @@ export default function UserManagement() {
             {filteredUsers.map((user) => (
               <tr key={user.id} className="transition-colors hover:bg-blue-50">
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-brand-900 text-sm">{user.name}</div>
-                  <div className="text-xs text-gray-500">{user.role}</div>
+                  <div className="text-brand-900 text-sm">{user.username}</div>
+                  <div className="text-xs text-gray-500">user</div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="flex items-center space-x-2 text-sm text-gray-600">
@@ -146,33 +110,34 @@ export default function UserManagement() {
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="flex items-center space-x-2 text-sm text-gray-600">
                     <Calendar className="h-4 w-4" />
-                    <span>{user.joinedDate}</span>
+                    <span>{new Date(user.createdAt).toLocaleDateString("vi-VN")}</span>
                   </div>
                 </td>
                 <td className="px-6 py-4 text-sm whitespace-nowrap text-gray-600">
-                  {user.lastLogin}
+                  {new Date(user.updatedAt).toLocaleString("vi-VN")}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <span
                     className={`rounded-full border-2 px-3 py-1 text-xs ${
-                      user.status === "active"
+                      user.status === UserStatus.ACTIVE
                         ? "border-green-200 bg-green-50 text-green-700"
                         : "border-red-200 bg-red-50 text-red-700"
                     }`}
                   >
-                    {user.status === "active" ? "Hoạt động" : "Bị khóa"}
+                    {user.status === UserStatus.ACTIVE ? "Hoạt động" : "Bị khóa"}
                   </span>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <ButtonCustom
-                    onClick={() => toggleUserStatus(user.id)}
-                    className={`flex items-center space-x-2 rounded-lg px-3 py-2 text-sm transition-all ${
-                      user.status === "active"
+                    onClick={() => handleToggleStatus(user.id, user.status)}
+                    disabled={togglingId === user.id}
+                    className={`flex items-center space-x-2 rounded-lg px-3 py-2 text-sm transition-all disabled:opacity-50 ${
+                      user.status === UserStatus.ACTIVE
                         ? "border border-red-200 bg-red-50 text-red-700 hover:bg-red-100"
                         : "border border-green-200 bg-green-50 text-green-700 hover:bg-green-100"
                     }`}
                   >
-                    {user.status === "active" ? (
+                    {user.status === UserStatus.ACTIVE ? (
                       <>
                         <Lock className="h-4 w-4" />
                         <span>Khóa</span>
