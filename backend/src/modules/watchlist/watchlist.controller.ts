@@ -11,12 +11,12 @@ import {
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
+import { User } from '@modules/user/entities/user.entity';
 
 import { RequestUser } from '@shared/decorators/request-user.decorator';
 import { AuthGuard } from '@shared/guards/auth.guard';
 import { generateInternalServerResult } from '@shared/helpers/operation-result.helper';
 
-import { User } from '@modules/user/entities/user.entity';
 import { AddWatchlistDTO } from './watchlist.dto';
 import { WatchlistService } from './watchlist.service';
 
@@ -25,7 +25,7 @@ import { WatchlistService } from './watchlist.service';
 @UseGuards(AuthGuard)
 @Controller('watchlist')
 export class WatchlistController {
-  constructor(protected watchlistService: WatchlistService) { }
+  constructor(protected watchlistService: WatchlistService) {}
 
   @Get()
   async getWatchlist(@RequestUser() user: User): Promise<HttpResponse> {
@@ -37,7 +37,7 @@ export class WatchlistController {
 
     return {
       success: true,
-      data: result.data
+      data: result.data,
     };
   }
 
@@ -54,7 +54,7 @@ export class WatchlistController {
 
     return {
       success: true,
-      data: result.data
+      data: result.data,
     };
   }
 
@@ -73,7 +73,7 @@ export class WatchlistController {
     }
 
     return {
-      success: true
+      success: true,
     };
   }
 }

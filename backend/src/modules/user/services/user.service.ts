@@ -119,4 +119,25 @@ export class UserService {
       order: { createdAt: 'DESC' },
     });
   }
+
+  async findRecentUsers(limit = 3) {
+    return this.repo.find({
+      where: [
+        { status: ENTITY_STATUS.ACTIVE },
+        { status: ENTITY_STATUS.SUSPENDED },
+        { status: ENTITY_STATUS.INACTIVE },
+      ],
+      select: ['id', 'email', 'username', 'status', 'createdAt', 'updatedAt'],
+      order: { createdAt: 'DESC' },
+      take: limit,
+    });
+  }
+
+  async countActiveUsers() {
+    return this.repo.count({
+      where: {
+        status: ENTITY_STATUS.ACTIVE,
+      },
+    });
+  }
 }

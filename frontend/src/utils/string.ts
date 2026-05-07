@@ -14,3 +14,13 @@ export const formatDateTime = (value: string) => {
 
   return date.toLocaleString("vi-VN");
 };
+
+export const formatRelativeTime = (timestamp: string) => {
+  const date = new Date(timestamp);
+  return date.toLocaleString("vi-VN", {
+    day: "2-digit",
+    month: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+};

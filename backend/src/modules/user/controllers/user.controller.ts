@@ -24,7 +24,7 @@ import { UserService } from '../services/user.service';
 export class UserController {
   protected logger = new Logger(UserController.name);
 
-  constructor(protected userService: UserService) { }
+  constructor(protected userService: UserService) {}
 
   @Get()
   @ApiOperation({
@@ -40,7 +40,7 @@ export class UserController {
 
     return {
       success: true,
-      data: users
+      data: users,
     };
   }
 
@@ -59,11 +59,13 @@ export class UserController {
       return generateInternalServerResult('User not found');
     }
 
-    const updatedUser = await this.userService.updateByID(id, { status: dto.status });
+    const updatedUser = await this.userService.updateByID(id, {
+      status: dto.status,
+    });
 
     return {
       success: true,
-      data: updatedUser
+      data: updatedUser,
     };
   }
 }

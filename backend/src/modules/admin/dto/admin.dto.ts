@@ -8,7 +8,6 @@ import {
 
 import { ApiProperty } from '@nestjs/swagger';
 
-// Role DTOs
 export class CreateRoleDTO {
   @ApiProperty({
     description: 'Role name (unique)',

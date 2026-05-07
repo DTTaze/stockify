@@ -4,10 +4,10 @@ import { Repository } from 'typeorm';
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 
+import { UserService } from '@modules/user/services/user.service';
 
 import { BaseCRUDService } from '@shared/services/base-crud.service';
 
-import { UserService } from '@modules/user/services/user.service';
 import { AddWatchlistDTO } from './watchlist.dto';
 import { WatchlistItem } from './watchlist.model';
 
@@ -38,7 +38,7 @@ export class WatchlistService extends BaseCRUDService<WatchlistItem> {
     if (!user) {
       return {
         success: false,
-        message: 'User not found'
+        message: 'User not found',
       };
     }
 
@@ -47,20 +47,18 @@ export class WatchlistService extends BaseCRUDService<WatchlistItem> {
     if (exists) {
       return {
         success: false,
-        message: 'Symbol already in watchlist'
+        message: 'Symbol already in watchlist',
       };
     }
 
-    const item = await this.create(
-      {
-        userId,
-        symbol: dto.symbol
-      }
-    );
+    const item = await this.create({
+      userId,
+      symbol: dto.symbol,
+    });
 
     return {
       success: true,
-      data: item
+      data: item,
     };
   }
 
@@ -77,7 +75,7 @@ export class WatchlistService extends BaseCRUDService<WatchlistItem> {
     await this.deleteOne({ userId, symbol });
 
     return {
-      success: true
+      success: true,
     };
   }
 }

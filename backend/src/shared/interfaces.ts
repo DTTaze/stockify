@@ -58,3 +58,37 @@ export interface FindOptions {
   relations?: FindOptionsRelations<any>;
   withDeleted?: boolean;
 }
+
+export interface AdminDashboardSummaryDto {
+  total_users: number;
+  active_users: number;
+  total_models: number;
+  active_models: number;
+  failed_models: number;
+  total_stocks: number;
+  updated_stocks: number;
+  needs_update_stocks: number;
+  total_records: number;
+}
+
+export interface AdminDashboardPerformanceDto {
+  time: string;
+  requests: number;
+  accuracy: number;
+  load: number;
+}
+
+export type AdminDashboardActivityType = 'success' | 'warning' | 'info';
+
+export interface AdminDashboardActivityDto {
+  type: AdminDashboardActivityType;
+  message: string;
+  timestamp: string;
+}
+
+export interface AdminDashboardRealtimeDto {
+  cpuLoad: number;
+  memoryUsage: number;
+  activeUsers: number;
+  timestamp: string;
+}
