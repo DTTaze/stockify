@@ -3,14 +3,14 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from contextlib import asynccontextmanager
 
-from ml.src.data_management import router as data_management
-from ml.src.vn_stock import router as vn_stock
-from ml.src.prediction import router as prediction
-from ml.src.model_management import router as model_management
+from src.data_management import router as data_management
+from src.vn_stock import router as vn_stock
+from src.prediction import router as prediction
+from src.model_management import router as model_management
 
-from ml.src.vn_stock.config import vn_stock_config
-from ml.src.vn_stock.utils import setup_logging
-from ml.src.vn_stock.exceptions import (
+from src.vn_stock.config import vn_stock_config
+from src.vn_stock.utils import setup_logging
+from src.vn_stock.exceptions import (
     IndexNotFoundException,
     InvalidPeriodException,
     DataFetchException,
