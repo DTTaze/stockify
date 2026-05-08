@@ -40,7 +40,7 @@ export default function WatchListPage() {
   const filteredCompanies = stockList.filter(
     (c: MarketListItem) =>
       c.symbol.toLowerCase().includes(addSearchTerm.toLowerCase()) ||
-      c.description.toLowerCase().includes(addSearchTerm.toLowerCase()),
+      (c.description ?? "").toLowerCase().includes(addSearchTerm.toLowerCase()),
   );
 
   const handleAdd = async (symbol: string) => {
