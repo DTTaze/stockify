@@ -66,7 +66,7 @@ export class AuthController {
   public async login(
     @LogId() logId: string,
     @Body() dto: LoginDTO,
-  ): Promise<HttpResponse> {
+  ): Promise<any> {
     const loginResult = await this.authService.login(logId, dto);
 
     if (!loginResult.success) {
@@ -80,11 +80,8 @@ export class AuthController {
     });
 
     return {
-      success: true,
-      data: {
-        accessToken,
-        user: data,
-      },
+      accessToken,
+      user: data,
     };
   }
 
@@ -92,14 +89,11 @@ export class AuthController {
   @ApiBearerAuth()
   @UseGuards(AuthGuard)
   @Get('whoami')
-  public async whoami(@RequestUser() user: User): Promise<HttpResponse> {
+  public async whoami(@RequestUser() user: User): Promise<any> {
     const roles = await this.userRolesService.getRoleNamesByUserId(user.id);
     return {
-      success: true,
-      data: {
-        ...extractUserInfo(user),
-        roles,
-      },
+      ...extractUserInfo(user),
+      roles,
     };
   }
 

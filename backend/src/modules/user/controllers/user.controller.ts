@@ -12,7 +12,7 @@ import {
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 
 import { AdminAuthGuard } from '@shared/guards/admin.guard';
-import { generateInternalServerResult } from '@shared/helpers/operation-result.helper';
+import { generateNotFoundResult } from '@shared/helpers/operation-result.helper';
 
 import { UpdateUserStatusDTO } from '../dto/user.dto';
 import { UserService } from '../services/user.service';
@@ -31,17 +31,8 @@ export class UserController {
     summary: 'Get all users',
     description: 'Retrieve list of all non-deleted users',
   })
-  async getUsers(): Promise<HttpResponse> {
-    const users = await this.userService.findAll();
-
-    if (!users) {
-      return generateInternalServerResult('Failed to retrieve users');
-    }
-
-    return {
-      success: true,
-      data: users,
-    };
+  async getUsers(): Promise<any> {
+    return this.userService.findAll();
   }
 
   @Patch(':id/status')
@@ -52,20 +43,15 @@ export class UserController {
   async updateUserStatus(
     @Param('id') id: string,
     @Body() dto: UpdateUserStatusDTO,
-  ): Promise<HttpResponse> {
+  ): Promise<any> {
     const user = await this.userService.findByID(id);
 
     if (!user) {
-      return generateInternalServerResult('User not found');
+      return generateNotFoundResult('User not found');
     }
 
-    const updatedUser = await this.userService.updateByID(id, {
+    return this.userService.updateByID(id, {
       status: dto.status,
     });
-
-    return {
-      success: true,
-      data: updatedUser,
-    };
   }
 }

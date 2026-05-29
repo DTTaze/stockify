@@ -3,8 +3,6 @@ import { HttpResponse } from 'mvc-common-toolkit';
 import { Controller, Get, Param, Post } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 
-import { generateInternalServerResult } from '@shared/helpers/operation-result.helper';
-
 import { DataManagementService } from './data-management.service';
 
 @ApiTags('Data Management')
@@ -19,16 +17,7 @@ export class DataManagementController {
     description: 'Get dashboard statistics for ML processed stock data',
   })
   async getDataManagementSummary(): Promise<HttpResponse> {
-    const result = await this.dataManagementService.getDataManagementSummary();
-
-    if (!result.success) {
-      return generateInternalServerResult(result.message);
-    }
-
-    return {
-      success: true,
-      data: result.data,
-    };
+    return this.dataManagementService.getDataManagementSummary();
   }
 
   @Get('stocks')
@@ -37,16 +26,7 @@ export class DataManagementController {
     description: 'Get list of stock symbols and processed data status',
   })
   async getDataManagementStocks(): Promise<HttpResponse> {
-    const result = await this.dataManagementService.getDataManagementStocks();
-
-    if (!result.success) {
-      return generateInternalServerResult(result.message);
-    }
-
-    return {
-      success: true,
-      data: result.data,
-    };
+    return this.dataManagementService.getDataManagementStocks();
   }
 
   @Post('update/:symbol')
@@ -57,16 +37,7 @@ export class DataManagementController {
   async updateStockData(
     @Param('symbol') symbol: string,
   ): Promise<HttpResponse> {
-    const result = await this.dataManagementService.updateStockData(symbol);
-
-    if (!result.success) {
-      return generateInternalServerResult(result.message);
-    }
-
-    return {
-      success: true,
-      data: result.data,
-    };
+    return this.dataManagementService.updateStockData(symbol);
   }
 
   @Post('update-all')
@@ -75,15 +46,6 @@ export class DataManagementController {
     description: 'Refresh data processing for all supported stock symbols',
   })
   async updateAllStockData(): Promise<HttpResponse> {
-    const result = await this.dataManagementService.updateAllStockData();
-
-    if (!result.success) {
-      return generateInternalServerResult(result.message);
-    }
-
-    return {
-      success: true,
-      data: result.data,
-    };
+    return this.dataManagementService.updateAllStockData();
   }
 }

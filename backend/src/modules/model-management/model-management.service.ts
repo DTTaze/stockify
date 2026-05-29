@@ -39,184 +39,70 @@ export class ModelManagementService extends OutboundPartnerService {
   }
 
   public async getModelSummary(): Promise<OperationResult<ModelSummaryDto>> {
-    try {
-      const response = await this.httpService.send(
-        'get',
-        this.baseUrl + '/model-management/summary',
-      );
-
-      if (response.success) {
-        return { success: true, data: response.data };
-      }
-
-      return {
-        success: false,
-        message: response.message || 'Failed to fetch summary',
-      };
-    } catch (error) {
-      this.logger.error('Failed to fetch model summary', error);
-      return { success: false, message: 'Failed to fetch summary' };
-    }
+    return this.request<ModelSummaryDto>(
+      'get',
+      '/model-management/summary',
+    ) as any;
   }
 
   public async getModels(): Promise<OperationResult<ModelItemDto[]>> {
-    try {
-      const response = await this.httpService.send(
-        'get',
-        this.baseUrl + '/model-management/models',
-      );
-
-      if (response.success) {
-        return { success: true, data: response.data };
-      }
-
-      return {
-        success: false,
-        message: response.message || 'Failed to fetch models',
-      };
-    } catch (error) {
-      this.logger.error('Failed to fetch models', error);
-      return { success: false, message: 'Failed to fetch models' };
-    }
+    return this.request<ModelItemDto[]>(
+      'get',
+      '/model-management/models',
+    ) as any;
   }
 
   public async getModelDetail(
     id: string,
   ): Promise<OperationResult<ModelDetailDto>> {
-    try {
-      const response = await this.httpService.send(
-        'get',
-        this.baseUrl + `/model-management/models/${id}`,
-      );
-
-      if (response.success) {
-        return { success: true, data: response.data };
-      }
-
-      return {
-        success: false,
-        message: response.message || 'Failed to fetch model detail',
-      };
-    } catch (error) {
-      this.logger.error(`Failed to fetch model detail for ${id}`, error);
-      return { success: false, message: 'Failed to fetch model detail' };
-    }
+    return this.request<ModelDetailDto>(
+      'get',
+      `/model-management/models/${id}`,
+    ) as any;
   }
 
   public async deployModel(
     id: string,
   ): Promise<OperationResult<ModelActionResponseDto>> {
-    try {
-      const response = await this.httpService.send(
-        'post',
-        this.baseUrl + `/model-management/deploy/${id}`,
-      );
-
-      if (response.success) {
-        return { success: true, data: response.data };
-      }
-
-      return {
-        success: false,
-        message: response.message || 'Failed to deploy model',
-      };
-    } catch (error) {
-      this.logger.error(`Failed to deploy model ${id}`, error);
-      return { success: false, message: 'Failed to deploy model' };
-    }
+    return this.request<ModelActionResponseDto>(
+      'post',
+      `/model-management/deploy/${id}`,
+    ) as any;
   }
 
   public async rollbackModel(
     id: string,
   ): Promise<OperationResult<ModelActionResponseDto>> {
-    try {
-      const response = await this.httpService.send(
-        'post',
-        this.baseUrl + `/model-management/rollback/${id}`,
-      );
-
-      if (response.success) {
-        return { success: true, data: response.data };
-      }
-
-      return {
-        success: false,
-        message: response.message || 'Failed to rollback model',
-      };
-    } catch (error) {
-      this.logger.error(`Failed to rollback model ${id}`, error);
-      return { success: false, message: 'Failed to rollback model' };
-    }
+    return this.request<ModelActionResponseDto>(
+      'post',
+      `/model-management/rollback/${id}`,
+    ) as any;
   }
 
   public async restartModel(
     id: string,
   ): Promise<OperationResult<ModelActionResponseDto>> {
-    try {
-      const response = await this.httpService.send(
-        'post',
-        this.baseUrl + `/model-management/restart/${id}`,
-      );
-      if (response.success) {
-        return { success: true, data: response.data };
-      }
-
-      return {
-        success: false,
-        message: response.message || 'Failed to restart model',
-      };
-    } catch (error) {
-      this.logger.error(`Failed to restart model ${id}`, error);
-      return { success: false, message: 'Failed to restart model' };
-    }
+    return this.request<ModelActionResponseDto>(
+      'post',
+      `/model-management/restart/${id}`,
+    ) as any;
   }
 
   public async deleteModel(
     id: string,
   ): Promise<OperationResult<ModelActionResponseDto>> {
-    try {
-      const response = await this.httpService.send(
-        'delete',
-        this.baseUrl + `/model-management/${id}`,
-      );
-
-      if (response.success) {
-        return { success: true, data: response.data };
-      }
-
-      return {
-        success: false,
-        message: response.message || 'Failed to delete model',
-      };
-    } catch (error) {
-      this.logger.error(`Failed to delete model ${id}`, error);
-      return { success: false, message: 'Failed to delete model' };
-    }
+    return this.request<ModelActionResponseDto>(
+      'delete',
+      `/model-management/${id}`,
+    ) as any;
   }
 
   public async getModelVersions(
     id: string,
   ): Promise<OperationResult<ModelVersionDto[]>> {
-    try {
-      const response = await this.httpService.send(
-        'get',
-        this.baseUrl + `/model-management/${id}/versions`,
-      );
-
-      if (response.success) {
-        return { success: true, data: response.data };
-      }
-
-      return {
-        success: false,
-        message: response.message || 'Failed to fetch model versions',
-      };
-    } catch (error) {
-      this.logger.error(`Failed to fetch model versions for ${id}`, error);
-      return {
-        success: false,
-        message: 'Failed to fetch model versions',
-      };
-    }
+    return this.request<ModelVersionDto[]>(
+      'get',
+      `/model-management/${id}/versions`,
+    ) as any;
   }
 }

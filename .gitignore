@@ -76,3 +76,9 @@ Thumbs.db
 
 dev.ps1
 format.ps1
+
+AGENTS.md
+CLAUDE.MD
+CLEAN_CODE.md
+.agents/*
+docs/*

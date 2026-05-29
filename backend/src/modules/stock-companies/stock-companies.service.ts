@@ -18,7 +18,7 @@ export class StockCompaniesService extends BaseCRUDService<StockCompanies> {
   }
 
   public async getAll(): Promise<OperationResult> {
-    const StockCompanies = await this.findAll(undefined, {
+    const stockCompanies = await this.findAll(undefined, {
       select: {
         symbol: true,
         organizationName: true,
@@ -27,7 +27,7 @@ export class StockCompaniesService extends BaseCRUDService<StockCompanies> {
 
     return {
       success: true,
-      data: StockCompanies,
+      data: stockCompanies,
     };
   }
 }

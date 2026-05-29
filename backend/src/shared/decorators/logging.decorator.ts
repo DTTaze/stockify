@@ -5,6 +5,12 @@ import { ExecutionContext, createParamDecorator } from '@nestjs/common';
 import { HEADER_KEY } from '@shared/constants';
 
 export const getLogId = (request: any) => {
+  if (!request) {
+    return stringUtils.generateRandomId();
+  }
+  if (!request.headers) {
+    request.headers = {};
+  }
   if (!request.headers[HEADER_KEY.LOG_ID]) {
     request.headers[HEADER_KEY.LOG_ID] = stringUtils.generateRandomId();
   }

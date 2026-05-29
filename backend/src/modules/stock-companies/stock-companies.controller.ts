@@ -13,15 +13,6 @@ export class StockCompaniesController {
 
   @Get()
   async getAll(): Promise<HttpResponse> {
-    const stockCompaniesResult = await this.stockCompaniesService.getAll();
-
-    if (!stockCompaniesResult.success) {
-      return stockCompaniesResult;
-    }
-
-    return {
-      success: true,
-      data: stockCompaniesResult.data,
-    };
+    return this.stockCompaniesService.getAll();
   }
 }

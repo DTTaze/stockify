@@ -40,118 +40,36 @@ export class DataManagementService extends OutboundPartnerService {
   public async getDataManagementSummary(): Promise<
     OperationResult<DataManagementSummaryDto>
   > {
-    try {
-      const response = await this.httpService.send(
-        'get',
-        this.baseUrl + '/data-management/summary',
-      );
-
-      if (response.success) {
-        return {
-          success: true,
-          data: response.data,
-        };
-      }
-
-      return {
-        success: false,
-        message: response.message || 'Failed to fetch data management summary',
-      };
-    } catch (error) {
-      this.logger.error('Failed to fetch data management summary');
-      return {
-        success: false,
-        message: 'Failed to fetch data management summary',
-      };
-    }
+    return this.request<DataManagementSummaryDto>(
+      'get',
+      '/data-management/summary',
+    ) as any;
   }
 
   public async getDataManagementStocks(): Promise<
     OperationResult<DataManagementStockDto[]>
   > {
-    try {
-      const response = await this.httpService.send(
-        'get',
-        this.baseUrl + '/data-management/stocks',
-      );
-
-      if (response.success) {
-        return {
-          success: true,
-          data: response.data,
-        };
-      }
-
-      return {
-        success: false,
-        message: response.message || 'Failed to fetch data management stocks',
-        data: [],
-      };
-    } catch (error) {
-      this.logger.error('Failed to fetch data management stocks');
-      return {
-        success: false,
-        message: 'Failed to fetch data management stocks',
-        data: [],
-      };
-    }
+    return this.request<DataManagementStockDto[]>(
+      'get',
+      '/data-management/stocks',
+    ) as any;
   }
 
   public async updateStockData(
     symbol: string,
   ): Promise<OperationResult<DataUpdateResponseDto>> {
-    try {
-      const response = await this.httpService.send(
-        'post',
-        this.baseUrl + `/data-management/update/${symbol.toUpperCase()}`,
-      );
-
-      if (response.success) {
-        return {
-          success: true,
-          data: response.data,
-        };
-      }
-
-      return {
-        success: false,
-        message: response.message || 'Failed to update stock data',
-      };
-    } catch (error) {
-      this.logger.error(`Failed to update stock data for ${symbol}`);
-      return {
-        success: false,
-        message: 'Failed to update stock data',
-      };
-    }
+    return this.request<DataUpdateResponseDto>(
+      'post',
+      `/data-management/update/${symbol.toUpperCase()}`,
+    ) as any;
   }
 
   public async updateAllStockData(): Promise<
     OperationResult<DataUpdateAllResponseDto>
   > {
-    try {
-      const response = await this.httpService.send(
-        'post',
-        this.baseUrl + '/data-management/update-all',
-      );
-
-      if (response.success) {
-        return {
-          success: true,
-          data: response.data,
-        };
-      }
-
-      return {
-        success: false,
-        message: response.message || 'Failed to update all stock data',
-      };
-    } catch (error) {
-      this.logger.error('Failed to update all stock data');
-      return {
-        success: false,
-        message: 'Failed to update all stock data',
-      };
-    }
+    return this.request<DataUpdateAllResponseDto>(
+      'post',
+      '/data-management/update-all',
+    ) as any;
   }
 }

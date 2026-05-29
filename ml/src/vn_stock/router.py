@@ -1,3 +1,4 @@
+from typing import List
 from fastapi import APIRouter, Depends, Query, Path
 
 from .service import StockService, stock_service
@@ -65,3 +66,16 @@ async def get_market_list(
         return service.get_indices()
 
     return service.get_stocks()
+
+
+@router.get(
+    "/symbols-by-exchange",
+    response_model=List[schemas.StockByExchange],
+    summary="Get stock symbols by exchange",
+)
+async def get_stocks_by_exchange(
+    exchange: str = Query("ALL", description="Exchange (HOSE, HNX, UPCOM, or ALL)"),
+    service: StockService = Depends(get_service),
+) -> List[schemas.StockByExchange]:
+    return service.get_stocks_by_exchange(exchange)
+

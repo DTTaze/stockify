@@ -5,7 +5,6 @@ import { Controller, Get, Logger, Sse, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 
 import { AdminAuthGuard } from '@shared/guards/admin.guard';
-import { generateInternalServerResult } from '@shared/helpers/operation-result.helper';
 import {
   AdminDashboardActivityDto,
   AdminDashboardPerformanceDto,
@@ -30,16 +29,7 @@ export class AdminController {
     description: 'Aggregate user, model, and data management metrics',
   })
   async getDashboardSummary(): Promise<HttpResponse> {
-    const result = await this.adminDashboardService.getSummary();
-
-    if (!result.success) {
-      return generateInternalServerResult(result.message);
-    }
-
-    return {
-      success: true,
-      data: result.data,
-    };
+    return this.adminDashboardService.getSummary();
   }
 
   @Get('dashboard/performance')
@@ -48,16 +38,7 @@ export class AdminController {
     description: 'System performance chart values for dashboard visualization',
   })
   async getDashboardPerformance(): Promise<HttpResponse> {
-    const result = await this.adminDashboardService.getPerformance();
-
-    if (!result.success) {
-      return generateInternalServerResult(result.message);
-    }
-
-    return {
-      success: true,
-      data: result.data,
-    };
+    return this.adminDashboardService.getPerformance();
   }
 
   @Get('dashboard/activities')
@@ -66,16 +47,7 @@ export class AdminController {
     description: 'Recent system and user activity for admin overview',
   })
   async getDashboardActivities(): Promise<HttpResponse> {
-    const result = await this.adminDashboardService.getRecentActivities();
-
-    if (!result.success) {
-      return generateInternalServerResult(result.message);
-    }
-
-    return {
-      success: true,
-      data: result.data,
-    };
+    return this.adminDashboardService.getRecentActivities();
   }
 
   @Sse('dashboard/realtime')

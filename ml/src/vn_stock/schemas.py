@@ -70,3 +70,11 @@ class ErrorResponse(BaseModel):
 
     detail: str = Field(..., description="Error message")
     error_code: Optional[str] = Field(None, description="Error code")
+
+
+class StockByExchange(BaseModel):
+    symbol: str = Field(..., description="Stock symbol")
+    exchange: str = Field(..., description="Exchange (HOSE, HNX, UPCOM)")
+    name: Optional[str] = Field(None, description="Organization name")
+    type: Optional[str] = Field(None, description="Type (stock, fund, warrant, etc.)")
+

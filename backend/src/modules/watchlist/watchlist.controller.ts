@@ -15,7 +15,6 @@ import { User } from '@modules/user/entities/user.entity';
 
 import { RequestUser } from '@shared/decorators/request-user.decorator';
 import { AuthGuard } from '@shared/guards/auth.guard';
-import { generateInternalServerResult } from '@shared/helpers/operation-result.helper';
 
 import { AddWatchlistDTO } from './watchlist.dto';
 import { WatchlistService } from './watchlist.service';
@@ -29,16 +28,7 @@ export class WatchlistController {
 
   @Get()
   async getWatchlist(@RequestUser() user: User): Promise<HttpResponse> {
-    const result = await this.watchlistService.getWatchlistByUserId(user.id);
-
-    if (!result.success) {
-      return generateInternalServerResult(result.message);
-    }
-
-    return {
-      success: true,
-      data: result.data,
-    };
+    return this.watchlistService.getWatchlistByUserId(user.id);
   }
 
   @Post()
@@ -46,16 +36,7 @@ export class WatchlistController {
     @RequestUser() user: User,
     @Body() dto: AddWatchlistDTO,
   ): Promise<HttpResponse> {
-    const result = await this.watchlistService.addToWatchlist(user.id, dto);
-
-    if (!result.success) {
-      return generateInternalServerResult(result.message);
-    }
-
-    return {
-      success: true,
-      data: result.data,
-    };
+    return this.watchlistService.addToWatchlist(user.id, dto);
   }
 
   @Delete(':symbol')
@@ -63,17 +44,6 @@ export class WatchlistController {
     @RequestUser() user: User,
     @Param('symbol') symbol: string,
   ): Promise<HttpResponse> {
-    const result = await this.watchlistService.removeFromWatchlist(
-      user.id,
-      symbol,
-    );
-
-    if (!result.success) {
-      return generateInternalServerResult(result.message);
-    }
-
-    return {
-      success: true,
-    };
+    return this.watchlistService.removeFromWatchlist(user.id, symbol);
   }
 }

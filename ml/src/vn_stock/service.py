@@ -227,5 +227,98 @@ class StockService:
             logger.error(f"Stock list error: {e}", exc_info=True)
             raise DataFetchException(str(e))
 
+    def get_stocks_by_exchange(self, exchange: str) -> List[dict]:
+        if Listing is None:
+            raise DataFetchException("Listing not available")
+
+        exchange_upper = exchange.upper()
+        exchanges_to_fetch = ["HOSE", "HNX", "UPCOM"]
+        if exchange_upper in exchanges_to_fetch:
+            exchanges_to_fetch = [exchange_upper]
+        elif exchange_upper != "ALL":
+            raise DataFetchException(f"Invalid exchange: {exchange}. Supported: HOSE, HNX, UPCOM, ALL")
+
+        # Try VCI first, fallback to KBS
+        try:
+            logger.info("Attempting to fetch symbols using VCI source...")
+            listing = Listing(source="VCI")
+            symbols_dict = {}
+            for ex in exchanges_to_fetch:
+                df = listing.symbols_by_exchange(exchange=ex, to_df=True)
+                if df is None or df.empty:
+                    continue
+                for _, row in df.iterrows():
+                    sym = row.get("symbol")
+                    if not sym:
+                        continue
+                    sym_str = str(sym).upper()
+
+                    row_exchange = row.get("exchange")
+                    if row_exchange:
+                        row_exchange = str(row_exchange).upper()
+                        if row_exchange in ["HSX", "HOSE"]:
+                            row_exchange = "HOSE"
+                        elif row_exchange == "HNX":
+                            row_exchange = "HNX"
+                        elif row_exchange == "UPCOM":
+                            row_exchange = "UPCOM"
+                    else:
+                        row_exchange = ex
+
+                    if exchange_upper != "ALL" and row_exchange != exchange_upper:
+                        continue
+
+                    organ_name = row.get("organ_name") or row.get("organ_short_name")
+                    stock_type = row.get("type") or "stock"
+                    symbols_dict[sym_str] = {
+                        "symbol": sym_str,
+                        "exchange": row_exchange,
+                        "name": str(organ_name) if organ_name else "",
+                        "type": str(stock_type)
+                    }
+            return list(symbols_dict.values())
+        except Exception as e:
+            logger.warning(f"VCI source failed: {e}. Falling back to KBS source.")
+            try:
+                listing = Listing(source="KBS")
+                symbols_dict = {}
+                for ex in exchanges_to_fetch:
+                    df = listing.symbols_by_exchange(exchange=ex, to_df=True)
+                    if df is None or df.empty:
+                        continue
+                    for _, row in df.iterrows():
+                        sym = row.get("symbol")
+                        if not sym:
+                            continue
+                        sym_str = str(sym).upper()
+
+                        row_exchange = row.get("exchange")
+                        if row_exchange:
+                            row_exchange = str(row_exchange).upper()
+                            if row_exchange in ["HSX", "HOSE"]:
+                                row_exchange = "HOSE"
+                            elif row_exchange == "HNX":
+                                row_exchange = "HNX"
+                            elif row_exchange == "UPCOM":
+                                row_exchange = "UPCOM"
+                        else:
+                            row_exchange = ex
+
+                        if exchange_upper != "ALL" and row_exchange != exchange_upper:
+                            continue
+
+                        organ_name = row.get("organ_name") or row.get("organ_short_name")
+                        stock_type = row.get("type") or "stock"
+                        symbols_dict[sym_str] = {
+                            "symbol": sym_str,
+                            "exchange": row_exchange,
+                            "name": str(organ_name) if organ_name else "",
+                            "type": str(stock_type)
+                        }
+                return list(symbols_dict.values())
+            except Exception as e_kbs:
+                logger.error(f"Error fetching symbols by exchange: {e_kbs}", exc_info=True)
+                raise DataFetchException(str(e_kbs))
+
 
 stock_service = StockService()

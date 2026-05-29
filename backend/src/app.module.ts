@@ -10,6 +10,7 @@ import { GlobalModule } from '@modules/global/global.module';
 import { MLModule } from '@modules/ml/ml.module';
 import { ModelManagementModule } from '@modules/model-management/model-management.module';
 import { StockCompaniesModule } from '@modules/stock-companies/stock-companies.module';
+import { StocksModule } from '@modules/stocks/stocks.module';
 import { UserModule } from '@modules/user/user.module';
 import { WatchlistModule } from '@modules/watchlist/watchlist.module';
 
@@ -50,6 +51,7 @@ import { WatchlistModule } from '@modules/watchlist/watchlist.module';
     ModelManagementModule,
     StockCompaniesModule,
     WatchlistModule,
+    StocksModule,
   ],
 })
 export class AppModule {}
