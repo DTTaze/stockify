@@ -8,6 +8,7 @@ export enum ExchangeFilter {
   HOSE = 'HOSE',
   HNX = 'HNX',
   UPCOM = 'UPCOM',
+  DELISTED = 'DELISTED',
   ALL = 'ALL',
 }
 

@@ -113,8 +113,15 @@ export class StocksService extends BaseCRUDService<Stock> {
         const stock = new Stock();
         stock.symbol = item.symbol;
         stock.exchange = item.exchange;
-        stock.name = item.name;
+        stock.name = item.organ_name || item.organ_short_name || '';
         stock.type = item.type;
+        stock.sid = item.sid;
+        stock.enOrganName = item.en_organ_name;
+        stock.enOrganShortName = item.en_organ_short_name;
+        stock.organShortName = item.organ_short_name;
+        stock.organName = item.organ_name;
+        stock.productGrpId = item.product_grp_id;
+        stock.icbCode2 = item.icb_code2;
         return stock;
       });
 

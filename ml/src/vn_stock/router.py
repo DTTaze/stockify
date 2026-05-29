@@ -79,3 +79,16 @@ async def get_stocks_by_exchange(
 ) -> List[schemas.StockByExchange]:
     return service.get_stocks_by_exchange(exchange)
 
+
+@router.get(
+    "/stock-details",
+    response_model=List[schemas.StockDetailResponse],
+    summary="Get detailed stock symbols by exchange",
+)
+async def get_stock_details(
+    exchange: str = Query("ALL", description="Exchange (HOSE, HNX, UPCOM, DELISTED, or ALL)"),
+    service: StockService = Depends(get_service),
+) -> List[schemas.StockDetailResponse]:
+    return service.get_stock_details(exchange)
+
+

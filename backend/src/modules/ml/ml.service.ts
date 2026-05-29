@@ -98,7 +98,7 @@ export class MLService extends OutboundPartnerService {
       this.logger.log(`Starting stock crawl for exchange: ${exchange}`);
       const response = await this.request<any[]>(
         'get',
-        `/market/symbols-by-exchange`,
+        `/market/stock-details`,
         { exchange },
       );
 
