@@ -58,7 +58,7 @@ export default function LoginForm() {
 
               <Link
                 href="/forgot-password"
-                className="text-brand-900 hover:hover:text-accent-500"
+                className="text-brand-900 hover:text-accent-500"
               >
                 Quên mật khẩu?
               </Link>

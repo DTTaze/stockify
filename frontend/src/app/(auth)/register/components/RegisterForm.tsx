@@ -85,7 +85,7 @@ export default function RegisterForm() {
             Đã có tài khoản?{" "}
             <Link
               href="/login"
-              className="text-brand-900 hover:hover:text-accent-500 transition-colors"
+              className="text-brand-900 hover:text-accent-500 transition-colors"
             >
               Đăng nhập ngay
             </Link>

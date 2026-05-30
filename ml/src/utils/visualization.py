@@ -2,12 +2,12 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 
-def plot_predictions(y_true, y_pred):
+def plot_predictions(y_true, y_pred, title: str = "Stock Price Prediction"):
     plt.figure(figsize=(12, 6))
     plt.plot(y_true, label="Real Price")
     plt.plot(y_pred, label="Predicted Price")
     plt.legend()
-    plt.title("Stock Price Prediction")
+    plt.title(title)
     plt.show()
 
 

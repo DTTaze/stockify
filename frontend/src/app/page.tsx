@@ -17,7 +17,7 @@ export default function Home() {
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex h-20 items-center justify-between">
             <div className="flex items-center space-x-3">
-              <TrendingUp className="hover:text-accent-500\ h-8 w-8" />
+              <TrendingUp className="hover:text-accent-500 h-8 w-8" />
               <span className="text-primary text-2xl font-light tracking-wide">
                 DRAGON PREDICT
               </span>
@@ -25,7 +25,7 @@ export default function Home() {
             <div className="flex items-center space-x-4">
               <Link
                 href="/login"
-                className="text-primary hover:hover:text-accent-500 px-6 py-2.5 transition-colors"
+                className="text-primary hover:text-accent-500 px-6 py-2.5 transition-colors"
               >
                 Đăng nhập
               </Link>
@@ -248,7 +248,7 @@ export default function Home() {
 
             <div className="relative z-10 text-center">
               <h2 className="mb-4 text-4xl text-white">
-                Được tin tùởng bởi hàng ngàn nhà đầu tư
+                Được tin tưởng bởi hàng ngàn nhà đầu tư
               </h2>
               <p className="mx-auto mb-12 max-w-2xl text-xl text-blue-100">
                 Dragon Predict đang là lựa chọn hàng đầu cho các nhà đầu tư tại

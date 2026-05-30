@@ -259,6 +259,23 @@ class StockService:
             "type": str(stock_type).lower() if pd.notna(stock_type) else "stock"
         }
 
+    def _fetch_symbols_from_source(
+        self, source: str, exchanges_to_fetch: List[str], exchange_upper: str
+    ) -> List[dict]:
+        listing = Listing(source=source)
+        symbols_dict = {}
+        for ex in exchanges_to_fetch:
+            df = listing.symbols_by_exchange(exchange=ex, to_df=True)
+            if df is None or df.empty:
+                continue
+            for _, row in df.iterrows():
+                stock_dict = self._parse_row_to_stock_dict(row, ex)
+                if stock_dict:
+                    if exchange_upper != "ALL" and stock_dict["exchange"] != exchange_upper:
+                        continue
+                    symbols_dict[stock_dict["symbol"]] = stock_dict
+        return list(symbols_dict.values())
+
     def get_stocks_by_exchange(self, exchange: str) -> List[dict]:
         if Listing is None:
             raise DataFetchException("Listing not available")
@@ -273,35 +290,11 @@ class StockService:
         # Try VCI first, fallback to KBS
         try:
             logger.info("Attempting to fetch symbols using VCI source...")
-            listing = Listing(source="VCI")
-            symbols_dict = {}
-            for ex in exchanges_to_fetch:
-                df = listing.symbols_by_exchange(exchange=ex, to_df=True)
-                if df is None or df.empty:
-                    continue
-                for _, row in df.iterrows():
-                    stock_dict = self._parse_row_to_stock_dict(row, ex)
-                    if stock_dict:
-                        if exchange_upper != "ALL" and stock_dict["exchange"] != exchange_upper:
-                            continue
-                        symbols_dict[stock_dict["symbol"]] = stock_dict
-            return list(symbols_dict.values())
+            return self._fetch_symbols_from_source("VCI", exchanges_to_fetch, exchange_upper)
         except Exception as e:
             logger.warning(f"VCI source failed: {e}. Falling back to KBS source.")
             try:
-                listing = Listing(source="KBS")
-                symbols_dict = {}
-                for ex in exchanges_to_fetch:
-                    df = listing.symbols_by_exchange(exchange=ex, to_df=True)
-                    if df is None or df.empty:
-                        continue
-                    for _, row in df.iterrows():
-                        stock_dict = self._parse_row_to_stock_dict(row, ex)
-                        if stock_dict:
-                            if exchange_upper != "ALL" and stock_dict["exchange"] != exchange_upper:
-                                continue
-                            symbols_dict[stock_dict["symbol"]] = stock_dict
-                return list(symbols_dict.values())
+                return self._fetch_symbols_from_source("KBS", exchanges_to_fetch, exchange_upper)
             except Exception as e_kbs:
                 logger.error(f"Error fetching symbols by exchange: {e_kbs}", exc_info=True)
                 raise DataFetchException(str(e_kbs))
@@ -315,46 +308,89 @@ class StockService:
         if exchange_upper not in valid_exchanges:
             raise DataFetchException(f"Invalid exchange: {exchange}. Supported: HOSE, HNX, UPCOM, DELISTED, ALL")
 
+        df = None
+        
+        # 1. Try VCI Listing first
         try:
-            logger.info("Fetching stock details using VCI source...")
+            logger.info("Fetching stock details using VCI Listing...")
             listing = Listing(source="VCI")
             df = listing.symbols_by_exchange(to_df=True)
-            if df is None or df.empty:
-                return []
-
-            results = []
-            for _, row in df.iterrows():
-                sym = row.get("symbol")
-                if not sym:
-                    continue
-                sym_str = str(sym).upper()
-
-                row_exchange = self._normalize_exchange(row.get("exchange"), fallback_exchange="")
-                
-                # Filter by exchange if not ALL
-                if exchange_upper != "ALL" and row_exchange != exchange_upper:
-                    continue
-
-                stock_type = row.get("type")
-                if stock_type:
-                    stock_type = str(stock_type).lower()
-
-                results.append({
-                    "symbol": sym_str,
-                    "exchange": row_exchange,
-                    "type": stock_type if pd.notna(stock_type) else None,
-                    "sid": int(row.get("sid")) if pd.notna(row.get("sid")) else None,
-                    "organ_name": str(row.get("organ_name")) if pd.notna(row.get("organ_name")) else None,
-                    "organ_short_name": str(row.get("organ_short_name")) if pd.notna(row.get("organ_short_name")) else None,
-                    "en_organ_name": str(row.get("en_organ_name")) if pd.notna(row.get("en_organ_name")) else None,
-                    "en_organ_short_name": str(row.get("en_organ_short_name")) if pd.notna(row.get("en_organ_short_name")) else None,
-                    "product_grp_id": str(row.get("product_grp_id")) if pd.notna(row.get("product_grp_id")) else None,
-                    "icb_code2": str(row.get("icb_code2")) if pd.notna(row.get("icb_code2")) else None,
-                })
-            return results
         except Exception as e:
-            logger.error(f"Error fetching stock details: {e}", exc_info=True)
-            raise DataFetchException(str(e))
+            logger.warning(f"VCI Listing failed: {e}. Trying direct HTTP fallback...")
+
+        # 2. Try Direct HTTP request fallback to Vietcap if VCI Listing failed
+        if df is None or df.empty:
+            try:
+                import requests
+                url = "https://trading.vietcap.com.vn/api/price/symbols/getAll"
+                headers = {
+                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+                }
+                r = requests.get(url, headers=headers, timeout=15)
+                if r.status_code == 200:
+                    json_data = r.json()
+                    df_raw = pd.DataFrame(json_data)
+                    if not df_raw.empty:
+                        # Map raw camelCase fields to match symbols_by_exchange columns
+                        df = df_raw.rename(columns={
+                            "board": "exchange",
+                            "enOrganName": "en_organ_name",
+                            "enOrganShortName": "en_organ_short_name",
+                            "organShortName": "organ_short_name",
+                            "organName": "organ_name",
+                            "productGrpID": "product_grp_id",
+                            "icbCode2": "icb_code2"
+                        })
+                        logger.info("Successfully fetched stock details via direct HTTP fallback.")
+            except Exception as e_direct:
+                logger.warning(f"Direct HTTP fallback failed: {e_direct}. Trying KBS fallback...")
+
+        # 3. Try KBS Listing fallback as a last resort (active stocks only)
+        if df is None or df.empty:
+            try:
+                logger.info("Attempting fallback to KBS Listing source...")
+                listing = Listing(source="KBS")
+                df_kbs = listing.symbols_by_exchange(get_all=True)
+                if not df_kbs.empty:
+                    df = df_kbs.rename(columns={
+                        "id": "sid"
+                    })
+                    logger.info("Successfully loaded active stock symbols via KBS fallback.")
+            except Exception as e_kbs:
+                logger.error(f"All fallback options failed: {e_kbs}", exc_info=True)
+                raise DataFetchException("Failed to fetch symbols from all available sources.")
+
+        # Process the dataframe
+        results = []
+        for _, row in df.iterrows():
+            sym = row.get("symbol")
+            if not sym:
+                continue
+            sym_str = str(sym).upper()
+
+            row_exchange = self._normalize_exchange(row.get("exchange"), fallback_exchange="")
+            
+            # Filter by exchange if not ALL
+            if exchange_upper != "ALL" and row_exchange != exchange_upper:
+                continue
+
+            stock_type = row.get("type")
+            if stock_type:
+                stock_type = str(stock_type).lower()
+
+            results.append({
+                "symbol": sym_str,
+                "exchange": row_exchange,
+                "type": stock_type if pd.notna(stock_type) else None,
+                "sid": int(row.get("sid")) if pd.notna(row.get("sid")) else None,
+                "organ_name": str(row.get("organ_name")) if pd.notna(row.get("organ_name")) else None,
+                "organ_short_name": str(row.get("organ_short_name")) if pd.notna(row.get("organ_short_name")) else None,
+                "en_organ_name": str(row.get("en_organ_name")) if pd.notna(row.get("en_organ_name")) else None,
+                "en_organ_short_name": str(row.get("en_organ_short_name")) if pd.notna(row.get("en_organ_short_name")) else None,
+                "product_grp_id": str(row.get("product_grp_id")) if pd.notna(row.get("product_grp_id")) else None,
+                "icb_code2": str(row.get("icb_code2")) if pd.notna(row.get("icb_code2")) else None,
+            })
+        return results
 
 
 stock_service = StockService()

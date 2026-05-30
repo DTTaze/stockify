@@ -19,12 +19,14 @@ interface ActivityItemProps {
 function ActivityItem(props: ActivityItemProps) {
   const { activity } = props;
   const config = ACTIVITY_CONFIG[activity.type];
-  // const Icon = config.icon;
+  const Icon = config.icon;
 
   return (
-    <div className="flex items-start space-x-3 rounded-xl border-2 p-4 transition-all hover:shadow-sm">
-      <div className="rounded-lg p-1.5">
-        {/* <Icon className="h-4 w-4 text-white" /> */}
+    <div
+      className={`flex items-start space-x-3 rounded-xl border-2 p-4 transition-all hover:shadow-sm ${config.container}`}
+    >
+      <div className={`rounded-lg p-1.5 ${config.iconBg}`}>
+        <Icon className="h-4 w-4 text-white" />
       </div>
 
       <div className="flex-1">

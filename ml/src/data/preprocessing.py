@@ -72,6 +72,12 @@ def load_multi_stock_data(symbols: List[str]) -> Dict[str, pd.DataFrame]:
 
 
 def feature_engineering(df: pd.DataFrame) -> pd.DataFrame:
+    if len(df) < 50:
+        raise ValueError(
+            f"Input DataFrame is too small ({len(df)} rows). "
+            "At least 50 rows are required to calculate technical indicators such as MA50."
+        )
+
     df = df.copy()
 
     df["MA10"] = df["Close"].rolling(10).mean()
