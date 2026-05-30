@@ -36,4 +36,28 @@ export const stockServices = {
 
   getSupportedSymbols: (): Promise<AxiosResponse> =>
     axiosClient.get(`ml/prediction/symbols`),
+
+  getMarketGroups: (): Promise<AxiosResponse> =>
+    axiosClient.get(`stock-categories/market`),
+
+  getIcbIndustries: (params?: { level?: number }): Promise<AxiosResponse> =>
+    axiosClient.get(`stock-categories/icb`, { params }),
+
+  getIcbStocks: (
+    icbCode: string,
+    params?: { keyword?: string; limit?: number; offset?: number },
+  ): Promise<AxiosResponse> =>
+    axiosClient.get(`stock-categories/icb/${icbCode}`, { params }),
+
+  getTickerCategories: (ticker: string): Promise<AxiosResponse> =>
+    axiosClient.get(`stock-categories/ticker/${ticker}`),
+
+  syncMarketGroups: (): Promise<AxiosResponse> =>
+    axiosClient.post(`stock-categories/sync-market-groups`),
+
+  syncIcbIndustries: (): Promise<AxiosResponse> =>
+    axiosClient.post(`stock-categories/sync-icb-industries`),
+
+  syncAllCategories: (): Promise<AxiosResponse> =>
+    axiosClient.post(`stock-categories/sync-all`),
 };

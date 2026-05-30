@@ -115,3 +115,26 @@ async def get_symbols_by_group(
     service: StockService = Depends(get_service),
 ) -> List[str]:
     return service.get_symbols_by_group(group)
+
+
+@router.get(
+    "/icb-industries",
+    response_model=List[schemas.IcbIndustryResponse],
+    summary="Get all ICB industries",
+)
+async def get_icb_industries(
+    service: StockService = Depends(get_service),
+) -> List[schemas.IcbIndustryResponse]:
+    return service.get_icb_industries()
+
+
+@router.get(
+    "/symbols-by-industries",
+    response_model=List[schemas.SymbolIndustryResponse],
+    summary="Get symbols mapped to industries",
+)
+async def get_symbols_by_industries(
+    service: StockService = Depends(get_service),
+) -> List[schemas.SymbolIndustryResponse]:
+    return service.get_symbols_by_industries()
+

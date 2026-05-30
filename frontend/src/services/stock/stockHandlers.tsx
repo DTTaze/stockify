@@ -76,3 +76,49 @@ export const getClassificationSummaryHandlers = async (): Promise<
 
   return response.data;
 };
+
+export const getMarketGroupsHandlers = async (): Promise<ApiResponse<any>> => {
+  const response = await stockServices.getMarketGroups();
+  return response.data;
+};
+
+export const getIcbIndustriesHandlers = async (params?: {
+  level?: number;
+}): Promise<ApiResponse<any>> => {
+  const response = await stockServices.getIcbIndustries(params);
+  return response.data;
+};
+
+export const getIcbStocksHandlers = async (
+  icbCode: string,
+  params?: { keyword?: string; limit?: number; offset?: number },
+): Promise<ApiResponse<any>> => {
+  const response = await stockServices.getIcbStocks(icbCode, params);
+  return response.data;
+};
+
+export const getTickerCategoriesHandlers = async (
+  ticker: string,
+): Promise<ApiResponse<any>> => {
+  const response = await stockServices.getTickerCategories(ticker);
+  return response.data;
+};
+
+export const syncMarketGroupsHandlers = async (): Promise<ApiResponse<any>> => {
+  const response = await stockServices.syncMarketGroups();
+  return response.data;
+};
+
+export const syncIcbIndustriesHandlers = async (): Promise<
+  ApiResponse<any>
+> => {
+  const response = await stockServices.syncIcbIndustries();
+  return response.data;
+};
+
+export const syncAllCategoriesHandlers = async (): Promise<
+  ApiResponse<any>
+> => {
+  const response = await stockServices.syncAllCategories();
+  return response.data;
+};

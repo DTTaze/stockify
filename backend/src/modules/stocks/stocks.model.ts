@@ -3,6 +3,7 @@ import { Column, Entity, OneToMany, PrimaryColumn } from 'typeorm';
 import { Audit } from '@shared/models/audit.model';
 
 import { StockGroupMapping } from './stock-group-mapping.model';
+import { StockIcbMapping } from './stock-icb-mapping.model';
 
 @Entity('stocks')
 export class Stock extends Audit {
@@ -44,4 +45,7 @@ export class Stock extends Audit {
 
   @OneToMany(() => StockGroupMapping, (m) => m.stock)
   mappings: StockGroupMapping[];
+
+  @OneToMany(() => StockIcbMapping, (m) => m.stock)
+  icbMappings: StockIcbMapping[];
 }

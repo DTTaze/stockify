@@ -1,5 +1,7 @@
 import { Search } from "lucide-react";
+import React from "react";
 
+import { IcbIndustrySelect } from "@/components/common/IcbIndustrySelect";
 import { Badge } from "@/components/ui/Badge";
 import { Card, CardContent } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
@@ -11,11 +13,11 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/Table";
-import { cn } from "@/utils";
 
 import { ClassificationTablePagination } from "./ClassificationTablePagination";
 
 type Props = {
+  industries: any[];
   stocks: any[];
   total: number;
   isLoading: boolean;
@@ -24,23 +26,14 @@ type Props = {
   currentPage: number;
   totalPages: number;
   onPageChange: (page: number) => void;
-  activeGroup: string;
-  onGroupChange: (group: string) => void;
+  activeIcbCode: string;
+  onIcbChange: (code: string) => void;
   limit: number;
   onLimitChange: (limit: number) => void;
 };
 
-const TABS = [
-  { id: "HOSE", label: "Sàn HOSE" },
-  { id: "VN30", label: "Chỉ số VN30" },
-  { id: "HNX", label: "Sàn HNX" },
-  { id: "UPCOM", label: "Sàn UPCOM" },
-  { id: "CW", label: "Chứng quyền (CW)" },
-  { id: "ETF", label: "Quỹ ETF" },
-  { id: "FU_INDEX", label: "Hợp đồng tương lai" },
-];
-
-export function DataClassificationTable({
+export function DataIcbClassificationTable({
+  industries,
   stocks,
   total,
   isLoading,
@@ -49,46 +42,52 @@ export function DataClassificationTable({
   currentPage,
   totalPages,
   onPageChange,
-  activeGroup,
-  onGroupChange,
+  activeIcbCode,
+  onIcbChange,
   limit,
   onLimitChange,
 }: Props) {
   return (
     <Card className="overflow-hidden rounded-xl border bg-white shadow-sm">
       <CardContent className="p-0">
-        {/* Tabs for Group filtering */}
-        <div className="flex flex-wrap gap-1 border-b border-gray-100 bg-gray-50/30 p-4">
-          {TABS.map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => onGroupChange(tab.id)}
-              className={cn(
-                "cursor-pointer rounded-lg px-3 py-1.5 text-xs font-semibold transition-all duration-200",
-                activeGroup === tab.id
-                  ? "bg-brand-900 text-white shadow-xs"
-                  : "text-gray-600 hover:bg-gray-100 hover:text-gray-900",
-              )}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
+        {/* Industry Filters */}
+        <div className="border-b border-gray-100 bg-gray-50/50 p-4">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 md:items-end">
+            {/* Custom Searchable Hierarchical Dropdown */}
+            <div className="flex flex-col gap-1.5">
+              <label className="text-brand-900 text-[10px] font-bold tracking-wider uppercase">
+                Chọn Ngành ICB
+              </label>
+              <IcbIndustrySelect
+                industries={industries}
+                activeIcbCode={activeIcbCode}
+                onChange={onIcbChange}
+                isLoading={isLoading}
+              />
+            </div>
 
-        <div className="flex items-center justify-between border-b border-gray-100 bg-gray-50/50 p-4">
-          <div className="relative w-full max-w-md">
-            <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-gray-400" />
-            <Input
-              type="text"
-              placeholder="Tìm kiếm mã chứng khoán hoặc tên công ty..."
-              value={search}
-              onChange={onSearchChange}
-              className="border-gray-200 bg-white pl-9"
-            />
-          </div>
-          <div className="text-xs font-medium text-gray-500">
-            Tổng số: <span className="text-brand-900 font-bold">{total}</span>{" "}
-            mã
+            {/* Search stock code / company name */}
+            <div className="flex flex-col gap-1.5">
+              <div className="flex items-center justify-between">
+                <label className="text-[10px] font-bold tracking-wider text-gray-400 uppercase">
+                  Tìm kiếm mã hoặc tên công ty
+                </label>
+                <div className="text-xs font-medium text-gray-500">
+                  Tổng số:{" "}
+                  <span className="text-brand-900 font-bold">{total}</span> mã
+                </div>
+              </div>
+              <div className="relative w-full">
+                <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                <Input
+                  type="text"
+                  placeholder="Nhập mã chứng khoán hoặc tên công ty..."
+                  value={search}
+                  onChange={onSearchChange}
+                  className="focus-visible:ring-brand-900 h-9 border-gray-200 bg-white pl-9"
+                />
+              </div>
+            </div>
           </div>
         </div>
 
@@ -106,9 +105,6 @@ export function DataClassificationTable({
                   Sàn giao dịch
                 </TableHead>
                 <TableHead className="text-sm font-semibold tracking-wider text-white uppercase">
-                  Nhóm chỉ số
-                </TableHead>
-                <TableHead className="text-sm font-semibold tracking-wider text-white uppercase">
                   Phân loại
                 </TableHead>
               </TableRow>
@@ -118,7 +114,7 @@ export function DataClassificationTable({
               {isLoading ? (
                 <TableRow>
                   <TableCell
-                    colSpan={5}
+                    colSpan={4}
                     className="h-32 text-center text-gray-400"
                   >
                     Đang tải danh sách...
@@ -127,7 +123,7 @@ export function DataClassificationTable({
               ) : stocks.length === 0 ? (
                 <TableRow>
                   <TableCell
-                    colSpan={5}
+                    colSpan={4}
                     className="h-32 text-center text-gray-400"
                   >
                     Không tìm thấy kết quả nào.
@@ -149,18 +145,6 @@ export function DataClassificationTable({
                       >
                         {stock.exchange}
                       </Badge>
-                    </TableCell>
-                    <TableCell className="font-semibold">
-                      {stock.indexGroup ? (
-                        <Badge
-                          variant="secondary"
-                          className="bg-purple-100 text-purple-700"
-                        >
-                          {stock.indexGroup}
-                        </Badge>
-                      ) : (
-                        <span className="font-normal text-gray-400">-</span>
-                      )}
                     </TableCell>
                     <TableCell className="text-sm text-gray-500 capitalize">
                       {stock.type || "stock"}

@@ -92,3 +92,20 @@ class StockDetailResponse(BaseModel):
     )
     product_grp_id: Optional[str] = Field(None, description="Product group ID")
     icb_code2: Optional[str] = Field(None, description="ICB Level 2 code")
+
+
+class IcbIndustryResponse(BaseModel):
+    icb_name: str = Field(..., description="ICB Industry name in Vietnamese")
+    en_icb_name: Optional[str] = Field(None, description="ICB Industry name in English")
+    icb_code: str = Field(..., description="ICB Industry code")
+    level: int = Field(..., description="ICB Industry hierarchy level (1-4)")
+
+
+class SymbolIndustryResponse(BaseModel):
+    symbol: str = Field(..., description="Stock symbol")
+    organ_name: Optional[str] = Field(None, description="Organization name")
+    com_type_code: Optional[str] = Field(None, description="Company type code")
+    icb_level: int = Field(..., description="ICB mapping level")
+    icb_code: str = Field(..., description="ICB Industry code")
+    icb_name: str = Field(..., description="ICB Industry name")
+

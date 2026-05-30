@@ -11,13 +11,20 @@ import {
 
 import {
   getClassificationSummaryQueryFn,
+  getIcbIndustriesQueryFn,
+  getIcbStocksQueryFn,
   getIndexQuoteQueryFn,
+  getMarketGroupsQueryFn,
   getPredictionQueryFn,
   getQuoteHistoricalQueryFn,
   getStockCompaniesQueryFn,
   getStocksQueryFn,
   getSupportedSymbolsQueryFn,
+  getTickerCategoriesQueryFn,
+  syncAllCategoriesQueryFn,
   syncClassificationsQueryFn,
+  syncIcbIndustriesQueryFn,
+  syncMarketGroupsQueryFn,
 } from "./QueryFnsStocks";
 import { QueryKeysStocks } from "./QueryKeysStocks";
 
@@ -114,6 +121,88 @@ export const useSyncClassifications = () => {
       });
       queryClient.invalidateQueries({
         queryKey: [QueryKeysStocks.ROOT, "list"],
+      });
+    },
+  });
+};
+
+export const useQueryMarketGroups = () =>
+  useQuery({
+    queryKey: [QueryKeysStocks.ROOT, "market-groups"],
+    queryFn: getMarketGroupsQueryFn,
+    refetchOnMount: true,
+  });
+
+export const useQueryIcbIndustries = (params?: { level?: number }) =>
+  useQuery({
+    queryKey: [QueryKeysStocks.ROOT, "icb-industries", params?.level],
+    queryFn: () => getIcbIndustriesQueryFn(params),
+    refetchOnMount: true,
+  });
+
+export const useQueryIcbStocks = (
+  icbCode: string,
+  params?: { keyword?: string; limit?: number; offset?: number },
+) =>
+  useQuery({
+    queryKey: [
+      QueryKeysStocks.ROOT,
+      "icb-stocks",
+      icbCode,
+      params?.keyword,
+      params?.limit,
+      params?.offset,
+    ],
+    queryFn: () => getIcbStocksQueryFn(icbCode, params),
+    enabled: !!icbCode,
+    refetchOnMount: true,
+  });
+
+export const useQueryTickerCategories = (ticker: string) =>
+  useQuery({
+    queryKey: [QueryKeysStocks.ROOT, "ticker-categories", ticker],
+    queryFn: () => getTickerCategoriesQueryFn(ticker),
+    enabled: !!ticker,
+    refetchOnMount: true,
+  });
+
+export const useSyncMarketGroups = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: syncMarketGroupsQueryFn,
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: [QueryKeysStocks.ROOT, "classification-summary"],
+      });
+      queryClient.invalidateQueries({
+        queryKey: [QueryKeysStocks.ROOT, "list"],
+      });
+    },
+  });
+};
+
+export const useSyncIcbIndustries = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: syncIcbIndustriesQueryFn,
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: [QueryKeysStocks.ROOT, "icb-industries"],
+      });
+      queryClient.invalidateQueries({
+        queryKey: [QueryKeysStocks.ROOT, "icb-stocks"],
+      });
+    },
+  });
+};
+
+export const useSyncAllCategories = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: syncAllCategoriesQueryFn,
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: [QueryKeysStocks.ROOT],
       });
     },
   });

@@ -1,12 +1,19 @@
 import {
   getClassificationSummaryHandlers,
+  getIcbIndustriesHandlers,
+  getIcbStocksHandlers,
   getIndexQuoteHandlers,
+  getMarketGroupsHandlers,
   getPredictionHandlers,
   getQuoteHistoricalHandlers,
   getStockCompaniesHandlers,
   getStocksHandlers,
   getSupportedSymbolsHandlers,
+  getTickerCategoriesHandlers,
+  syncAllCategoriesHandlers,
   syncClassificationsHandlers,
+  syncIcbIndustriesHandlers,
+  syncMarketGroupsHandlers,
 } from "@/services/stock/stockHandlers";
 import {
   MarketQuoteParams,
@@ -110,5 +117,68 @@ export const getClassificationSummaryQueryFn = async (): Promise<any> => {
     );
   }
 
+  return response.data;
+};
+
+export const getMarketGroupsQueryFn = async (): Promise<any> => {
+  const response = await getMarketGroupsHandlers();
+  if (!response.success) {
+    throw new Error(response.message || "Failed to fetch market groups");
+  }
+  return response.data;
+};
+
+export const getIcbIndustriesQueryFn = async (params?: {
+  level?: number;
+}): Promise<any> => {
+  const response = await getIcbIndustriesHandlers(params);
+  if (!response.success) {
+    throw new Error(response.message || "Failed to fetch ICB industries");
+  }
+  return response.data;
+};
+
+export const getIcbStocksQueryFn = async (
+  icbCode: string,
+  params?: { keyword?: string; limit?: number; offset?: number },
+): Promise<any> => {
+  const response = await getIcbStocksHandlers(icbCode, params);
+  if (!response.success) {
+    throw new Error(response.message || "Failed to fetch ICB stocks");
+  }
+  return response.data;
+};
+
+export const getTickerCategoriesQueryFn = async (
+  ticker: string,
+): Promise<any> => {
+  const response = await getTickerCategoriesHandlers(ticker);
+  if (!response.success) {
+    throw new Error(response.message || "Failed to fetch ticker categories");
+  }
+  return response.data;
+};
+
+export const syncMarketGroupsQueryFn = async (): Promise<any> => {
+  const response = await syncMarketGroupsHandlers();
+  if (!response.success) {
+    throw new Error(response.message || "Failed to sync market groups");
+  }
+  return response.data;
+};
+
+export const syncIcbIndustriesQueryFn = async (): Promise<any> => {
+  const response = await syncIcbIndustriesHandlers();
+  if (!response.success) {
+    throw new Error(response.message || "Failed to sync ICB industries");
+  }
+  return response.data;
+};
+
+export const syncAllCategoriesQueryFn = async (): Promise<any> => {
+  const response = await syncAllCategoriesHandlers();
+  if (!response.success) {
+    throw new Error(response.message || "Failed to sync all categories");
+  }
   return response.data;
 };

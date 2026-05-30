@@ -593,5 +593,88 @@ class StockService:
             "FU_INDEX": [],
         }
 
+    def get_icb_industries(self) -> List[dict]:
+        if Listing is None:
+            raise DataFetchException("Listing not available")
+        try:
+            listing = Listing(source="VCI")
+            df = listing.industries_icb()
+            if df is None or df.empty:
+                return []
+            
+            results = []
+            for _, row in df.iterrows():
+                results.append({
+                    "icb_name": str(row.get("icb_name")) if pd.notna(row.get("icb_name")) else "",
+                    "en_icb_name": str(row.get("en_icb_name")) if pd.notna(row.get("en_icb_name")) else None,
+                    "icb_code": str(row.get("icb_code")) if pd.notna(row.get("icb_code")) else "",
+                    "level": int(row.get("level")) if pd.notna(row.get("level")) else 0,
+                })
+            return results
+        except Exception as e:
+            logger.error(f"Error fetching ICB industries: {e}", exc_info=True)
+            try:
+                logger.info("Retrying fetch of ICB industries via KBS source...")
+                listing = Listing(source="KBS")
+                df = listing.industries_icb()
+                if df is None or df.empty:
+                    return []
+                results = []
+                for _, row in df.iterrows():
+                    results.append({
+                        "icb_name": str(row.get("icb_name")) if pd.notna(row.get("icb_name")) else "",
+                        "en_icb_name": str(row.get("en_icb_name")) if pd.notna(row.get("en_icb_name")) else None,
+                        "icb_code": str(row.get("icb_code")) if pd.notna(row.get("icb_code")) else "",
+                        "level": int(row.get("level")) if pd.notna(row.get("level")) else 0,
+                    })
+                return results
+            except Exception as e_kbs:
+                logger.error(f"KBS fallback failed for ICB industries: {e_kbs}", exc_info=True)
+                raise DataFetchException(str(e_kbs))
+
+    def get_symbols_by_industries(self) -> List[dict]:
+        if Listing is None:
+            raise DataFetchException("Listing not available")
+        try:
+            listing = Listing(source="VCI")
+            df = listing.symbols_by_industries()
+            if df is None or df.empty:
+                return []
+            
+            results = []
+            for _, row in df.iterrows():
+                results.append({
+                    "symbol": str(row.get("symbol")).upper(),
+                    "organ_name": str(row.get("organ_name")) if pd.notna(row.get("organ_name")) else None,
+                    "com_type_code": str(row.get("com_type_code")) if pd.notna(row.get("com_type_code")) else None,
+                    "icb_level": int(row.get("icb_level")) if pd.notna(row.get("icb_level")) else 0,
+                    "icb_code": str(row.get("icb_code")) if pd.notna(row.get("icb_code")) else "",
+                    "icb_name": str(row.get("icb_name")) if pd.notna(row.get("icb_name")) else "",
+                })
+            return results
+        except Exception as e:
+            logger.error(f"Error fetching symbols by industries: {e}", exc_info=True)
+            try:
+                logger.info("Retrying fetch of symbols by industries via KBS source...")
+                listing = Listing(source="KBS")
+                df = listing.symbols_by_industries()
+                if df is None or df.empty:
+                    return []
+                results = []
+                for _, row in df.iterrows():
+                    results.append({
+                        "symbol": str(row.get("symbol")).upper(),
+                        "organ_name": str(row.get("organ_name")) if pd.notna(row.get("organ_name")) else None,
+                        "com_type_code": str(row.get("com_type_code")) if pd.notna(row.get("com_type_code")) else None,
+                        "icb_level": int(row.get("icb_level")) if pd.notna(row.get("icb_level")) else 0,
+                        "icb_code": str(row.get("icb_code")) if pd.notna(row.get("icb_code")) else "",
+                        "icb_name": str(row.get("icb_name")) if pd.notna(row.get("icb_name")) else "",
+                    })
+                return results
+            except Exception as e_kbs:
+                logger.error(f"KBS fallback failed for symbols by industries: {e_kbs}", exc_info=True)
+                raise DataFetchException(str(e_kbs))
+
 
 stock_service = StockService()
+

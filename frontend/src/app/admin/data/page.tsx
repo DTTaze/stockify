@@ -4,159 +4,59 @@ import { Database, Layers, RefreshCw } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
-import { DataClassificationStats } from "@/app/admin/data/components/DataClassificationStats";
-import { DataClassificationTable } from "@/app/admin/data/components/DataClassificationTable";
-import { DataManagementActions } from "@/app/admin/data/components/DataManagementActions";
-import { DataManagementError } from "@/app/admin/data/components/DataManagementError";
+import { ClassificationDataSection } from "@/app/admin/data/components/ClassificationDataSection";
 import { DataManagementHeader } from "@/app/admin/data/components/DataManagementHeader";
-import { DataManagementStats } from "@/app/admin/data/components/DataManagementStats";
-import { DataManagementTable } from "@/app/admin/data/components/DataManagementTable";
+import { TrainingDataSection } from "@/app/admin/data/components/TrainingDataSection";
 import { ButtonCustom } from "@/components/common/form/button";
-import { EMPTY_TEMPLATE_STRING } from "@/constants/common";
 import {
-  useQueryDataManagementStocks,
-  useQueryDataManagementSummary,
-  useUpdateDataManagementAll,
-  useUpdateDataManagementSymbol,
-} from "@/queries/data-management/QueryHooksDataManagement";
-import {
-  useQueryClassificationSummary,
-  useQueryStocks,
-  useSyncClassifications,
+  useSyncAllCategories,
+  useSyncIcbIndustries,
+  useSyncMarketGroups,
 } from "@/queries/stocks/QueryHooksStocks";
 import { cn } from "@/utils";
-
-// Dynamic limits will be managed via state
 
 export default function DataManagement() {
   const [activeTab, setActiveTab] = useState<"training" | "classification">(
     "training",
   );
-  const [updatingStock, setUpdatingStock] = useState<string | null>(null);
+  const [isTrainingBusy, setIsTrainingBusy] = useState(false);
 
-  // Classification states
-  const [classificationSearch, setClassificationSearch] = useState("");
-  const [classificationPage, setClassificationPage] = useState(1);
-  const [classificationGroup, setClassificationGroup] = useState("HOSE");
-  const [classificationLimit, setClassificationLimit] = useState(10);
-
-  // Training states
-  const [trainingSearch, setTrainingSearch] = useState("");
-  const [trainingStatus, setTrainingStatus] = useState<
-    "all" | "updated" | "needs_update"
-  >("all");
-  const [trainingPage, setTrainingPage] = useState(1);
-  const [trainingLimit, setTrainingLimit] = useState(10);
-
-  // Training Data Queries & Mutations
-  const summaryQuery = useQueryDataManagementSummary();
-  const trainingOffset = (trainingPage - 1) * trainingLimit;
-  const stocksQuery = useQueryDataManagementStocks({
-    keyword: trainingSearch.trim() || undefined,
-    status: trainingStatus,
-    limit: trainingLimit,
-    offset: trainingOffset,
-  });
-  const updateSymbolMutation = useUpdateDataManagementSymbol();
-  const updateAllMutation = useUpdateDataManagementAll();
-
-  // Classification Queries & Mutations
-  const classificationSummaryQuery = useQueryClassificationSummary();
-  const syncClassificationsMutation = useSyncClassifications();
-  const offset = (classificationPage - 1) * classificationLimit;
-  const classificationStocksQuery = useQueryStocks({
-    group: classificationGroup,
-    keyword: classificationSearch.trim() || undefined,
-    limit: classificationLimit,
-    offset: offset,
-  });
-
-  const summary = summaryQuery.data;
-  const stocks = stocksQuery.data?.stocks ?? [];
-  const trainingTotal = stocksQuery.data?.total ?? 0;
-  const trainingTotalPages = Math.ceil(trainingTotal / trainingLimit) || 1;
-
-  const classificationSummary = classificationSummaryQuery.data;
-  const classificationStocks = classificationStocksQuery.data?.rows ?? [];
-  const classificationTotal = classificationStocksQuery.data?.total ?? 0;
-  const classificationTotalPages =
-    Math.ceil(classificationTotal / classificationLimit) || 1;
-
-  const hasError =
-    summaryQuery.isError ||
-    stocksQuery.isError ||
-    classificationSummaryQuery.isError;
+  // Sync Mutations
+  const syncMarketGroupsMutation = useSyncMarketGroups();
+  const syncIcbIndustriesMutation = useSyncIcbIndustries();
+  const syncAllCategoriesMutation = useSyncAllCategories();
 
   const isBusy =
-    summaryQuery.isLoading ||
-    stocksQuery.isLoading ||
-    updateAllMutation.status === "pending" ||
-    updateSymbolMutation.status === "pending" ||
-    syncClassificationsMutation.isPending;
+    isTrainingBusy ||
+    syncMarketGroupsMutation.isPending ||
+    syncIcbIndustriesMutation.isPending ||
+    syncAllCategoriesMutation.isPending;
 
-  const handleUpdateStock = async (symbol: string) => {
-    setUpdatingStock(symbol);
+  const handleSyncMarketGroups = async () => {
     try {
-      await updateSymbolMutation.mutateAsync(symbol);
-      toast.success(`Cập nhật dữ liệu cho ${symbol} thành công`);
+      await syncMarketGroupsMutation.mutateAsync();
+      toast.success("Đồng bộ dữ liệu nhóm thị trường từ vnstock thành công!");
     } catch (err: any) {
-      toast.error(`Lỗi cập nhật ${symbol}: ${err.message}`);
-    } finally {
-      setUpdatingStock(null);
+      toast.error(`Đồng bộ nhóm thị trường thất bại: ${err.message}`);
     }
   };
 
-  const handleUpdateAll = async () => {
-    setUpdatingStock("all");
+  const handleSyncIcbIndustries = async () => {
     try {
-      await updateAllMutation.mutateAsync();
-      toast.success("Cập nhật tất cả dữ liệu huấn luyện thành công");
+      await syncIcbIndustriesMutation.mutateAsync();
+      toast.success("Đồng bộ dữ liệu ngành ICB từ vnstock thành công!");
     } catch (err: any) {
-      toast.error(`Lỗi cập nhật tất cả: ${err.message}`);
-    } finally {
-      setUpdatingStock(null);
+      toast.error(`Đồng bộ ngành ICB thất bại: ${err.message}`);
     }
   };
 
-  const handleSyncClassifications = async () => {
+  const handleSyncAllCategories = async () => {
     try {
-      await syncClassificationsMutation.mutateAsync();
-      toast.success("Đồng bộ phân loại mã chứng khoán từ vnstock thành công!");
+      await syncAllCategoriesMutation.mutateAsync();
+      toast.success("Đồng bộ toàn bộ dữ liệu phân loại từ vnstock thành công!");
     } catch (err: any) {
-      toast.error(`Đồng bộ thất bại: ${err.message}`);
+      toast.error(`Đồng bộ toàn bộ phân loại thất bại: ${err.message}`);
     }
-  };
-
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setClassificationSearch(e.target.value);
-    setClassificationPage(1);
-  };
-
-  const handleGroupChange = (group: string) => {
-    setClassificationGroup(group);
-    setClassificationPage(1);
-  };
-
-  const handleTrainingSearchChange = (val: string) => {
-    setTrainingSearch(val);
-    setTrainingPage(1);
-  };
-
-  const handleTrainingStatusChange = (
-    val: "all" | "updated" | "needs_update",
-  ) => {
-    setTrainingStatus(val);
-    setTrainingPage(1);
-  };
-
-  const handleClassificationLimitChange = (newLimit: number) => {
-    setClassificationLimit(newLimit);
-    setClassificationPage(1);
-  };
-
-  const handleTrainingLimitChange = (newLimit: number) => {
-    setTrainingLimit(newLimit);
-    setTrainingPage(1);
   };
 
   return (
@@ -166,15 +66,65 @@ export default function DataManagement() {
         <DataManagementHeader />
 
         {activeTab === "training" ? (
-          <DataManagementActions
-            isBusy={isBusy}
-            updatingStock={updatingStock}
-            onUpdateAll={handleUpdateAll}
-          />
-        ) : (
           <div className="flex items-center gap-3">
+            <span className="text-xs text-gray-400">
+              {isTrainingBusy
+                ? "Đang cập nhật dữ liệu huấn luyện..."
+                : "Sẵn sàng"}
+            </span>
+          </div>
+        ) : (
+          <div className="flex flex-wrap items-center gap-3">
             <ButtonCustom
-              onClick={handleSyncClassifications}
+              onClick={handleSyncMarketGroups}
+              disabled={isBusy}
+              className={cn(
+                "flex items-center space-x-2",
+                "rounded-lg",
+                "px-4 py-2",
+                "bg-blue-600 text-white",
+                "shadow-md",
+                "transition-all",
+                "hover:bg-blue-700",
+                "disabled:opacity-50",
+                "cursor-pointer",
+              )}
+            >
+              <RefreshCw
+                className={cn(
+                  "h-4 w-4",
+                  syncMarketGroupsMutation.isPending && "animate-spin",
+                )}
+              />
+              <span>Sync Market Groups</span>
+            </ButtonCustom>
+
+            <ButtonCustom
+              onClick={handleSyncIcbIndustries}
+              disabled={isBusy}
+              className={cn(
+                "flex items-center space-x-2",
+                "rounded-lg",
+                "px-4 py-2",
+                "bg-amber-600 text-white",
+                "shadow-md",
+                "transition-all",
+                "hover:bg-amber-700",
+                "disabled:opacity-50",
+                "cursor-pointer",
+              )}
+            >
+              <RefreshCw
+                className={cn(
+                  "h-4 w-4",
+                  syncIcbIndustriesMutation.isPending && "animate-spin",
+                )}
+              />
+              <span>Sync ICB Industries</span>
+            </ButtonCustom>
+
+            <ButtonCustom
+              onClick={handleSyncAllCategories}
               disabled={isBusy}
               className={cn(
                 "flex items-center space-x-2",
@@ -190,11 +140,11 @@ export default function DataManagement() {
             >
               <RefreshCw
                 className={cn(
-                  "h-5 w-5",
-                  syncClassificationsMutation.isPending && "animate-spin",
+                  "h-4 w-4",
+                  syncAllCategoriesMutation.isPending && "animate-spin",
                 )}
               />
-              <span>Đồng bộ Phân loại (Sync Data)</span>
+              <span>Sync All Categories</span>
             </ButtonCustom>
           </div>
         )}
@@ -232,60 +182,13 @@ export default function DataManagement() {
         </button>
       </div>
 
-      {hasError && <DataManagementError />}
-
       {activeTab === "training" ? (
-        <>
-          {/* Stats */}
-          <DataManagementStats
-            totalStocks={summary?.total_stocks ?? EMPTY_TEMPLATE_STRING}
-            updated={summary?.updated ?? EMPTY_TEMPLATE_STRING}
-            needsUpdate={summary?.needs_update ?? EMPTY_TEMPLATE_STRING}
-            totalRecords={
-              summary?.total_records?.toLocaleString() ?? EMPTY_TEMPLATE_STRING
-            }
-          />
-
-          {/* Table */}
-          <DataManagementTable
-            stocks={stocks}
-            isLoading={summaryQuery.isLoading || stocksQuery.isLoading}
-            isBusy={isBusy}
-            updatingStock={updatingStock}
-            onUpdateStock={handleUpdateStock}
-            search={trainingSearch}
-            onSearchChange={handleTrainingSearchChange}
-            statusFilter={trainingStatus}
-            onStatusChange={handleTrainingStatusChange}
-            total={trainingTotal}
-            currentPage={trainingPage}
-            totalPages={trainingTotalPages}
-            onPageChange={setTrainingPage}
-            limit={trainingLimit}
-            onLimitChange={handleTrainingLimitChange}
-          />
-        </>
+        <TrainingDataSection
+          isParentBusy={isBusy}
+          onBusyChange={setIsTrainingBusy}
+        />
       ) : (
-        <>
-          {/* Classification Stats */}
-          <DataClassificationStats summary={classificationSummary} />
-
-          {/* List and search table */}
-          <DataClassificationTable
-            stocks={classificationStocks}
-            total={classificationTotal}
-            isLoading={classificationStocksQuery.isLoading}
-            search={classificationSearch}
-            onSearchChange={handleSearchChange}
-            currentPage={classificationPage}
-            totalPages={classificationTotalPages}
-            onPageChange={setClassificationPage}
-            activeGroup={classificationGroup}
-            onGroupChange={handleGroupChange}
-            limit={classificationLimit}
-            onLimitChange={handleClassificationLimitChange}
-          />
-        </>
+        <ClassificationDataSection />
       )}
     </div>
   );

@@ -128,4 +128,12 @@ export class MLService extends OutboundPartnerService {
   public async getGroupedSymbols(): Promise<OperationResult<any>> {
     return this.request<any>('get', '/market/grouped-symbols') as any;
   }
+
+  public async getIcbIndustries(): Promise<OperationResult<any[]>> {
+    return this.request<any[]>('get', '/market/icb-industries') as any;
+  }
+
+  public async getSymbolsByIndustries(): Promise<OperationResult<any[]>> {
+    return this.request<any[]>('get', '/market/symbols-by-industries') as any;
+  }
 }

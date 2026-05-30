@@ -1,4 +1,5 @@
-import { IsEnum, IsOptional, IsString } from 'class-validator';
+import { Type } from 'class-transformer';
+import { IsEnum, IsInt, IsOptional, IsString, Max, Min } from 'class-validator';
 
 import { ApiPropertyOptional } from '@nestjs/swagger';
 
@@ -47,4 +48,27 @@ export class CrawlStocksDTO {
   @IsEnum(ExchangeFilter)
   @IsOptional()
   exchange?: ExchangeFilter = ExchangeFilter.ALL;
+}
+
+export class QueryIcbDTO {
+  @ApiPropertyOptional({
+    description: 'Filter by level (1, 2, 3, 4)',
+    minimum: 1,
+    maximum: 4,
+  })
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  @Max(4)
+  level?: number;
+}
+
+export class QueryIcbStocksDTO extends PaginationDTO {
+  @ApiPropertyOptional({
+    description: 'Keyword to search symbol or name',
+  })
+  @IsString()
+  @IsOptional()
+  keyword?: string;
 }

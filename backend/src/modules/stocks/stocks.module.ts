@@ -2,19 +2,29 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { MLModule } from '../ml/ml.module';
+import { IcbIndustry } from './icb-industry.model';
+import { StockCategoriesController } from './stock-categories.controller';
+import { StockCategoriesService } from './stock-categories.service';
 import { StockGroupMapping } from './stock-group-mapping.model';
 import { StockGroup } from './stock-group.model';
+import { StockIcbMapping } from './stock-icb-mapping.model';
 import { StocksController } from './stocks.controller';
 import { Stock } from './stocks.model';
 import { StocksService } from './stocks.service';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Stock, StockGroup, StockGroupMapping]),
+    TypeOrmModule.forFeature([
+      Stock,
+      StockGroup,
+      StockGroupMapping,
+      IcbIndustry,
+      StockIcbMapping,
+    ]),
     MLModule,
   ],
-  controllers: [StocksController],
-  providers: [StocksService],
-  exports: [StocksService],
+  controllers: [StocksController, StockCategoriesController],
+  providers: [StocksService, StockCategoriesService],
+  exports: [StocksService, StockCategoriesService],
 })
 export class StocksModule {}
