@@ -36,7 +36,7 @@ function isAdminRoute(pathname: string) {
   return ADMIN_ROUTES.some((route) => pathname.startsWith(route));
 }
 
-export function middleware(req: NextRequest) {
+export function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
   const token = req.cookies.get(ACCESS_TOKEN)?.value;

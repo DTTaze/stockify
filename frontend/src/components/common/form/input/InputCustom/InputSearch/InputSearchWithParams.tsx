@@ -1,12 +1,10 @@
 import { debounce } from "lodash-es";
-import { useSearchParams } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { ChangeEvent, useCallback, useMemo, useState } from "react";
 
 import { QUERY_PARAMS } from "@/constants/query";
-import { usePathname, useRouter } from "@/i18n/navigation";
 
 import { InputSearch } from ".";
-
 interface InputSearchWithParamsProps {
   queryParamToClear?: string | string[];
 }
