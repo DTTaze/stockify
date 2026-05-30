@@ -145,5 +145,12 @@ class ModelManagementService:
             }
         ]
 
+    def train_model(self, symbol: str, background_tasks) -> ActionResponse:
+        symbol = symbol.upper()
+        from ..models.train import train_multi_stock_models
+
+        background_tasks.add_task(train_multi_stock_models, [symbol])
+        return ActionResponse(success=True, message=f"Training started for {symbol}")
+
 
 model_management_service = ModelManagementService()

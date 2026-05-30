@@ -28,4 +28,7 @@ export const modelManagementServices = {
 
   getModelVersions: (id: string): Promise<AxiosResponse> =>
     axiosClient.get(`${BASE_URL}/${id}/versions`),
+
+  trainModel: (symbol: string): Promise<AxiosResponse> =>
+    axiosClient.post(`${BASE_URL}/train/${symbol}`),
 };

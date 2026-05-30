@@ -3,6 +3,7 @@
 import { Calendar, Sparkles, TrendingDown, TrendingUp } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 
+import { useGetModels } from "@/queries/model-management/QueryHooksModelManagement";
 import { useQueryPrediction } from "@/queries/stocks/QueryHooksStocks";
 
 interface PredictionPanelProps {
@@ -29,6 +30,8 @@ export function PredictionPanel(props: PredictionPanelProps) {
     isLoading: predictionLoading,
     error,
   } = useQueryPrediction(selectedSymbol, !!selectedSymbol);
+
+  const { data: models = [] } = useGetModels();
 
   const predictions = useMemo(() => {
     if (!prediction) return [];
@@ -93,6 +96,27 @@ export function PredictionPanel(props: PredictionPanelProps) {
           </div>
         </div>
       </div>
+
+      {models.length > 0 && (
+        <div className="mb-6">
+          <p className="mb-2 text-sm text-gray-600">Có sẵn dự đoán nhanh:</p>
+          <div className="flex flex-wrap gap-2">
+            {models.map((model) => (
+              <button
+                key={model.id}
+                onClick={() => setSelectedSymbol(model.id)}
+                className={`cursor-pointer rounded-lg px-3 py-1 text-sm transition-all ${
+                  selectedSymbol === model.id
+                    ? "bg-brand-900 text-white"
+                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                }`}
+              >
+                {model.id}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       {error ? (
         <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-red-700">

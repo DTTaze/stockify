@@ -11,7 +11,7 @@ from ..data.preprocessing import (
 )
 
 # Default symbols to train
-DEFAULT_SYMBOLS = ["VCB", "VIC", "VNM"]
+DEFAULT_SYMBOLS = ["VCB", "VIC", "VNM", "FPT", "HPG", "SSI", "VHM", "BID", "CTG", "TCB"]
 
 
 def train_single_stock_model(

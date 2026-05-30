@@ -69,3 +69,10 @@ export const getModelVersionsHandlers = async (
   const response = await modelManagementServices.getModelVersions(id);
   return response.data;
 };
+
+export const trainModelHandlers = async (
+  symbol: string,
+): Promise<ApiResponse<null>> => {
+  const response = await modelManagementServices.trainModel(symbol);
+  return response.data;
+};

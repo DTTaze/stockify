@@ -9,6 +9,7 @@ import {
   getModelVersionsQueryFn,
   restartModelMutationFn,
   rollbackModelMutationFn,
+  trainModelMutationFn,
 } from "./QueryFnsModelManagement";
 import { QueryKeysModelManagement } from "./QueryKeysModelManagement";
 
@@ -138,5 +139,26 @@ export const useGetModelVersions = (options: UseGetModelVersionsOptions) => {
     queryFn: () => getModelVersionsQueryFn(id),
     enabled: enabled,
     refetchOnMount: true,
+  });
+};
+
+export const useTrainModel = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: trainModelMutationFn,
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: [
+          QueryKeysModelManagement.ROOT,
+          QueryKeysModelManagement.MODELS,
+        ],
+      });
+      queryClient.invalidateQueries({
+        queryKey: [
+          QueryKeysModelManagement.ROOT,
+          QueryKeysModelManagement.SUMMARY,
+        ],
+      });
+    },
   });
 };

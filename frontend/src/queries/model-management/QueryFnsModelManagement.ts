@@ -7,6 +7,7 @@ import {
   getModelVersionsHandlers,
   restartModelHandlers,
   rollbackModelHandlers,
+  trainModelHandlers,
 } from "@/services/model-management/modelManagementHandlers";
 
 export const getModelSummaryQueryFn = async () => {
@@ -77,6 +78,16 @@ export const deleteModelMutationFn = async (id: string) => {
 
 export const getModelVersionsQueryFn = async (id: string) => {
   const response = await getModelVersionsHandlers(id);
+
+  if (!response.success) {
+    throw new Error(response.message);
+  }
+
+  return response.data;
+};
+
+export const trainModelMutationFn = async (symbol: string) => {
+  const response = await trainModelHandlers(symbol);
 
   if (!response.success) {
     throw new Error(response.message);

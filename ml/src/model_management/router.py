@@ -1,5 +1,5 @@
 from typing import List
-from fastapi import APIRouter
+from fastapi import APIRouter, BackgroundTasks
 
 from .schemas import ModelSummary, ModelItem, ModelDetail, ActionResponse, ModelVersion
 from .service import model_management_service
@@ -53,3 +53,9 @@ async def delete_model(model_id: str):
 async def get_model_versions(model_id: str):
     """Get all versions of a model"""
     return model_management_service.get_model_versions(model_id)
+
+
+@router.post("/train/{symbol}", response_model=ActionResponse)
+async def train_model(symbol: str, background_tasks: BackgroundTasks):
+    """Start training a model for a specific symbol"""
+    return model_management_service.train_model(symbol, background_tasks)
