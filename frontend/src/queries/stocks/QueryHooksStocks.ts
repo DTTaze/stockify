@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import {
   MarketQuoteParams,
@@ -10,11 +10,14 @@ import {
 } from "@/types/stock/stock.type";
 
 import {
+  getClassificationSummaryQueryFn,
   getIndexQuoteQueryFn,
   getPredictionQueryFn,
   getQuoteHistoricalQueryFn,
   getStockCompaniesQueryFn,
+  getStocksQueryFn,
   getSupportedSymbolsQueryFn,
+  syncClassificationsQueryFn,
 } from "./QueryFnsStocks";
 import { QueryKeysStocks } from "./QueryKeysStocks";
 
@@ -73,3 +76,45 @@ export const useQuerySupportedSymbols = () =>
     queryFn: () => getSupportedSymbolsQueryFn(),
     refetchOnMount: true,
   });
+
+export const useQueryStocks = (params?: {
+  group?: string;
+  keyword?: string;
+  offset?: number;
+  limit?: number;
+}) =>
+  useQuery({
+    queryKey: [
+      QueryKeysStocks.ROOT,
+      "list",
+      params?.group,
+      params?.keyword,
+      params?.offset,
+      params?.limit,
+    ],
+    queryFn: () => getStocksQueryFn(params),
+    refetchOnMount: true,
+  });
+
+export const useQueryClassificationSummary = () =>
+  useQuery({
+    queryKey: [QueryKeysStocks.ROOT, "classification-summary"],
+    queryFn: getClassificationSummaryQueryFn,
+    refetchOnMount: true,
+  });
+
+export const useSyncClassifications = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: syncClassificationsQueryFn,
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: [QueryKeysStocks.ROOT, "classification-summary"],
+      });
+      queryClient.invalidateQueries({
+        queryKey: [QueryKeysStocks.ROOT, "list"],
+      });
+    },
+  });
+};

@@ -47,6 +47,15 @@ export class StocksService extends BaseCRUDService<Stock> {
       filter.exchange = query.exchange;
     }
 
+    if (query.group) {
+      const g = query.group.toUpperCase();
+      if (['HOSE', 'HNX', 'UPCOM'].includes(g)) {
+        filter.exchange = g;
+      } else if (['VN30', 'CW', 'ETF', 'FU_INDEX'].includes(g)) {
+        filter.indexGroup = g;
+      }
+    }
+
     const keywordColumns: (keyof Stock)[] = ['symbol', 'name'];
     const result = await this.paginateByKeyword(
       query,
@@ -130,5 +139,119 @@ export class StocksService extends BaseCRUDService<Stock> {
     }
 
     return insertedCount;
+  }
+
+  public async syncClassifications(): Promise<OperationResult> {
+    try {
+      this.logger.log(
+        'Starting sync of stock classifications from Python microservice...',
+      );
+      const response = await this.mlService.getGroupedSymbols();
+      if (!response.success || !response.data) {
+        return {
+          success: false,
+          message: 'Failed to fetch grouped symbols from ML service',
+        };
+      }
+
+      const groupedSymbols = response.data;
+
+      const allStocks = await this.repo.find();
+      this.logger.log(
+        `Found ${allStocks.length} stocks in database to update.`,
+      );
+
+      const vn30Set = new Set(
+        (groupedSymbols.VN30 || []).map((s: string) => s.toUpperCase()),
+      );
+      const cwSet = new Set(
+        (groupedSymbols.CW || []).map((s: string) => s.toUpperCase()),
+      );
+      const etfSet = new Set(
+        (groupedSymbols.ETF || []).map((s: string) => s.toUpperCase()),
+      );
+      const fuIndexSet = new Set(
+        (groupedSymbols.FU_INDEX || []).map((s: string) => s.toUpperCase()),
+      );
+
+      const updatedStocks = allStocks.map((stock) => {
+        const sym = stock.symbol.toUpperCase();
+        if (vn30Set.has(sym)) {
+          stock.indexGroup = 'VN30';
+        } else if (cwSet.has(sym)) {
+          stock.indexGroup = 'CW';
+        } else if (etfSet.has(sym)) {
+          stock.indexGroup = 'ETF';
+        } else if (fuIndexSet.has(sym)) {
+          stock.indexGroup = 'FU_INDEX';
+        } else {
+          stock.indexGroup = null;
+        }
+        return stock;
+      });
+
+      // Save in chunks
+      const chunkSize = 200;
+      for (let i = 0; i < updatedStocks.length; i += chunkSize) {
+        const chunk = updatedStocks.slice(i, i + chunkSize);
+        await this.repo.save(chunk);
+      }
+
+      this.logger.log('Stock classifications sync completed.');
+      return {
+        success: true,
+        message: 'Synced stock classifications successfully',
+        data: {
+          total: updatedStocks.length,
+        },
+      };
+    } catch (error) {
+      this.logger.error('Error in syncClassifications:', error);
+      return {
+        success: false,
+        message: `Failed to sync stock classifications: ${error.message}`,
+      };
+    }
+  }
+
+  public async getClassificationSummary(): Promise<OperationResult> {
+    try {
+      const allStocks = await this.repo.find();
+
+      const summary = {
+        HOSE: 0,
+        HNX: 0,
+        UPCOM: 0,
+        VN30: 0,
+        CW: 0,
+        ETF: 0,
+        FU_INDEX: 0,
+        total: allStocks.length,
+      };
+
+      allStocks.forEach((stock) => {
+        const ex = (stock.exchange || '').toUpperCase();
+        if (ex === 'HOSE') summary.HOSE++;
+        else if (ex === 'HNX') summary.HNX++;
+        else if (ex === 'UPCOM') summary.UPCOM++;
+
+        const idx = (stock.indexGroup || '').toUpperCase();
+        if (idx === 'VN30') summary.VN30++;
+        else if (idx === 'CW') summary.CW++;
+        else if (idx === 'ETF') summary.ETF++;
+        else if (idx === 'FU_INDEX') summary.FU_INDEX++;
+      });
+
+      return {
+        success: true,
+        data: summary,
+      };
+    } catch (error) {
+      this.logger.error('Error getting classification summary:', error);
+      return {
+        success: false,
+        message: `Failed to get classification summary: ${error.message}`,
+      };
+    }
   }
 }

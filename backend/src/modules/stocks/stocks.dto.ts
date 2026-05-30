@@ -28,6 +28,14 @@ export class QueryStocksDTO extends PaginationDTO {
   @IsString()
   @IsOptional()
   keyword?: string;
+
+  @ApiPropertyOptional({
+    description:
+      'Filter by index group or exchange (e.g., VN30, CW, ETF, HOSE, HNX, UPCOM)',
+  })
+  @IsString()
+  @IsOptional()
+  group?: string;
 }
 
 export class CrawlStocksDTO {

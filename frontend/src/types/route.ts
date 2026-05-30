@@ -30,6 +30,7 @@ export enum publicRouteEnum {
 export enum protectedRouteEnum {
   DASHBOARD = "/user/dashboard",
   WATCHLIST = "/user/watchlist",
+  STOCKS = "/user/stocks",
   ADMIN_DASHBOARD = "/admin/dashboard",
   USERS = "/admin/users",
   DATA = "/admin/data",

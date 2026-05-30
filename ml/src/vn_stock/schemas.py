@@ -87,8 +87,8 @@ class StockDetailResponse(BaseModel):
     organ_name: Optional[str] = Field(None, description="Full organization name")
     organ_short_name: Optional[str] = Field(None, description="Short organization name")
     en_organ_name: Optional[str] = Field(None, description="English organization name")
-    en_organ_short_name: Optional[str] = Field(None, description="English short organization name")
+    en_organ_short_name: Optional[str] = Field(
+        None, description="English short organization name"
+    )
     product_grp_id: Optional[str] = Field(None, description="Product group ID")
     icb_code2: Optional[str] = Field(None, description="ICB Level 2 code")
-
-

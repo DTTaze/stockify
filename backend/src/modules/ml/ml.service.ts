@@ -124,4 +124,8 @@ export class MLService extends OutboundPartnerService {
       };
     }
   }
+
+  public async getGroupedSymbols(): Promise<OperationResult<any>> {
+    return this.request<any>('get', '/market/grouped-symbols') as any;
+  }
 }

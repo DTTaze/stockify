@@ -1,9 +1,12 @@
 import {
+  getClassificationSummaryHandlers,
   getIndexQuoteHandlers,
   getPredictionHandlers,
   getQuoteHistoricalHandlers,
   getStockCompaniesHandlers,
+  getStocksHandlers,
   getSupportedSymbolsHandlers,
+  syncClassificationsHandlers,
 } from "@/services/stock/stockHandlers";
 import {
   MarketQuoteParams,
@@ -72,3 +75,40 @@ export const getSupportedSymbolsQueryFn =
 
     return response.data;
   };
+
+export const getStocksQueryFn = async (params?: {
+  group?: string;
+  keyword?: string;
+  offset?: number;
+  limit?: number;
+}): Promise<any> => {
+  const response = await getStocksHandlers(params);
+
+  if (!response.success) {
+    throw new Error(response.message || "Failed to fetch stocks");
+  }
+
+  return response.data;
+};
+
+export const syncClassificationsQueryFn = async (): Promise<any> => {
+  const response = await syncClassificationsHandlers();
+
+  if (!response.success) {
+    throw new Error(response.message || "Failed to sync stock classifications");
+  }
+
+  return response.data;
+};
+
+export const getClassificationSummaryQueryFn = async (): Promise<any> => {
+  const response = await getClassificationSummaryHandlers();
+
+  if (!response.success) {
+    throw new Error(
+      response.message || "Failed to fetch classification summary",
+    );
+  }
+
+  return response.data;
+};

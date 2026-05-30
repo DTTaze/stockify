@@ -107,6 +107,11 @@ export default function Header() {
           label: "Watchlist",
           icon: Star,
         },
+        {
+          path: "/user/stocks",
+          label: "Danh mục",
+          icon: Database,
+        },
       ],
       showNotification: true,
     };

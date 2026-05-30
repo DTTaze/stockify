@@ -36,4 +36,7 @@ export class Stock extends Audit {
 
   @Column({ name: 'icb_code2', nullable: true })
   icbCode2: string;
+
+  @Column({ name: 'index_group', nullable: true })
+  indexGroup: string;
 }

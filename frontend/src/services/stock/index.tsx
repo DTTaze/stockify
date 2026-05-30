@@ -18,6 +18,19 @@ export const stockServices = {
   getStockCompanies: (): Promise<AxiosResponse> =>
     axiosClient.get(`stock-companies`),
 
+  getStocks: (params?: {
+    group?: string;
+    keyword?: string;
+    page?: number;
+    limit?: number;
+  }): Promise<AxiosResponse> => axiosClient.get(`stocks`, { params }),
+
+  syncClassifications: (): Promise<AxiosResponse> =>
+    axiosClient.post(`stocks/sync-categories`),
+
+  getClassificationSummary: (): Promise<AxiosResponse> =>
+    axiosClient.get(`stocks/classification-summary`),
+
   getPrediction: (symbol: string): Promise<AxiosResponse> =>
     axiosClient.get(`ml/prediction/${symbol}`),
 

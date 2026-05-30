@@ -21,4 +21,14 @@ export class StocksController {
   async crawlStocks(@Body() body: CrawlStocksDTO): Promise<HttpResponse> {
     return this.stocksService.crawlAndSave(body.exchange);
   }
+
+  @Post('sync-categories')
+  async syncCategories(): Promise<HttpResponse> {
+    return this.stocksService.syncClassifications();
+  }
+
+  @Get('classification-summary')
+  async getClassificationSummary(): Promise<HttpResponse> {
+    return this.stocksService.getClassificationSummary();
+  }
 }

@@ -49,3 +49,30 @@ export const getSupportedSymbolsHandlers = async (): Promise<
 
   return response.data;
 };
+
+export const getStocksHandlers = async (params?: {
+  group?: string;
+  keyword?: string;
+  offset?: number;
+  limit?: number;
+}): Promise<ApiResponse<any>> => {
+  const response = await stockServices.getStocks(params);
+
+  return response.data;
+};
+
+export const syncClassificationsHandlers = async (): Promise<
+  ApiResponse<any>
+> => {
+  const response = await stockServices.syncClassifications();
+
+  return response.data;
+};
+
+export const getClassificationSummaryHandlers = async (): Promise<
+  ApiResponse<any>
+> => {
+  const response = await stockServices.getClassificationSummary();
+
+  return response.data;
+};

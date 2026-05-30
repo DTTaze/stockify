@@ -4,4 +4,6 @@ export enum QueryKeysDataManagement {
   STOCKS = "stocks",
   UPDATE_SYMBOL = "updateSymbol",
   UPDATE_ALL = "updateAll",
+  CLASSIFICATION_SUMMARY = "classificationSummary",
+  SYNC_CLASSIFICATION = "syncClassification",
 }

@@ -86,9 +86,32 @@ async def get_stocks_by_exchange(
     summary="Get detailed stock symbols by exchange",
 )
 async def get_stock_details(
-    exchange: str = Query("ALL", description="Exchange (HOSE, HNX, UPCOM, DELISTED, or ALL)"),
+    exchange: str = Query(
+        "ALL", description="Exchange (HOSE, HNX, UPCOM, DELISTED, or ALL)"
+    ),
     service: StockService = Depends(get_service),
 ) -> List[schemas.StockDetailResponse]:
     return service.get_stock_details(exchange)
 
 
+@router.get(
+    "/grouped-symbols",
+    response_model=dict,
+    summary="Get symbols grouped by classification",
+)
+async def get_grouped_symbols(
+    service: StockService = Depends(get_service),
+) -> dict:
+    return service.get_grouped_symbols()
+
+
+@router.get(
+    "/symbols-by-group/{group}",
+    response_model=List[str],
+    summary="Get symbols for a specific group",
+)
+async def get_symbols_by_group(
+    group: str = Path(..., description="Group name (e.g. VN30, CW, ETF, FU_INDEX)"),
+    service: StockService = Depends(get_service),
+) -> List[str]:
+    return service.get_symbols_by_group(group)
