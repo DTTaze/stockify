@@ -1,8 +1,9 @@
 import { HttpResponse } from 'mvc-common-toolkit';
 
-import { Controller, Get, Param, Post } from '@nestjs/common';
+import { Controller, Get, Param, Post, Query } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 
+import { QueryDataManagementStocksDTO } from './data-management.dto';
 import { DataManagementService } from './data-management.service';
 
 @ApiTags('Data Management')
@@ -25,8 +26,10 @@ export class DataManagementController {
     summary: 'Get data management stock list',
     description: 'Get list of stock symbols and processed data status',
   })
-  async getDataManagementStocks(): Promise<HttpResponse> {
-    return this.dataManagementService.getDataManagementStocks();
+  async getDataManagementStocks(
+    @Query() query: QueryDataManagementStocksDTO,
+  ): Promise<HttpResponse> {
+    return this.dataManagementService.getDataManagementStocks(query);
   }
 
   @Post('update/:symbol')

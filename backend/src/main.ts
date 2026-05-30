@@ -7,6 +7,11 @@ import {
   SwaggerModule,
 } from '@nestjs/swagger';
 
+import { INJECTION_TOKEN } from '@shared/constants';
+import { AllExceptionsFilter } from '@shared/filters/all-exceptions.filter';
+import { HttpLoggingInterceptor } from '@shared/interceptors/http-logging.interceptor';
+import { HttpResponseInterceptor } from '@shared/interceptors/http-response.interceptor';
+
 import { AppModule } from './app.module';
 
 async function bootstrap() {
@@ -25,6 +30,13 @@ async function bootstrap() {
     }),
   );
   app.setGlobalPrefix('/v1/api');
+
+  const auditService = app.get(INJECTION_TOKEN.AUDIT_SERVICE);
+  app.useGlobalFilters(new AllExceptionsFilter(auditService));
+  app.useGlobalInterceptors(
+    new HttpLoggingInterceptor(),
+    new HttpResponseInterceptor(),
+  );
 
   if (process.env.ENABLE_CORS === 'true') {
     app.enableCors({

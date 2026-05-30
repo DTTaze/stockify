@@ -15,10 +15,19 @@ export const useQueryDataManagementSummary = () =>
     refetchOnMount: true,
   });
 
-export const useQueryDataManagementStocks = () =>
+export const useQueryDataManagementStocks = (params?: {
+  keyword?: string;
+  status?: string;
+  limit?: number;
+  offset?: number;
+}) =>
   useQuery({
-    queryKey: [QueryKeysDataManagement.ROOT, QueryKeysDataManagement.STOCKS],
-    queryFn: getDataManagementStocksQueryFn,
+    queryKey: [
+      QueryKeysDataManagement.ROOT,
+      QueryKeysDataManagement.STOCKS,
+      params,
+    ],
+    queryFn: () => getDataManagementStocksQueryFn(params),
     refetchOnMount: true,
   });
 

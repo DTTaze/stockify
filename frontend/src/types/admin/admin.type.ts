@@ -1,9 +1,9 @@
 import { AlertCircle, CheckCircle } from "lucide-react";
 
 export enum ADMIN_DASHBOARD_ACTIVITY_TYPE {
-  SUCCESS = "SUCCESS",
-  WARNING = "WARNING",
-  INFO = "INFO",
+  SUCCESS = "success",
+  WARNING = "warning",
+  INFO = "info",
 }
 export const ACTIVITY_CONFIG: Record<
   ADMIN_DASHBOARD_ACTIVITY_TYPE,

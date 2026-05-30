@@ -1,6 +1,8 @@
-import { Column, Entity, PrimaryColumn } from 'typeorm';
+import { Column, Entity, OneToMany, PrimaryColumn } from 'typeorm';
 
 import { Audit } from '@shared/models/audit.model';
+
+import { StockGroupMapping } from './stock-group-mapping.model';
 
 @Entity('stocks')
 export class Stock extends Audit {
@@ -39,4 +41,7 @@ export class Stock extends Audit {
 
   @Column({ name: 'index_group', nullable: true })
   indexGroup: string;
+
+  @OneToMany(() => StockGroupMapping, (m) => m.stock)
+  mappings: StockGroupMapping[];
 }

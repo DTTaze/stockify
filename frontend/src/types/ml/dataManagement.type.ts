@@ -16,6 +16,9 @@ export type DataManagementStockType = {
 
 export type DataManagementStocksType = {
   stocks: DataManagementStockType[];
+  total: number;
+  limit: number;
+  offset: number;
 };
 
 export type DataManagementUpdateResponseType = {

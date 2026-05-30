@@ -24,18 +24,22 @@ export const getDataManagementSummaryQueryFn =
     return response.data;
   };
 
-export const getDataManagementStocksQueryFn =
-  async (): Promise<DataManagementStocksType> => {
-    const response = await getDataManagementStocksHandlers();
+export const getDataManagementStocksQueryFn = async (params?: {
+  keyword?: string;
+  status?: string;
+  limit?: number;
+  offset?: number;
+}): Promise<DataManagementStocksType> => {
+  const response = await getDataManagementStocksHandlers(params);
 
-    if (!response.success) {
-      throw new Error(
-        response.message || "Failed to fetch data management stocks",
-      );
-    }
+  if (!response.success) {
+    throw new Error(
+      response.message || "Failed to fetch data management stocks",
+    );
+  }
 
-    return response.data;
-  };
+  return response.data;
+};
 
 export const updateStockDataQueryFn = async (
   symbol: string,

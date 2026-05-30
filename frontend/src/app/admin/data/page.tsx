@@ -26,7 +26,7 @@ import {
 } from "@/queries/stocks/QueryHooksStocks";
 import { cn } from "@/utils";
 
-const CLASSIFICATION_LIMIT = 10;
+// Dynamic limits will be managed via state
 
 export default function DataManagement() {
   const [activeTab, setActiveTab] = useState<"training" | "classification">(
@@ -37,31 +37,50 @@ export default function DataManagement() {
   // Classification states
   const [classificationSearch, setClassificationSearch] = useState("");
   const [classificationPage, setClassificationPage] = useState(1);
+  const [classificationGroup, setClassificationGroup] = useState("HOSE");
+  const [classificationLimit, setClassificationLimit] = useState(10);
+
+  // Training states
+  const [trainingSearch, setTrainingSearch] = useState("");
+  const [trainingStatus, setTrainingStatus] = useState<
+    "all" | "updated" | "needs_update"
+  >("all");
+  const [trainingPage, setTrainingPage] = useState(1);
+  const [trainingLimit, setTrainingLimit] = useState(10);
 
   // Training Data Queries & Mutations
   const summaryQuery = useQueryDataManagementSummary();
-  const stocksQuery = useQueryDataManagementStocks();
+  const trainingOffset = (trainingPage - 1) * trainingLimit;
+  const stocksQuery = useQueryDataManagementStocks({
+    keyword: trainingSearch.trim() || undefined,
+    status: trainingStatus,
+    limit: trainingLimit,
+    offset: trainingOffset,
+  });
   const updateSymbolMutation = useUpdateDataManagementSymbol();
   const updateAllMutation = useUpdateDataManagementAll();
 
   // Classification Queries & Mutations
   const classificationSummaryQuery = useQueryClassificationSummary();
   const syncClassificationsMutation = useSyncClassifications();
-  const offset = (classificationPage - 1) * CLASSIFICATION_LIMIT;
+  const offset = (classificationPage - 1) * classificationLimit;
   const classificationStocksQuery = useQueryStocks({
+    group: classificationGroup,
     keyword: classificationSearch.trim() || undefined,
-    limit: CLASSIFICATION_LIMIT,
+    limit: classificationLimit,
     offset: offset,
   });
 
   const summary = summaryQuery.data;
   const stocks = stocksQuery.data?.stocks ?? [];
+  const trainingTotal = stocksQuery.data?.total ?? 0;
+  const trainingTotalPages = Math.ceil(trainingTotal / trainingLimit) || 1;
 
   const classificationSummary = classificationSummaryQuery.data;
   const classificationStocks = classificationStocksQuery.data?.rows ?? [];
   const classificationTotal = classificationStocksQuery.data?.total ?? 0;
   const classificationTotalPages =
-    Math.ceil(classificationTotal / CLASSIFICATION_LIMIT) || 1;
+    Math.ceil(classificationTotal / classificationLimit) || 1;
 
   const hasError =
     summaryQuery.isError ||
@@ -111,6 +130,33 @@ export default function DataManagement() {
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setClassificationSearch(e.target.value);
     setClassificationPage(1);
+  };
+
+  const handleGroupChange = (group: string) => {
+    setClassificationGroup(group);
+    setClassificationPage(1);
+  };
+
+  const handleTrainingSearchChange = (val: string) => {
+    setTrainingSearch(val);
+    setTrainingPage(1);
+  };
+
+  const handleTrainingStatusChange = (
+    val: "all" | "updated" | "needs_update",
+  ) => {
+    setTrainingStatus(val);
+    setTrainingPage(1);
+  };
+
+  const handleClassificationLimitChange = (newLimit: number) => {
+    setClassificationLimit(newLimit);
+    setClassificationPage(1);
+  };
+
+  const handleTrainingLimitChange = (newLimit: number) => {
+    setTrainingLimit(newLimit);
+    setTrainingPage(1);
   };
 
   return (
@@ -207,6 +253,16 @@ export default function DataManagement() {
             isBusy={isBusy}
             updatingStock={updatingStock}
             onUpdateStock={handleUpdateStock}
+            search={trainingSearch}
+            onSearchChange={handleTrainingSearchChange}
+            statusFilter={trainingStatus}
+            onStatusChange={handleTrainingStatusChange}
+            total={trainingTotal}
+            currentPage={trainingPage}
+            totalPages={trainingTotalPages}
+            onPageChange={setTrainingPage}
+            limit={trainingLimit}
+            onLimitChange={handleTrainingLimitChange}
           />
         </>
       ) : (
@@ -224,6 +280,10 @@ export default function DataManagement() {
             currentPage={classificationPage}
             totalPages={classificationTotalPages}
             onPageChange={setClassificationPage}
+            activeGroup={classificationGroup}
+            onGroupChange={handleGroupChange}
+            limit={classificationLimit}
+            onLimitChange={handleClassificationLimitChange}
           />
         </>
       )}

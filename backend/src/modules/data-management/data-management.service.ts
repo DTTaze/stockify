@@ -15,6 +15,7 @@ import {
   DataManagementSummaryDto,
   DataUpdateAllResponseDto,
   DataUpdateResponseDto,
+  QueryDataManagementStocksDTO,
 } from './data-management.dto';
 
 @Injectable()
@@ -46,13 +47,55 @@ export class DataManagementService extends OutboundPartnerService {
     ) as any;
   }
 
-  public async getDataManagementStocks(): Promise<
-    OperationResult<DataManagementStockDto[]>
+  public async getDataManagementStocks(
+    query: QueryDataManagementStocksDTO,
+  ): Promise<
+    OperationResult<{
+      stocks: DataManagementStockDto[];
+      total: number;
+      limit: number;
+      offset: number;
+    }>
   > {
-    return this.request<DataManagementStockDto[]>(
-      'get',
-      '/data-management/stocks',
-    ) as any;
+    const { keyword, status, limit, offset } = query;
+    const result = await this.request<any>('get', '/data-management/stocks');
+
+    if (!result.success || !result.data) {
+      return result as any;
+    }
+
+    const rawData = result.data;
+    const stocks: DataManagementStockDto[] = Array.isArray(rawData)
+      ? rawData
+      : ((rawData as any)?.stocks ?? []);
+
+    let filtered = stocks;
+
+    if (keyword) {
+      const kw = keyword.toLowerCase();
+      filtered = filtered.filter((stock) =>
+        stock.symbol.toLowerCase().includes(kw),
+      );
+    }
+
+    if (status && status !== 'all') {
+      filtered = filtered.filter((stock) => stock.status === status);
+    }
+
+    const total = filtered.length;
+    const parsedLimit = limit !== undefined ? Number(limit) : 10;
+    const parsedOffset = offset !== undefined ? Number(offset) : 0;
+    const sliced = filtered.slice(parsedOffset, parsedOffset + parsedLimit);
+
+    return {
+      success: true,
+      data: {
+        stocks: sliced,
+        total,
+        limit: parsedLimit,
+        offset: parsedOffset,
+      },
+    } as any;
   }
 
   public async updateStockData(

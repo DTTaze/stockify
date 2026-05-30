@@ -13,6 +13,8 @@ import { ENV_KEY, INJECTION_TOKEN } from '@shared/constants';
 import { BaseCRUDService } from '@shared/services/base-crud.service';
 
 import { MLService } from '../ml/ml.service';
+import { StockGroupMapping } from './stock-group-mapping.model';
+import { StockGroup } from './stock-group.model';
 import { ExchangeFilter, QueryStocksDTO } from './stocks.dto';
 import { Stock } from './stocks.model';
 
@@ -23,6 +25,12 @@ export class StocksService extends BaseCRUDService<Stock> {
   constructor(
     @InjectRepository(Stock)
     protected repo: Repository<Stock>,
+
+    @InjectRepository(StockGroup)
+    protected groupRepo: Repository<StockGroup>,
+
+    @InjectRepository(StockGroupMapping)
+    protected mappingRepo: Repository<StockGroupMapping>,
 
     private readonly configService: ConfigService,
 
@@ -43,17 +51,20 @@ export class StocksService extends BaseCRUDService<Stock> {
 
   public async getStocks(query: QueryStocksDTO): Promise<OperationResult> {
     const filter: any = {};
+    const relations: any = {};
+
     if (query.exchange && query.exchange !== ExchangeFilter.ALL) {
       filter.exchange = query.exchange;
     }
 
     if (query.group) {
       const g = query.group.toUpperCase();
-      if (['HOSE', 'HNX', 'UPCOM'].includes(g)) {
-        filter.exchange = g;
-      } else if (['VN30', 'CW', 'ETF', 'FU_INDEX'].includes(g)) {
-        filter.indexGroup = g;
-      }
+      relations.mappings = { stockGroup: true };
+      filter.mappings = {
+        stockGroup: {
+          code: g,
+        },
+      };
     }
 
     const keywordColumns: (keyof Stock)[] = ['symbol', 'name'];
@@ -62,6 +73,7 @@ export class StocksService extends BaseCRUDService<Stock> {
       keywordColumns,
       query.keyword,
       filter,
+      { relations },
     );
 
     return {
@@ -156,11 +168,42 @@ export class StocksService extends BaseCRUDService<Stock> {
 
       const groupedSymbols = response.data;
 
-      const allStocks = await this.repo.find();
-      this.logger.log(
-        `Found ${allStocks.length} stocks in database to update.`,
-      );
+      // 1. Ensure stock_groups exist
+      const groupsToCreate = [
+        { code: 'HOSE', name: 'Sàn HOSE' },
+        { code: 'HNX', name: 'Sàn HNX' },
+        { code: 'UPCOM', name: 'Sàn UPCOM' },
+        { code: 'VN30', name: 'Chỉ số VN30' },
+        { code: 'CW', name: 'Chứng quyền' },
+        { code: 'ETF', name: 'Quỹ ETF' },
+        { code: 'FU_INDEX', name: 'Hợp đồng tương lai' },
+      ];
 
+      for (const g of groupsToCreate) {
+        let group = await this.groupRepo.findOne({ where: { code: g.code } });
+        if (!group) {
+          group = this.groupRepo.create(g);
+          await this.groupRepo.save(group);
+        }
+      }
+
+      const dbGroups = await this.groupRepo.find();
+      const groupMap = new Map<string, number>();
+      dbGroups.forEach((g) => groupMap.set(g.code.toUpperCase(), g.id));
+
+      // 2. Fetch all stocks and clear existing mappings
+      const allStocks = await this.repo.find();
+      await this.mappingRepo.clear();
+
+      const hoseSet = new Set(
+        (groupedSymbols.HOSE || []).map((s: string) => s.toUpperCase()),
+      );
+      const hnxSet = new Set(
+        (groupedSymbols.HNX || []).map((s: string) => s.toUpperCase()),
+      );
+      const upcomSet = new Set(
+        (groupedSymbols.UPCOM || []).map((s: string) => s.toUpperCase()),
+      );
       const vn30Set = new Set(
         (groupedSymbols.VN30 || []).map((s: string) => s.toUpperCase()),
       );
@@ -174,27 +217,71 @@ export class StocksService extends BaseCRUDService<Stock> {
         (groupedSymbols.FU_INDEX || []).map((s: string) => s.toUpperCase()),
       );
 
-      const updatedStocks = allStocks.map((stock) => {
-        const sym = stock.symbol.toUpperCase();
-        if (vn30Set.has(sym)) {
-          stock.indexGroup = 'VN30';
-        } else if (cwSet.has(sym)) {
-          stock.indexGroup = 'CW';
-        } else if (etfSet.has(sym)) {
-          stock.indexGroup = 'ETF';
-        } else if (fuIndexSet.has(sym)) {
-          stock.indexGroup = 'FU_INDEX';
-        } else {
-          stock.indexGroup = null;
-        }
-        return stock;
-      });
+      const newMappings: StockGroupMapping[] = [];
 
-      // Save in chunks
+      for (const stock of allStocks) {
+        const sym = stock.symbol.toUpperCase();
+
+        // Correct exchange name based on groups from vnstock
+        if (hoseSet.has(sym)) {
+          stock.exchange = 'HOSE';
+        } else if (hnxSet.has(sym)) {
+          stock.exchange = 'HNX';
+        } else if (upcomSet.has(sym)) {
+          stock.exchange = 'UPCOM';
+        }
+
+        const ex = (stock.exchange || '').toUpperCase();
+
+        // Map exchange group
+        if (ex && groupMap.has(ex)) {
+          const mapping = new StockGroupMapping();
+          mapping.stockSymbol = stock.symbol;
+          mapping.groupId = groupMap.get(ex)!;
+          newMappings.push(mapping);
+        }
+
+        // Map index groups
+        let indexGroupCode: string | null = null;
+        if (vn30Set.has(sym) && groupMap.has('VN30')) {
+          const mapping = new StockGroupMapping();
+          mapping.stockSymbol = stock.symbol;
+          mapping.groupId = groupMap.get('VN30')!;
+          newMappings.push(mapping);
+          indexGroupCode = 'VN30';
+        }
+        if (cwSet.has(sym) && groupMap.has('CW')) {
+          const mapping = new StockGroupMapping();
+          mapping.stockSymbol = stock.symbol;
+          mapping.groupId = groupMap.get('CW')!;
+          newMappings.push(mapping);
+          indexGroupCode = 'CW';
+        }
+        if (etfSet.has(sym) && groupMap.has('ETF')) {
+          const mapping = new StockGroupMapping();
+          mapping.stockSymbol = stock.symbol;
+          mapping.groupId = groupMap.get('ETF')!;
+          newMappings.push(mapping);
+          indexGroupCode = 'ETF';
+        }
+        if (fuIndexSet.has(sym) && groupMap.has('FU_INDEX')) {
+          const mapping = new StockGroupMapping();
+          mapping.stockSymbol = stock.symbol;
+          mapping.groupId = groupMap.get('FU_INDEX')!;
+          newMappings.push(mapping);
+          indexGroupCode = 'FU_INDEX';
+        }
+        stock.indexGroup = indexGroupCode;
+      }
+
+      // 3. Save stocks (for backward compatibility column) and mappings in chunks
       const chunkSize = 200;
-      for (let i = 0; i < updatedStocks.length; i += chunkSize) {
-        const chunk = updatedStocks.slice(i, i + chunkSize);
-        await this.repo.save(chunk);
+      for (let i = 0; i < allStocks.length; i += chunkSize) {
+        await this.repo.save(allStocks.slice(i, i + chunkSize));
+      }
+
+      for (let i = 0; i < newMappings.length; i += chunkSize) {
+        await this.mappingRepo.save(newMappings.slice(i, i + chunkSize));
       }
 
       this.logger.log('Stock classifications sync completed.');
@@ -202,7 +289,8 @@ export class StocksService extends BaseCRUDService<Stock> {
         success: true,
         message: 'Synced stock classifications successfully',
         data: {
-          total: updatedStocks.length,
+          total: allStocks.length,
+          mappingsCount: newMappings.length,
         },
       };
     } catch (error) {
@@ -229,17 +317,20 @@ export class StocksService extends BaseCRUDService<Stock> {
         total: allStocks.length,
       };
 
-      allStocks.forEach((stock) => {
-        const ex = (stock.exchange || '').toUpperCase();
-        if (ex === 'HOSE') summary.HOSE++;
-        else if (ex === 'HNX') summary.HNX++;
-        else if (ex === 'UPCOM') summary.UPCOM++;
+      const mappingCounts = await this.mappingRepo
+        .createQueryBuilder('mapping')
+        .innerJoin('mapping.stockGroup', 'sg')
+        .select('sg.code', 'code')
+        .addSelect('COUNT(mapping.id)', 'count')
+        .groupBy('sg.code')
+        .getRawMany();
 
-        const idx = (stock.indexGroup || '').toUpperCase();
-        if (idx === 'VN30') summary.VN30++;
-        else if (idx === 'CW') summary.CW++;
-        else if (idx === 'ETF') summary.ETF++;
-        else if (idx === 'FU_INDEX') summary.FU_INDEX++;
+      mappingCounts.forEach((row) => {
+        const code = (row.code || '').toUpperCase();
+        const count = parseInt(row.count, 10) || 0;
+        if (code in summary) {
+          summary[code as keyof typeof summary] = count;
+        }
       });
 
       return {

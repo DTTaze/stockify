@@ -1,6 +1,8 @@
-import { IsEnum, IsString } from 'class-validator';
+import { IsEnum, IsOptional, IsString } from 'class-validator';
 
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+
+import { PaginationDTO } from '@shared/common/pagination.dto';
 
 export class DataManagementStockDto {
   @ApiProperty({
@@ -102,4 +104,22 @@ export class DataUpdateAllResponseDto {
     required: false,
   })
   message?: string;
+}
+
+export class QueryDataManagementStocksDTO extends PaginationDTO {
+  @ApiPropertyOptional({
+    description: 'Search keyword for stock symbol',
+    example: 'VCB',
+  })
+  @IsOptional()
+  @IsString()
+  keyword?: string;
+
+  @ApiPropertyOptional({
+    description: 'Filter by status',
+    example: 'updated',
+  })
+  @IsOptional()
+  @IsString()
+  status?: string;
 }

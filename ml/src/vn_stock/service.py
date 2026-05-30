@@ -1,4 +1,7 @@
 import logging
+import os
+import json
+import time
 from datetime import datetime, timedelta
 from typing import List
 
@@ -16,6 +19,9 @@ from .exceptions import IndexNotFoundException, DataFetchException
 from . import schemas
 
 logger = logging.getLogger(__name__)
+
+CACHE_FILE_PATH = os.path.join(os.path.dirname(__file__), "grouped_symbols_cache.json")
+CACHE_DURATION = 43200  # 12 hours
 
 
 class StockService:
@@ -447,33 +453,145 @@ class StockService:
         return results
 
     def get_symbols_by_group(self, group: str) -> List[str]:
+        group_upper = group.upper()
+        grouped = self.get_grouped_symbols()
+        return grouped.get(group_upper, [])
+
+    def _fetch_grouped_symbols_from_api(self) -> dict:
         if Listing is None:
             raise DataFetchException("Listing not available")
 
-        group_upper = group.upper()
-        for source in ["VCI", "KBS"]:
+        result = {
+            "HOSE": [],
+            "VN30": [],
+            "HNX": [],
+            "UPCOM": [],
+            "CW": [],
+            "ETF": [],
+            "FU_INDEX": [],
+        }
+
+        # Step 1: Fetch general list via exchange API (1 call instead of 5 calls)
+        all_symbols_df = None
+        for source in ["KBS", "VCI"]:
             try:
+                logger.info(f"Fetching exchange symbols from {source}...")
                 listing = Listing(source=source)
-                res = listing.symbols_by_group(group_name=group_upper)
-                if res is not None:
-                    if hasattr(res, "tolist"):
-                        return res.tolist()
-                    elif isinstance(res, list):
-                        return res
-                    else:
-                        return list(res)
-            except Exception as e:
-                logger.warning(
-                    f"Failed to fetch group {group_upper} using {source}: {e}"
-                )
-        return []
+                df = listing.symbols_by_exchange(exchange="HOSE", to_df=True)
+                if df is not None and not df.empty:
+                    all_symbols_df = df
+                    logger.info(f"Successfully fetched {len(df)} symbols from {source}")
+                    break
+            except BaseException as e:
+                logger.warning(f"Failed to fetch exchange symbols from {source}: {e}")
+                time.sleep(1)
+
+        if all_symbols_df is not None:
+            # HOSE
+            hose_mask = all_symbols_df["exchange"].isin(["HOSE", "HSX"])
+            result["HOSE"] = all_symbols_df[hose_mask]["symbol"].dropna().tolist()
+
+            # HNX
+            hnx_mask = all_symbols_df["exchange"] == "HNX"
+            result["HNX"] = all_symbols_df[hnx_mask]["symbol"].dropna().tolist()
+
+            # UPCOM
+            upcom_mask = all_symbols_df["exchange"] == "UPCOM"
+            result["UPCOM"] = all_symbols_df[upcom_mask]["symbol"].dropna().tolist()
+
+            # CW
+            cw_mask = all_symbols_df["type"].isin(["cw", "warrant"])
+            result["CW"] = all_symbols_df[cw_mask]["symbol"].dropna().tolist()
+
+            # ETF
+            etf_mask = all_symbols_df["type"].isin(["fund", "etf"])
+            result["ETF"] = all_symbols_df[etf_mask]["symbol"].dropna().tolist()
+
+        # Step 2: Fetch group index lists
+        for group in ["VN30", "FU_INDEX"]:
+            group_symbols = []
+            for source in ["KBS", "VCI"]:
+                try:
+                    logger.info(f"Fetching group {group} symbols from {source}...")
+                    listing = Listing(source=source)
+                    res = listing.symbols_by_group(group_name=group)
+                    if res is not None:
+                        if hasattr(res, "tolist"):
+                            group_symbols = res.tolist()
+                        elif isinstance(res, list):
+                            group_symbols = res
+                        else:
+                            group_symbols = list(res)
+                        logger.info(
+                            f"Successfully fetched {len(group_symbols)} symbols for {group} from {source}"
+                        )
+                        break
+                except BaseException as e:
+                    logger.warning(f"Failed to fetch group {group} from {source}: {e}")
+                    time.sleep(1)
+            result[group] = group_symbols
+
+        return result
 
     def get_grouped_symbols(self) -> dict:
-        groups = ["HOSE", "VN30", "HNX", "UPCOM", "CW", "ETF", "FU_INDEX"]
+        # 1. Try to load from cache
+        if os.path.exists(CACHE_FILE_PATH):
+            try:
+                with open(CACHE_FILE_PATH, "r", encoding="utf-8") as f:
+                    cache_data = json.load(f)
+
+                # Check if cache is still fresh
+                if time.time() - cache_data.get("timestamp", 0) < CACHE_DURATION:
+                    logger.info("Using fresh cached grouped symbols.")
+                    return cache_data.get("data", {})
+            except Exception as e:
+                logger.warning(f"Failed to read cache file: {e}")
+
+        # 2. Cache is missing or expired, fetch it
+        logger.info("Cache missed or expired. Fetching fresh grouped symbols.")
         result = {}
-        for group in groups:
-            result[group] = self.get_symbols_by_group(group)
-        return result
+        try:
+            result = self._fetch_grouped_symbols_from_api()
+
+            # If successful, save to cache
+            if result and all(result.values()):
+                try:
+                    with open(CACHE_FILE_PATH, "w", encoding="utf-8") as f:
+                        json.dump(
+                            {"timestamp": time.time(), "data": result},
+                            f,
+                            ensure_ascii=False,
+                            indent=2,
+                        )
+                    logger.info("Grouped symbols cache updated.")
+                except Exception as e:
+                    logger.warning(f"Failed to write cache file: {e}")
+                return result
+        except BaseException as e:
+            logger.error(f"Critical error during API fetch of grouped symbols: {e}")
+            # Do NOT propagate BaseException to prevent FastAPI server from crashing
+
+        # 3. Fallback: if fetch failed, load stale cache if available
+        if os.path.exists(CACHE_FILE_PATH):
+            try:
+                with open(CACHE_FILE_PATH, "r", encoding="utf-8") as f:
+                    cache_data = json.load(f)
+                logger.info(
+                    "Using stale cached grouped symbols after API fetch failure."
+                )
+                return cache_data.get("data", {})
+            except Exception as e:
+                logger.warning(f"Failed to read stale cache file: {e}")
+
+        return {
+            "HOSE": [],
+            "VN30": [],
+            "HNX": [],
+            "UPCOM": [],
+            "CW": [],
+            "ETF": [],
+            "FU_INDEX": [],
+        }
 
 
 stock_service = StockService()

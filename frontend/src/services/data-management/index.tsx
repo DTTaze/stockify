@@ -8,8 +8,13 @@ export const dataManagementServices = {
   getSummary: (): Promise<AxiosResponse> =>
     axiosClient.get(`${BASE_URL}/summary`),
 
-  getStocks: (): Promise<AxiosResponse> =>
-    axiosClient.get(`${BASE_URL}/stocks`),
+  getStocks: (params?: {
+    keyword?: string;
+    status?: string;
+    limit?: number;
+    offset?: number;
+  }): Promise<AxiosResponse> =>
+    axiosClient.get(`${BASE_URL}/stocks`, { params }),
 
   updateStock: (symbol: string): Promise<AxiosResponse> =>
     axiosClient.post(`${BASE_URL}/update/${symbol}`),

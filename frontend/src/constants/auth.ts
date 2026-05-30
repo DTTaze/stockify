@@ -32,6 +32,22 @@ export const responseError: ErrorType[] = [
     errorCode: "password_incorrect",
     message: "Password is incorrect",
   },
+  {
+    errorCode: "internal_server_error",
+    message: "Internal server error",
+  },
+  {
+    errorCode: "unauthorized",
+    message: "Unauthorized",
+  },
+  {
+    errorCode: "forbidden",
+    message: "Forbidden",
+  },
+  {
+    errorCode: "too_many_requests",
+    message: "Too many requests",
+  },
 
   // register
   {

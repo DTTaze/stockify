@@ -15,10 +15,13 @@ export const getDataManagementSummaryHandlers = async (): Promise<
   return response.data;
 };
 
-export const getDataManagementStocksHandlers = async (): Promise<
-  ApiResponse<DataManagementStocksType>
-> => {
-  const response = await dataManagementServices.getStocks();
+export const getDataManagementStocksHandlers = async (params?: {
+  keyword?: string;
+  status?: string;
+  limit?: number;
+  offset?: number;
+}): Promise<ApiResponse<DataManagementStocksType>> => {
+  const response = await dataManagementServices.getStocks(params);
   return response.data;
 };
 
