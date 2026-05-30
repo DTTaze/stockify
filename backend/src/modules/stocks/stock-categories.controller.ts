@@ -41,6 +41,21 @@ export class StockCategoriesController {
     return this.categoriesService.getTickerCategories(ticker);
   }
 
+  @Get('futures')
+  async getFutures(): Promise<HttpResponse> {
+    return this.categoriesService.getFutures();
+  }
+
+  @Get('government-bonds')
+  async getGovernmentBonds(): Promise<HttpResponse> {
+    return this.categoriesService.getGovernmentBonds();
+  }
+
+  @Get('indices')
+  async getIndices(): Promise<HttpResponse> {
+    return this.categoriesService.getIndices();
+  }
+
   @Post('sync-market-groups')
   async syncMarketGroups(): Promise<HttpResponse> {
     return this.stocksService.syncClassifications();

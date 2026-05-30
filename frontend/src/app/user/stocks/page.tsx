@@ -4,21 +4,26 @@ import { Layers } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 
 import {
+  useQueryFutures,
+  useQueryGovernmentBonds,
   useQueryIcbIndustries,
   useQueryIcbStocks,
+  useQueryIndices,
   useQueryStocks,
 } from "@/queries/stocks/QueryHooksStocks";
 import { cn } from "@/utils";
 
 import { UserIcbClassificationTable } from "./components/UserIcbClassificationTable";
 import { UserMarketClassificationTable } from "./components/UserMarketClassificationTable";
+import { UserSimpleSymbolsTable } from "./components/UserSimpleSymbolsTable";
 
 const ITEMS_PER_PAGE = 15;
 
+type ClassificationType = "market" | "icb" | "futures" | "bonds" | "indices";
+
 export default function UserStocksPage() {
-  const [classificationType, setClassificationType] = useState<
-    "market" | "icb"
-  >("market");
+  const [classificationType, setClassificationType] =
+    useState<ClassificationType>("market");
 
   // Market classification states
   const [activeMarketTab, setActiveMarketTab] = useState("HOSE");
@@ -73,6 +78,17 @@ export default function UserStocksPage() {
   const icbTotal = icbData?.total ?? 0;
   const icbTotalPages = Math.ceil(icbTotal / ITEMS_PER_PAGE) || 1;
 
+  // Futures, Bonds, and Indices Queries
+  const { data: futuresData, isLoading: isFuturesLoading } = useQueryFutures();
+  const { data: bondsData, isLoading: isBondsLoading } =
+    useQueryGovernmentBonds();
+  const { data: indicesListData, isLoading: isIndicesListLoading } =
+    useQueryIndices();
+
+  const futuresSymbols = futuresData ?? [];
+  const bondsSymbols = bondsData ?? [];
+  const indicesSymbols = indicesListData ?? [];
+
   const handleMarketTabChange = (tabId: string) => {
     setActiveMarketTab(tabId);
     setMarketPage(1);
@@ -93,6 +109,69 @@ export default function UserStocksPage() {
     setIcbPage(1);
   };
 
+  const renderActiveTable = () => {
+    switch (classificationType) {
+      case "market":
+        return (
+          <UserMarketClassificationTable
+            activeMarketTab={activeMarketTab}
+            marketSearch={marketSearch}
+            marketPage={marketPage}
+            marketStocks={marketStocks}
+            marketTotal={marketTotal}
+            marketTotalPages={marketTotalPages}
+            isMarketLoading={isMarketLoading}
+            onMarketTabChange={handleMarketTabChange}
+            onMarketSearch={handleMarketSearch}
+            onMarketPageChange={setMarketPage}
+          />
+        );
+      case "icb":
+        return (
+          <UserIcbClassificationTable
+            icbIndustries={icbIndustries}
+            activeIcbCode={activeIcbCode}
+            icbSearch={icbSearch}
+            icbPage={icbPage}
+            icbStocks={icbStocks}
+            icbTotal={icbTotal}
+            icbTotalPages={icbTotalPages}
+            isIcbLoading={isIcbLoading}
+            isIcbIndustriesLoading={isIcbIndustriesLoading}
+            onIcbTabChange={handleIcbTabChange}
+            onIcbSearch={handleIcbSearch}
+            onIcbPageChange={setIcbPage}
+          />
+        );
+      case "futures":
+        return (
+          <UserSimpleSymbolsTable
+            symbols={futuresSymbols}
+            type="futures"
+            isLoading={isFuturesLoading}
+          />
+        );
+      case "bonds":
+        return (
+          <UserSimpleSymbolsTable
+            symbols={bondsSymbols}
+            type="bonds"
+            isLoading={isBondsLoading}
+          />
+        );
+      case "indices":
+        return (
+          <UserSimpleSymbolsTable
+            symbols={indicesSymbols}
+            type="indices"
+            isLoading={isIndicesListLoading}
+          />
+        );
+      default:
+        return null;
+    }
+  };
+
   return (
     <div className="space-y-6 p-6">
       {/* Header */}
@@ -103,67 +182,37 @@ export default function UserStocksPage() {
             Danh mục chứng khoán
           </h1>
           <p className="text-sm text-gray-500">
-            Tra cứu danh sách mã chứng khoán phân loại theo sàn giao dịch hoặc
-            ngành ICB.
+            Tra cứu danh sách mã chứng khoán phân loại theo sàn giao dịch, ngành
+            ICB, hợp đồng tương lai, trái phiếu chính phủ hoặc bộ chỉ số.
           </p>
         </div>
       </div>
 
-      {/* Main Switcher (Market vs ICB) */}
-      <div className="flex gap-2 border-b border-gray-200">
-        <button
-          onClick={() => setClassificationType("market")}
-          className={cn(
-            "cursor-pointer border-b-2 px-4 pb-3 text-sm font-semibold transition-all",
-            classificationType === "market"
-              ? "border-brand-900 text-brand-900"
-              : "border-transparent text-gray-500 hover:text-gray-900",
-          )}
-        >
-          Phân loại thị trường
-        </button>
-        <button
-          onClick={() => setClassificationType("icb")}
-          className={cn(
-            "cursor-pointer border-b-2 px-4 pb-3 text-sm font-semibold transition-all",
-            classificationType === "icb"
-              ? "border-brand-900 text-brand-900"
-              : "border-transparent text-gray-500 hover:text-gray-900",
-          )}
-        >
-          Phân loại ngành ICB
-        </button>
+      {/* Main Switcher (Market vs ICB vs Futures vs Bonds vs Indices) */}
+      <div className="flex flex-wrap gap-2 border-b border-gray-200">
+        {[
+          { id: "market", label: "Phân loại thị trường" },
+          { id: "icb", label: "Phân loại ngành ICB" },
+          { id: "futures", label: "Hợp đồng tương lai" },
+          { id: "bonds", label: "Trái phiếu chính phủ" },
+          { id: "indices", label: "Bộ chỉ số" },
+        ].map((tab) => (
+          <button
+            key={tab.id}
+            onClick={() => setClassificationType(tab.id as ClassificationType)}
+            className={cn(
+              "cursor-pointer border-b-2 px-4 pb-3 text-sm font-semibold whitespace-nowrap transition-all",
+              classificationType === tab.id
+                ? "border-brand-900 text-brand-900"
+                : "border-transparent text-gray-500 hover:text-gray-900",
+            )}
+          >
+            {tab.label}
+          </button>
+        ))}
       </div>
 
-      {classificationType === "market" ? (
-        <UserMarketClassificationTable
-          activeMarketTab={activeMarketTab}
-          marketSearch={marketSearch}
-          marketPage={marketPage}
-          marketStocks={marketStocks}
-          marketTotal={marketTotal}
-          marketTotalPages={marketTotalPages}
-          isMarketLoading={isMarketLoading}
-          onMarketTabChange={handleMarketTabChange}
-          onMarketSearch={handleMarketSearch}
-          onMarketPageChange={setMarketPage}
-        />
-      ) : (
-        <UserIcbClassificationTable
-          icbIndustries={icbIndustries}
-          activeIcbCode={activeIcbCode}
-          icbSearch={icbSearch}
-          icbPage={icbPage}
-          icbStocks={icbStocks}
-          icbTotal={icbTotal}
-          icbTotalPages={icbTotalPages}
-          isIcbLoading={isIcbLoading}
-          isIcbIndustriesLoading={isIcbIndustriesLoading}
-          onIcbTabChange={handleIcbTabChange}
-          onIcbSearch={handleIcbSearch}
-          onIcbPageChange={setIcbPage}
-        />
-      )}
+      {renderActiveTable()}
     </div>
   );
 }

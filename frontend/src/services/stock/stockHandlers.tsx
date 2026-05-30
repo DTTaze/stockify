@@ -104,6 +104,23 @@ export const getTickerCategoriesHandlers = async (
   return response.data;
 };
 
+export const getFuturesHandlers = async (): Promise<ApiResponse<string[]>> => {
+  const response = await stockServices.getFutures();
+  return response.data;
+};
+
+export const getGovernmentBondsHandlers = async (): Promise<
+  ApiResponse<string[]>
+> => {
+  const response = await stockServices.getGovernmentBonds();
+  return response.data;
+};
+
+export const getIndicesHandlers = async (): Promise<ApiResponse<string[]>> => {
+  const response = await stockServices.getIndices();
+  return response.data;
+};
+
 export const syncMarketGroupsHandlers = async (): Promise<ApiResponse<any>> => {
   const response = await stockServices.syncMarketGroups();
   return response.data;

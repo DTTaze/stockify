@@ -1,8 +1,11 @@
 import {
   getClassificationSummaryHandlers,
+  getFuturesHandlers,
+  getGovernmentBondsHandlers,
   getIcbIndustriesHandlers,
   getIcbStocksHandlers,
   getIndexQuoteHandlers,
+  getIndicesHandlers,
   getMarketGroupsHandlers,
   getPredictionHandlers,
   getQuoteHistoricalHandlers,
@@ -181,4 +184,30 @@ export const syncAllCategoriesQueryFn = async (): Promise<any> => {
     throw new Error(response.message || "Failed to sync all categories");
   }
   return response.data;
+};
+
+export const getFuturesQueryFn = async (): Promise<string[]> => {
+  const response = await getFuturesHandlers();
+  if (!response.success) {
+    throw new Error(response.message || "Failed to fetch futures symbols");
+  }
+  return response.data || [];
+};
+
+export const getGovernmentBondsQueryFn = async (): Promise<string[]> => {
+  const response = await getGovernmentBondsHandlers();
+  if (!response.success) {
+    throw new Error(
+      response.message || "Failed to fetch government bonds symbols",
+    );
+  }
+  return response.data || [];
+};
+
+export const getIndicesQueryFn = async (): Promise<string[]> => {
+  const response = await getIndicesHandlers();
+  if (!response.success) {
+    throw new Error(response.message || "Failed to fetch indices symbols");
+  }
+  return response.data || [];
 };

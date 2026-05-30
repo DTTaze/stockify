@@ -469,6 +469,8 @@ class StockService:
             "CW": [],
             "ETF": [],
             "FU_INDEX": [],
+            "FU_BOND": [],
+            "INDEX": [],
         }
 
         # Step 1: Fetch general list via exchange API (1 call instead of 5 calls)
@@ -508,7 +510,7 @@ class StockService:
             result["ETF"] = all_symbols_df[etf_mask]["symbol"].dropna().tolist()
 
         # Step 2: Fetch group index lists
-        for group in ["VN30", "FU_INDEX"]:
+        for group in ["VN30"]:
             group_symbols = []
             for source in ["KBS", "VCI"]:
                 try:
@@ -530,6 +532,11 @@ class StockService:
                     logger.warning(f"Failed to fetch group {group} from {source}: {e}")
                     time.sleep(1)
             result[group] = group_symbols
+
+        # Step 3: Fetch derivative & debt securities / indices
+        result["FU_INDEX"] = self.get_futures()
+        result["FU_BOND"] = self.get_government_bonds()
+        result["INDEX"] = self.get_all_indices()
 
         return result
 
@@ -591,6 +598,8 @@ class StockService:
             "CW": [],
             "ETF": [],
             "FU_INDEX": [],
+            "FU_BOND": [],
+            "INDEX": [],
         }
 
     def get_icb_industries(self) -> List[dict]:
@@ -601,15 +610,31 @@ class StockService:
             df = listing.industries_icb()
             if df is None or df.empty:
                 return []
-            
+
             results = []
             for _, row in df.iterrows():
-                results.append({
-                    "icb_name": str(row.get("icb_name")) if pd.notna(row.get("icb_name")) else "",
-                    "en_icb_name": str(row.get("en_icb_name")) if pd.notna(row.get("en_icb_name")) else None,
-                    "icb_code": str(row.get("icb_code")) if pd.notna(row.get("icb_code")) else "",
-                    "level": int(row.get("level")) if pd.notna(row.get("level")) else 0,
-                })
+                results.append(
+                    {
+                        "icb_name": (
+                            str(row.get("icb_name"))
+                            if pd.notna(row.get("icb_name"))
+                            else ""
+                        ),
+                        "en_icb_name": (
+                            str(row.get("en_icb_name"))
+                            if pd.notna(row.get("en_icb_name"))
+                            else None
+                        ),
+                        "icb_code": (
+                            str(row.get("icb_code"))
+                            if pd.notna(row.get("icb_code"))
+                            else ""
+                        ),
+                        "level": (
+                            int(row.get("level")) if pd.notna(row.get("level")) else 0
+                        ),
+                    }
+                )
             return results
         except Exception as e:
             logger.error(f"Error fetching ICB industries: {e}", exc_info=True)
@@ -621,15 +646,35 @@ class StockService:
                     return []
                 results = []
                 for _, row in df.iterrows():
-                    results.append({
-                        "icb_name": str(row.get("icb_name")) if pd.notna(row.get("icb_name")) else "",
-                        "en_icb_name": str(row.get("en_icb_name")) if pd.notna(row.get("en_icb_name")) else None,
-                        "icb_code": str(row.get("icb_code")) if pd.notna(row.get("icb_code")) else "",
-                        "level": int(row.get("level")) if pd.notna(row.get("level")) else 0,
-                    })
+                    results.append(
+                        {
+                            "icb_name": (
+                                str(row.get("icb_name"))
+                                if pd.notna(row.get("icb_name"))
+                                else ""
+                            ),
+                            "en_icb_name": (
+                                str(row.get("en_icb_name"))
+                                if pd.notna(row.get("en_icb_name"))
+                                else None
+                            ),
+                            "icb_code": (
+                                str(row.get("icb_code"))
+                                if pd.notna(row.get("icb_code"))
+                                else ""
+                            ),
+                            "level": (
+                                int(row.get("level"))
+                                if pd.notna(row.get("level"))
+                                else 0
+                            ),
+                        }
+                    )
                 return results
             except Exception as e_kbs:
-                logger.error(f"KBS fallback failed for ICB industries: {e_kbs}", exc_info=True)
+                logger.error(
+                    f"KBS fallback failed for ICB industries: {e_kbs}", exc_info=True
+                )
                 raise DataFetchException(str(e_kbs))
 
     def get_symbols_by_industries(self) -> List[dict]:
@@ -640,17 +685,39 @@ class StockService:
             df = listing.symbols_by_industries()
             if df is None or df.empty:
                 return []
-            
+
             results = []
             for _, row in df.iterrows():
-                results.append({
-                    "symbol": str(row.get("symbol")).upper(),
-                    "organ_name": str(row.get("organ_name")) if pd.notna(row.get("organ_name")) else None,
-                    "com_type_code": str(row.get("com_type_code")) if pd.notna(row.get("com_type_code")) else None,
-                    "icb_level": int(row.get("icb_level")) if pd.notna(row.get("icb_level")) else 0,
-                    "icb_code": str(row.get("icb_code")) if pd.notna(row.get("icb_code")) else "",
-                    "icb_name": str(row.get("icb_name")) if pd.notna(row.get("icb_name")) else "",
-                })
+                results.append(
+                    {
+                        "symbol": str(row.get("symbol")).upper(),
+                        "organ_name": (
+                            str(row.get("organ_name"))
+                            if pd.notna(row.get("organ_name"))
+                            else None
+                        ),
+                        "com_type_code": (
+                            str(row.get("com_type_code"))
+                            if pd.notna(row.get("com_type_code"))
+                            else None
+                        ),
+                        "icb_level": (
+                            int(row.get("icb_level"))
+                            if pd.notna(row.get("icb_level"))
+                            else 0
+                        ),
+                        "icb_code": (
+                            str(row.get("icb_code"))
+                            if pd.notna(row.get("icb_code"))
+                            else ""
+                        ),
+                        "icb_name": (
+                            str(row.get("icb_name"))
+                            if pd.notna(row.get("icb_name"))
+                            else ""
+                        ),
+                    }
+                )
             return results
         except Exception as e:
             logger.error(f"Error fetching symbols by industries: {e}", exc_info=True)
@@ -662,19 +729,103 @@ class StockService:
                     return []
                 results = []
                 for _, row in df.iterrows():
-                    results.append({
-                        "symbol": str(row.get("symbol")).upper(),
-                        "organ_name": str(row.get("organ_name")) if pd.notna(row.get("organ_name")) else None,
-                        "com_type_code": str(row.get("com_type_code")) if pd.notna(row.get("com_type_code")) else None,
-                        "icb_level": int(row.get("icb_level")) if pd.notna(row.get("icb_level")) else 0,
-                        "icb_code": str(row.get("icb_code")) if pd.notna(row.get("icb_code")) else "",
-                        "icb_name": str(row.get("icb_name")) if pd.notna(row.get("icb_name")) else "",
-                    })
+                    results.append(
+                        {
+                            "symbol": str(row.get("symbol")).upper(),
+                            "organ_name": (
+                                str(row.get("organ_name"))
+                                if pd.notna(row.get("organ_name"))
+                                else None
+                            ),
+                            "com_type_code": (
+                                str(row.get("com_type_code"))
+                                if pd.notna(row.get("com_type_code"))
+                                else None
+                            ),
+                            "icb_level": (
+                                int(row.get("icb_level"))
+                                if pd.notna(row.get("icb_level"))
+                                else 0
+                            ),
+                            "icb_code": (
+                                str(row.get("icb_code"))
+                                if pd.notna(row.get("icb_code"))
+                                else ""
+                            ),
+                            "icb_name": (
+                                str(row.get("icb_name"))
+                                if pd.notna(row.get("icb_name"))
+                                else ""
+                            ),
+                        }
+                    )
                 return results
             except Exception as e_kbs:
-                logger.error(f"KBS fallback failed for symbols by industries: {e_kbs}", exc_info=True)
+                logger.error(
+                    f"KBS fallback failed for symbols by industries: {e_kbs}",
+                    exc_info=True,
+                )
                 raise DataFetchException(str(e_kbs))
+
+    def get_futures(self) -> List[str]:
+        if Listing is None:
+            return []
+        for source in ["KBS", "VCI"]:
+            try:
+                listing = Listing(source=source)
+                res = listing.all_future_indices()
+                if res is not None:
+                    if hasattr(res, "tolist"):
+                        return res.tolist()
+                    return list(res)
+            except Exception as e:
+                logger.warning(f"Failed to fetch futures from {source}: {e}")
+        return ["VN30F1M", "VN30F2M", "VN30F2306", "VN30F2309"]
+
+    def get_government_bonds(self) -> List[str]:
+        if Listing is None:
+            return []
+        for source in ["VCI", "KBS"]:
+            try:
+                listing = Listing(source=source)
+                res = listing.all_government_bonds()
+                if res is not None:
+                    if hasattr(res, "tolist"):
+                        return res.tolist()
+                    return list(res)
+            except Exception as e:
+                logger.warning(f"Failed to fetch government bonds from {source}: {e}")
+
+        for source in ["KBS", "VCI"]:
+            try:
+                listing = Listing(source=source)
+                if hasattr(listing, "all_bonds"):
+                    res = listing.all_bonds()
+                    if res is not None:
+                        if hasattr(res, "tolist"):
+                            return res.tolist()
+                        return list(res)
+            except Exception:
+                pass
+        return []
+
+    def get_all_indices(self) -> List[str]:
+        if Listing is None:
+            return ["VNINDEX", "VN30", "HNXINDEX", "HNX30", "UPCOMINDEX"]
+        for source in ["KBS", "VCI"]:
+            try:
+                listing = Listing(source=source)
+                if hasattr(listing, "all_indices"):
+                    res = getattr(listing, "all_indices")()
+                    if res is not None:
+                        if hasattr(res, "tolist"):
+                            return res.tolist()
+                        elif hasattr(res, "symbol"):
+                            return res["symbol"].tolist()
+                        return list(res)
+            except Exception:
+                pass
+        return ["VNINDEX", "VN30", "HNXINDEX", "HNX30", "UPCOMINDEX"]
 
 
 stock_service = StockService()
-

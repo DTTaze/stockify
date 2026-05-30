@@ -136,4 +136,16 @@ export class MLService extends OutboundPartnerService {
   public async getSymbolsByIndustries(): Promise<OperationResult<any[]>> {
     return this.request<any[]>('get', '/market/symbols-by-industries') as any;
   }
+
+  public async getFutures(): Promise<OperationResult<string[]>> {
+    return this.request<string[]>('get', '/market/futures') as any;
+  }
+
+  public async getGovernmentBonds(): Promise<OperationResult<string[]>> {
+    return this.request<string[]>('get', '/market/government-bonds') as any;
+  }
+
+  public async getIndices(): Promise<OperationResult<string[]>> {
+    return this.request<string[]>('get', '/market/indices') as any;
+  }
 }

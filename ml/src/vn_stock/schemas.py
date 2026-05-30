@@ -108,4 +108,3 @@ class SymbolIndustryResponse(BaseModel):
     icb_level: int = Field(..., description="ICB mapping level")
     icb_code: str = Field(..., description="ICB Industry code")
     icb_name: str = Field(..., description="ICB Industry name")
-
