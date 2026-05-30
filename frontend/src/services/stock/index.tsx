@@ -52,6 +52,15 @@ export const stockServices = {
   getTickerCategories: (ticker: string): Promise<AxiosResponse> =>
     axiosClient.get(`stock-categories/ticker/${ticker}`),
 
+  getFutures: (): Promise<AxiosResponse> =>
+    axiosClient.get(`stock-categories/futures`),
+
+  getGovernmentBonds: (): Promise<AxiosResponse> =>
+    axiosClient.get(`stock-categories/government-bonds`),
+
+  getIndices: (): Promise<AxiosResponse> =>
+    axiosClient.get(`stock-categories/indices`),
+
   syncMarketGroups: (): Promise<AxiosResponse> =>
     axiosClient.post(`stock-categories/sync-market-groups`),
 

@@ -138,3 +138,36 @@ async def get_symbols_by_industries(
 ) -> List[schemas.SymbolIndustryResponse]:
     return service.get_symbols_by_industries()
 
+
+@router.get(
+    "/futures",
+    response_model=List[str],
+    summary="Get all futures contracts symbols",
+)
+async def get_futures(
+    service: StockService = Depends(get_service),
+) -> List[str]:
+    return service.get_futures()
+
+
+@router.get(
+    "/government-bonds",
+    response_model=List[str],
+    summary="Get all government bonds symbols",
+)
+async def get_government_bonds(
+    service: StockService = Depends(get_service),
+) -> List[str]:
+    return service.get_government_bonds()
+
+
+@router.get(
+    "/indices",
+    response_model=List[str],
+    summary="Get all indices symbols",
+)
+async def get_indices_list(
+    service: StockService = Depends(get_service),
+) -> List[str]:
+    return service.get_all_indices()
+

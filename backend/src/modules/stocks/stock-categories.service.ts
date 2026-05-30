@@ -285,4 +285,63 @@ export class StockCategoriesService {
       };
     }
   }
+
+  private async getSymbolsByGroupCode(groupCode: string): Promise<string[]> {
+    const mappings = await this.groupMappingRepo
+      .createQueryBuilder('mapping')
+      .innerJoin('mapping.stockGroup', 'sg')
+      .where('sg.code = :groupCode', { groupCode })
+      .select('mapping.stockSymbol', 'symbol')
+      .orderBy('mapping.stockSymbol', 'ASC')
+      .getRawMany();
+    return mappings.map((m) => m.symbol);
+  }
+
+  public async getFutures(): Promise<OperationResult<string[]>> {
+    try {
+      const symbols = await this.getSymbolsByGroupCode('FU_INDEX');
+      return {
+        success: true,
+        data: symbols,
+      };
+    } catch (error) {
+      this.logger.error('Error fetching futures from DB:', error);
+      return {
+        success: false,
+        message: `Failed to fetch futures: ${error.message}`,
+      };
+    }
+  }
+
+  public async getGovernmentBonds(): Promise<OperationResult<string[]>> {
+    try {
+      const symbols = await this.getSymbolsByGroupCode('FU_BOND');
+      return {
+        success: true,
+        data: symbols,
+      };
+    } catch (error) {
+      this.logger.error('Error fetching government bonds from DB:', error);
+      return {
+        success: false,
+        message: `Failed to fetch government bonds: ${error.message}`,
+      };
+    }
+  }
+
+  public async getIndices(): Promise<OperationResult<string[]>> {
+    try {
+      const symbols = await this.getSymbolsByGroupCode('INDEX');
+      return {
+        success: true,
+        data: symbols,
+      };
+    } catch (error) {
+      this.logger.error('Error fetching indices from DB:', error);
+      return {
+        success: false,
+        message: `Failed to fetch indices: ${error.message}`,
+      };
+    }
+  }
 }

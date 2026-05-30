@@ -11,9 +11,12 @@ import {
 
 import {
   getClassificationSummaryQueryFn,
+  getFuturesQueryFn,
+  getGovernmentBondsQueryFn,
   getIcbIndustriesQueryFn,
   getIcbStocksQueryFn,
   getIndexQuoteQueryFn,
+  getIndicesQueryFn,
   getMarketGroupsQueryFn,
   getPredictionQueryFn,
   getQuoteHistoricalQueryFn,
@@ -207,3 +210,24 @@ export const useSyncAllCategories = () => {
     },
   });
 };
+
+export const useQueryFutures = () =>
+  useQuery<string[]>({
+    queryKey: [QueryKeysStocks.ROOT, "futures"],
+    queryFn: getFuturesQueryFn,
+    refetchOnMount: true,
+  });
+
+export const useQueryGovernmentBonds = () =>
+  useQuery<string[]>({
+    queryKey: [QueryKeysStocks.ROOT, "government-bonds"],
+    queryFn: getGovernmentBondsQueryFn,
+    refetchOnMount: true,
+  });
+
+export const useQueryIndices = () =>
+  useQuery<string[]>({
+    queryKey: [QueryKeysStocks.ROOT, "indices"],
+    queryFn: getIndicesQueryFn,
+    refetchOnMount: true,
+  });

@@ -177,6 +177,8 @@ export class StocksService extends BaseCRUDService<Stock> {
         { code: 'CW', name: 'Chứng quyền' },
         { code: 'ETF', name: 'Quỹ ETF' },
         { code: 'FU_INDEX', name: 'Hợp đồng tương lai' },
+        { code: 'FU_BOND', name: 'Trái phiếu chính phủ' },
+        { code: 'INDEX', name: 'Bộ chỉ số' },
       ];
 
       for (const g of groupsToCreate) {
@@ -191,7 +193,45 @@ export class StocksService extends BaseCRUDService<Stock> {
       const groupMap = new Map<string, number>();
       dbGroups.forEach((g) => groupMap.set(g.code.toUpperCase(), g.id));
 
-      // 2. Fetch all stocks and clear existing mappings
+      // Ensure special symbols (futures, bonds, indices) exist in the stocks table first
+      const futuresList = groupedSymbols.FU_INDEX || [];
+      const bondsList = groupedSymbols.FU_BOND || [];
+      const indicesList = groupedSymbols.INDEX || [];
+
+      const specialSymbolsToUpsert: any[] = [];
+      futuresList.forEach((sym: string) => {
+        specialSymbolsToUpsert.push({
+          symbol: sym,
+          exchange: 'DER',
+          organ_name: 'Hợp đồng tương lai ' + sym,
+          type: 'future',
+        });
+      });
+      bondsList.forEach((sym: string) => {
+        specialSymbolsToUpsert.push({
+          symbol: sym,
+          exchange: 'BOND',
+          organ_name: 'Trái phiếu chính phủ ' + sym,
+          type: 'bond',
+        });
+      });
+      indicesList.forEach((sym: string) => {
+        specialSymbolsToUpsert.push({
+          symbol: sym,
+          exchange: 'INDEX',
+          organ_name: 'Chỉ số ' + sym,
+          type: 'index',
+        });
+      });
+
+      if (specialSymbolsToUpsert.length > 0) {
+        this.logger.log(
+          `Upserting ${specialSymbolsToUpsert.length} special securities into DB...`,
+        );
+        await this.upsertStocksInChunks(specialSymbolsToUpsert);
+      }
+
+      // 2. Fetch all stocks (including newly inserted ones) and clear existing mappings
       const allStocks = await this.repo.find();
       await this.mappingRepo.clear();
 
@@ -216,11 +256,18 @@ export class StocksService extends BaseCRUDService<Stock> {
       const fuIndexSet = new Set(
         (groupedSymbols.FU_INDEX || []).map((s: string) => s.toUpperCase()),
       );
+      const fuBondSet = new Set(
+        (groupedSymbols.FU_BOND || []).map((s: string) => s.toUpperCase()),
+      );
+      const indexSet = new Set(
+        (groupedSymbols.INDEX || []).map((s: string) => s.toUpperCase()),
+      );
 
       const newMappings: StockGroupMapping[] = [];
 
       for (const stock of allStocks) {
         const sym = stock.symbol.toUpperCase();
+        const mappedGroupIds = new Set<number>();
 
         // Correct exchange name based on groups from vnstock
         if (hoseSet.has(sym)) {
@@ -235,41 +282,81 @@ export class StocksService extends BaseCRUDService<Stock> {
 
         // Map exchange group
         if (ex && groupMap.has(ex)) {
+          const groupId = groupMap.get(ex)!;
           const mapping = new StockGroupMapping();
           mapping.stockSymbol = stock.symbol;
-          mapping.groupId = groupMap.get(ex)!;
+          mapping.groupId = groupId;
           newMappings.push(mapping);
+          mappedGroupIds.add(groupId);
         }
 
         // Map index groups
         let indexGroupCode: string | null = null;
         if (vn30Set.has(sym) && groupMap.has('VN30')) {
-          const mapping = new StockGroupMapping();
-          mapping.stockSymbol = stock.symbol;
-          mapping.groupId = groupMap.get('VN30')!;
-          newMappings.push(mapping);
+          const groupId = groupMap.get('VN30')!;
+          if (!mappedGroupIds.has(groupId)) {
+            const mapping = new StockGroupMapping();
+            mapping.stockSymbol = stock.symbol;
+            mapping.groupId = groupId;
+            newMappings.push(mapping);
+            mappedGroupIds.add(groupId);
+          }
           indexGroupCode = 'VN30';
         }
         if (cwSet.has(sym) && groupMap.has('CW')) {
-          const mapping = new StockGroupMapping();
-          mapping.stockSymbol = stock.symbol;
-          mapping.groupId = groupMap.get('CW')!;
-          newMappings.push(mapping);
+          const groupId = groupMap.get('CW')!;
+          if (!mappedGroupIds.has(groupId)) {
+            const mapping = new StockGroupMapping();
+            mapping.stockSymbol = stock.symbol;
+            mapping.groupId = groupId;
+            newMappings.push(mapping);
+            mappedGroupIds.add(groupId);
+          }
           indexGroupCode = 'CW';
         }
         if (etfSet.has(sym) && groupMap.has('ETF')) {
-          const mapping = new StockGroupMapping();
-          mapping.stockSymbol = stock.symbol;
-          mapping.groupId = groupMap.get('ETF')!;
-          newMappings.push(mapping);
+          const groupId = groupMap.get('ETF')!;
+          if (!mappedGroupIds.has(groupId)) {
+            const mapping = new StockGroupMapping();
+            mapping.stockSymbol = stock.symbol;
+            mapping.groupId = groupId;
+            newMappings.push(mapping);
+            mappedGroupIds.add(groupId);
+          }
           indexGroupCode = 'ETF';
         }
         if (fuIndexSet.has(sym) && groupMap.has('FU_INDEX')) {
-          const mapping = new StockGroupMapping();
-          mapping.stockSymbol = stock.symbol;
-          mapping.groupId = groupMap.get('FU_INDEX')!;
-          newMappings.push(mapping);
+          const groupId = groupMap.get('FU_INDEX')!;
+          if (!mappedGroupIds.has(groupId)) {
+            const mapping = new StockGroupMapping();
+            mapping.stockSymbol = stock.symbol;
+            mapping.groupId = groupId;
+            newMappings.push(mapping);
+            mappedGroupIds.add(groupId);
+          }
           indexGroupCode = 'FU_INDEX';
+        }
+        if (fuBondSet.has(sym) && groupMap.has('FU_BOND')) {
+          const groupId = groupMap.get('FU_BOND')!;
+          if (!mappedGroupIds.has(groupId)) {
+            const mapping = new StockGroupMapping();
+            mapping.stockSymbol = stock.symbol;
+            mapping.groupId = groupId;
+            newMappings.push(mapping);
+            mappedGroupIds.add(groupId);
+          }
+          indexGroupCode = 'FU_BOND';
+        }
+        if (indexSet.has(sym) && groupMap.has('INDEX')) {
+          const groupId = groupMap.get('INDEX')!;
+          if (!mappedGroupIds.has(groupId)) {
+            const mapping = new StockGroupMapping();
+            mapping.stockSymbol = stock.symbol;
+            mapping.groupId = groupId;
+            newMappings.push(mapping);
+            mappedGroupIds.add(groupId);
+          }
+          indexGroupCode = 'INDEX';
         }
         stock.indexGroup = indexGroupCode;
       }
@@ -314,6 +401,8 @@ export class StocksService extends BaseCRUDService<Stock> {
         CW: 0,
         ETF: 0,
         FU_INDEX: 0,
+        FU_BOND: 0,
+        INDEX: 0,
         total: allStocks.length,
       };
 
