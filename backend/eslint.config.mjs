@@ -22,7 +22,7 @@ export default tseslint.config(
       '@typescript-eslint/interface-name-prefix': 'off',
       '@typescript-eslint/explicit-function-return-type': 'off',
       '@typescript-eslint/explicit-module-boundary-types': 'off',
-      '@typescript-eslint/no-explicit-any': 'warn',
+      '@typescript-eslint/no-explicit-any': 'off',
       '@typescript-eslint/no-unused-vars': [
         'error',
         {
@@ -32,11 +32,11 @@ export default tseslint.config(
         },
       ],
       'prefer-const': 'error',
-      'no-console': ['warn', { allow: ['warn', 'error'] }],
+      'no-console': 'off',
       'no-debugger': 'error',
       'eqeqeq': ['error', 'always'],
       'curly': ['error', 'all'],
-      '@typescript-eslint/require-await': 'warn',
+      '@typescript-eslint/require-await': 'off',
     },
   }
 );

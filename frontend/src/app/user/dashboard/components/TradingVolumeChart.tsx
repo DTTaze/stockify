@@ -11,7 +11,7 @@ import {
 } from "recharts";
 
 import { TradingVolumeChartSkeleton } from "@/app/user/dashboard/components/TradingVolumeChartSkeleton";
-import { useQueryQuoteHistorical } from "@/queries/stocks/QueryHooksStocks";
+import { useQueryStockHistorical } from "@/queries/stocks/QueryHooksStocks";
 import {
   MarketType,
   StockHistoricalDataType,
@@ -27,7 +27,7 @@ export default function TradingVolumeChart({
   symbol,
   period,
 }: TradingVolumeChartProps) {
-  const { data, isLoading } = useQueryQuoteHistorical({
+  const { data, isLoading } = useQueryStockHistorical({
     symbol,
     type: MarketType.STOCK,
     period,

@@ -919,4 +919,123 @@ export class StocksService extends BaseCRUDService<Stock> {
       };
     }
   }
+
+  /**
+   * Convert a TimePeriod string to a start Date relative to now.
+   */
+  private periodToStartDate(period: string): Date {
+    const now = new Date();
+    switch (period) {
+      case '1d':
+        return new Date(now.getTime() - 1 * 24 * 60 * 60 * 1000);
+      case '1w':
+        return new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+      case '1mo':
+        return new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+      case '3mo':
+        return new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
+      case '6mo':
+        return new Date(now.getTime() - 180 * 24 * 60 * 60 * 1000);
+      case '1y':
+        return new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000);
+      default:
+        return new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+    }
+  }
+
+  /**
+   * Get historical prices by period enum (1d, 1w, 1mo, 3mo, 6mo, 1y).
+   * Returns data shaped as { date, close, volume }[] for frontend charts.
+   */
+  public async getHistoricalByPeriod(
+    symbol: string,
+    period: string,
+  ): Promise<OperationResult> {
+    try {
+      const startDate = this.periodToStartDate(period);
+      const upperSymbol = symbol.toUpperCase();
+
+      const list = await this.priceRepo
+        .createQueryBuilder('sp')
+        .where('sp.symbol = :symbol', { symbol: upperSymbol })
+        .andWhere('sp.date >= :start', { start: startDate })
+        .orderBy('sp.date', 'ASC')
+        .getMany();
+
+      const data = list.map((p) => ({
+        date: p.date,
+        close: p.close,
+        volume: Number(p.volume),
+      }));
+
+      return { success: true, data };
+    } catch (error) {
+      this.logger.error(`Error in getHistoricalByPeriod for ${symbol}:`, error);
+      return {
+        success: false,
+        message: `Failed to get historical prices: ${error.message}`,
+      };
+    }
+  }
+
+  /**
+   * Compute a stock quote (price, change_percent, volume) from DB records.
+   */
+  public async getQuoteFromDb(
+    symbol: string,
+    _period: string,
+  ): Promise<OperationResult> {
+    try {
+      const upperSymbol = symbol.toUpperCase();
+
+      // Get the two most recent records to compute change
+      const latestRecords = await this.priceRepo
+        .createQueryBuilder('sp')
+        .where('sp.symbol = :symbol', { symbol: upperSymbol })
+        .orderBy('sp.date', 'DESC')
+        .take(2)
+        .getMany();
+
+      if (latestRecords.length === 0) {
+        return {
+          success: true,
+          data: {
+            symbol: upperSymbol,
+            price: 0,
+            change_percent: 0,
+            volume: 0,
+          },
+        };
+      }
+
+      const latest = latestRecords[0];
+      const previous = latestRecords.length > 1 ? latestRecords[1] : null;
+
+      const price = latest.close || 0;
+      const volume = Number(latest.volume) || 0;
+      let changePercent = 0;
+
+      if (previous && previous.close > 0) {
+        changePercent = Number(
+          (((price - previous.close) / previous.close) * 100).toFixed(2),
+        );
+      }
+
+      return {
+        success: true,
+        data: {
+          symbol: upperSymbol,
+          price,
+          change_percent: changePercent,
+          volume,
+        },
+      };
+    } catch (error) {
+      this.logger.error(`Error in getQuoteFromDb for ${symbol}:`, error);
+      return {
+        success: false,
+        message: `Failed to get quote: ${error.message}`,
+      };
+    }
+  }
 }

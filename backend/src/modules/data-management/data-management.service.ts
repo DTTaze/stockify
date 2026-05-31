@@ -10,6 +10,7 @@ import { ConfigService } from '@nestjs/config';
 import { ENV_KEY, INJECTION_TOKEN } from '@shared/constants';
 import { OutboundPartnerService } from '@shared/services/outbound-partner.service';
 
+import { StocksService } from '../stocks/stocks.service';
 import {
   DataManagementStockDto,
   DataManagementSummaryDto,
@@ -21,15 +22,13 @@ import {
 @Injectable()
 export class DataManagementService extends OutboundPartnerService {
   private readonly logger = new Logger(DataManagementService.name);
-
   constructor(
     private readonly configService: ConfigService,
-
     @Inject(INJECTION_TOKEN.HTTP_SERVICE)
     protected readonly httpService: AxiosHttpService,
-
     @Inject(INJECTION_TOKEN.AUDIT_SERVICE)
     protected readonly auditService: AuditService,
+    private readonly stocksService: StocksService,
   ) {
     super(httpService, auditService);
   }
@@ -41,21 +40,23 @@ export class DataManagementService extends OutboundPartnerService {
   public async getDataManagementSummary(): Promise<
     OperationResult<DataManagementSummaryDto>
   > {
-    const result = await this.request<any>('get', '/data-management/summary');
-    if (!result.success || !result.data) {
-      return result as any;
+    // Use StocksService to compute summary from the database
+    const classificationResult =
+      await this.stocksService.getClassificationSummary();
+    if (!classificationResult.success) {
+      return { success: false, message: classificationResult.message } as any;
     }
+    // For now, we set needsUpdate to false and totalRecords to 0 (placeholder)
     return {
       success: true,
       data: {
-        totalStocks: result.data.total_stocks,
-        total_stocks: result.data.total_stocks,
-        updated: result.data.updated,
-        needsUpdate: result.data.needs_update,
-        needs_update: result.data.needs_update,
-        totalRecords: result.data.total_records,
-        total_records: result.data.total_records,
-      } as any,
+        totalStocks: classificationResult.data.total,
+        // timestamp as number (ms since epoch) to match DTO
+        updated: Date.now(),
+        // 0 = no update needed, 1 = needs update
+        needsUpdate: 0,
+        totalRecords: 0,
+      },
     };
   }
 
@@ -69,54 +70,28 @@ export class DataManagementService extends OutboundPartnerService {
       offset: number;
     }>
   > {
-    const { keyword, status, limit, offset } = query;
-    const result = await this.request<any>('get', '/data-management/stocks');
-
-    if (!result.success || !result.data) {
-      return result as any;
+    // Delegate to StocksService which reads from the database
+    const serviceResult = await this.stocksService.getStocks(query);
+    if (!serviceResult.success) {
+      return { success: false, message: serviceResult.message } as any;
     }
-
-    const rawData = result.data;
-    const rawStocks = Array.isArray(rawData)
-      ? rawData
-      : ((rawData as any)?.stocks ?? []);
-
-    const stocks: any[] = rawStocks.map((stock: any) => ({
-      symbol: stock.symbol,
-      lastUpdated: stock.last_updated,
-      last_updated: stock.last_updated,
-      totalRecords: stock.total_records,
-      total_records: stock.total_records,
-      status: stock.status,
+    const { stocks, total, limit, offset } = serviceResult.data;
+    // Map Stock entities to DataManagementStockDto shape
+    const dmStocks: DataManagementStockDto[] = stocks.map((s) => ({
+      symbol: s.symbol,
+      lastUpdated: (s as any).lastUpdated || null,
+      totalRecords: (s as any).totalRecords || 0,
+      status: (s as any).status || 'unknown',
     }));
-
-    let filtered = stocks;
-
-    if (keyword) {
-      const kw = keyword.toLowerCase();
-      filtered = filtered.filter((stock) =>
-        stock.symbol.toLowerCase().includes(kw),
-      );
-    }
-
-    if (status && status !== 'all') {
-      filtered = filtered.filter((stock) => stock.status === status);
-    }
-
-    const total = filtered.length;
-    const parsedLimit = limit !== undefined ? Number(limit) : 10;
-    const parsedOffset = offset !== undefined ? Number(offset) : 0;
-    const sliced = filtered.slice(parsedOffset, parsedOffset + parsedLimit);
-
     return {
       success: true,
       data: {
-        stocks: sliced,
+        stocks: dmStocks,
         total,
-        limit: parsedLimit,
-        offset: parsedOffset,
+        limit,
+        offset,
       },
-    } as any;
+    };
   }
 
   public async updateStockData(

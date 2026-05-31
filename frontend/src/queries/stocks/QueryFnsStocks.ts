@@ -10,6 +10,8 @@ import {
   getPredictionHandlers,
   getQuoteHistoricalHandlers,
   getStockCompaniesHandlers,
+  getStockHistoricalHandlers,
+  getStockQuoteHandlers,
   getStocksHandlers,
   getSupportedSymbolsHandlers,
   getTickerCategoriesHandlers,
@@ -42,6 +44,18 @@ export const getIndexQuoteQueryFn = async (
   return response.data;
 };
 
+export const getStockQuoteQueryFn = async (
+  params: MarketQuoteParams,
+): Promise<StockDataType> => {
+  const response = await getStockQuoteHandlers(params);
+
+  if (!response.success) {
+    throw new Error(response.message || "Failed to fetch stock quote");
+  }
+
+  return response.data;
+};
+
 export const getQuoteHistoricalQueryFn = async (
   params: MarketQuoteParams,
 ): Promise<StockHistoricalDataType[]> => {
@@ -49,6 +63,18 @@ export const getQuoteHistoricalQueryFn = async (
 
   if (!response.success) {
     throw new Error(response.message || "Failed to fetch index quote");
+  }
+
+  return response.data;
+};
+
+export const getStockHistoricalQueryFn = async (
+  params: MarketQuoteParams,
+): Promise<StockHistoricalDataType[]> => {
+  const response = await getStockHistoricalHandlers(params);
+
+  if (!response.success) {
+    throw new Error(response.message || "Failed to fetch stock historical");
   }
 
   return response.data;

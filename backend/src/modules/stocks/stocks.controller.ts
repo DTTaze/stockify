@@ -33,6 +33,32 @@ export class StocksController {
     return this.stocksService.getClassificationSummary();
   }
 
+  @Get(':symbol/quote')
+  @ApiOperation({
+    summary: 'Get stock quote from database',
+    description:
+      'Compute current price, change percent, and volume from stored data',
+  })
+  async getQuoteFromDb(
+    @Param('symbol') symbol: string,
+    @Query('period') period?: string,
+  ): Promise<HttpResponse> {
+    return this.stocksService.getQuoteFromDb(symbol, period || '1d');
+  }
+
+  @Get(':symbol/historical')
+  @ApiOperation({
+    summary: 'Get stock historical prices by period',
+    description:
+      'Get historical price data from the database filtered by time period (1d, 1w, 1mo, 3mo, 6mo, 1y)',
+  })
+  async getHistoricalByPeriod(
+    @Param('symbol') symbol: string,
+    @Query('period') period?: string,
+  ): Promise<HttpResponse> {
+    return this.stocksService.getHistoricalByPeriod(symbol, period || '1mo');
+  }
+
   @Get(':symbol/latest-date')
   @ApiOperation({ summary: 'Get latest stock price date in DB' })
   async getLatestPriceDate(
@@ -57,7 +83,7 @@ export class StocksController {
   }
 
   @Get(':symbol/history')
-  @ApiOperation({ summary: 'Get stock historical prices' })
+  @ApiOperation({ summary: 'Get stock historical prices (raw)' })
   async getHistoricalPrices(
     @Param('symbol') symbol: string,
     @Query('period') period?: string,

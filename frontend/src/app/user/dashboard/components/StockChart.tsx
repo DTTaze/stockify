@@ -11,7 +11,7 @@ import {
 } from "recharts";
 
 import { StockChartSkeleton } from "@/app/user/dashboard/components/StockChartSkeleton";
-import { useQueryQuoteHistorical } from "@/queries/stocks/QueryHooksStocks";
+import { useQueryStockHistorical } from "@/queries/stocks/QueryHooksStocks";
 import {
   MarketType,
   StockHistoricalDataType,
@@ -26,7 +26,7 @@ interface Props {
 export function StockChart(props: Props) {
   const { symbol, period } = props;
 
-  const { data, isLoading } = useQueryQuoteHistorical({
+  const { data, isLoading } = useQueryStockHistorical({
     symbol,
     type: MarketType.STOCK,
     period,

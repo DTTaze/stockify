@@ -21,6 +21,8 @@ import {
   getPredictionQueryFn,
   getQuoteHistoricalQueryFn,
   getStockCompaniesQueryFn,
+  getStockHistoricalQueryFn,
+  getStockQuoteQueryFn,
   getStocksQueryFn,
   getSupportedSymbolsQueryFn,
   getTickerCategoriesQueryFn,
@@ -62,6 +64,31 @@ export const useQueryQuoteHistorical = (params: MarketQuoteParams) =>
       params.period,
     ],
     queryFn: () => getQuoteHistoricalQueryFn(params),
+    refetchOnMount: true,
+  });
+
+export const useQueryStockQuote = (params: MarketQuoteParams) =>
+  useQuery<StockDataType>({
+    queryKey: [
+      QueryKeysStocks.ROOT,
+      "stock-quote",
+      params.symbol,
+      params.period,
+    ],
+    queryFn: () => getStockQuoteQueryFn(params),
+    placeholderData: initialStockData,
+    refetchOnMount: true,
+  });
+
+export const useQueryStockHistorical = (params: MarketQuoteParams) =>
+  useQuery<StockHistoricalDataType[]>({
+    queryKey: [
+      QueryKeysStocks.ROOT,
+      "stock-historical",
+      params.symbol,
+      params.period,
+    ],
+    queryFn: () => getStockHistoricalQueryFn(params),
     refetchOnMount: true,
   });
 

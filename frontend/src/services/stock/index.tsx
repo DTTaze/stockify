@@ -1,33 +1,31 @@
 import { AxiosResponse } from "axios";
 
-import { MarketQuoteParams, MarketType } from "@/types/stock/stock.type";
+import { MarketQuoteParams } from "@/types/stock/stock.type";
 
 import axiosClient from "..";
 
 export const stockServices = {
-  getIndexQuote: (params: MarketQuoteParams): Promise<AxiosResponse> => {
-    if (params.type === MarketType.STOCK) {
-      return axiosClient.get(`stocks/${params.symbol}/quote`, {
-        params: { period: params.period },
-      });
-    }
+  // Market indices (vnindex, vn30, etc.) — still uses ML because indices aren't stored in stock_prices
+  getIndexQuote: (params: MarketQuoteParams): Promise<AxiosResponse> =>
+    axiosClient.get(`ml/market/quote`, { params }),
 
-    return axiosClient.get(`ml/market/quote`, {
-      params,
-    });
-  },
+  // Individual stock quote from DB
+  getStockQuote: (params: MarketQuoteParams): Promise<AxiosResponse> =>
+    axiosClient.get(`stocks/${params.symbol}/quote`, {
+      params: { period: params.period },
+    }),
 
-  getQuoteHistorical: (params: MarketQuoteParams): Promise<AxiosResponse> => {
-    if (params.type === MarketType.STOCK) {
-      return axiosClient.get(`stocks/${params.symbol}/history`, {
-        params: { period: params.period },
-      });
-    }
+  // Individual stock historical from DB
+  getStockHistorical: (params: MarketQuoteParams): Promise<AxiosResponse> =>
+    axiosClient.get(`stocks/${params.symbol}/historical`, {
+      params: { period: params.period },
+    }),
 
-    return axiosClient.get(`ml/market/history`, {
-      params,
-    });
-  },
+  // Legacy: kept for backward compat but deprecated — use getStockHistorical instead
+  getQuoteHistorical: (params: MarketQuoteParams): Promise<AxiosResponse> =>
+    axiosClient.get(`stocks/${params.symbol}/historical`, {
+      params: { period: params.period },
+    }),
 
   getStockCompanies: (): Promise<AxiosResponse> =>
     axiosClient.get(`stock-companies`),

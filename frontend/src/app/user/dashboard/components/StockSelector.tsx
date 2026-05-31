@@ -13,8 +13,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { ButtonCustom } from "@/components/common/form/button";
 import { useGetModels } from "@/queries/model-management/QueryHooksModelManagement";
 import {
-  useQueryIndexQuote,
   useQueryStockCompanies,
+  useQueryStockQuote,
 } from "@/queries/stocks/QueryHooksStocks";
 import { MarketType, TimePeriod } from "@/types/stock/stock.type";
 import { formatPrice } from "@/utils/string";
@@ -153,7 +153,7 @@ export function StockSelector(props: StockSelectorProps) {
     };
   }, [allSearchableCompanies, searchQuery, currentCompany, trainedSymbols]);
 
-  const { data } = useQueryIndexQuote({
+  const { data } = useQueryStockQuote({
     symbol: value,
     type: MarketType.STOCK,
     period: period,
