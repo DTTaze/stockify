@@ -2,6 +2,7 @@ import {
   getAdminDashboardActivitiesHandlers,
   getAdminDashboardPerformanceHandlers,
   getAdminDashboardSummaryHandlers,
+  syncAdminStockPricesHandlers,
 } from "@/services/admin/adminHandlers";
 
 export const getAdminDashboardSummaryQueryFn = async () => {
@@ -29,6 +30,16 @@ export const getAdminDashboardActivitiesQueryFn = async () => {
 
   if (!response.success) {
     throw new Error(response.message);
+  }
+
+  return response.data;
+};
+
+export const syncAdminStockPricesQueryFn = async () => {
+  const response = await syncAdminStockPricesHandlers();
+
+  if (!response.success) {
+    throw new Error(response.message || "Failed to sync stock prices");
   }
 
   return response.data;

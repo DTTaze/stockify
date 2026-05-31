@@ -1,10 +1,18 @@
-import { Column, Entity, JoinColumn, ManyToOne, PrimaryColumn } from 'typeorm';
+import {
+  Column,
+  Entity,
+  Index,
+  JoinColumn,
+  ManyToOne,
+  PrimaryColumn,
+} from 'typeorm';
 
 import { Audit } from '@shared/models/audit.model';
 
 import { Stock } from './stocks.model';
 
 @Entity('stock_prices')
+@Index('IDX_stock_prices_symbol', ['symbol'])
 export class StockPrice extends Audit {
   @PrimaryColumn({ name: 'symbol' })
   symbol: string;

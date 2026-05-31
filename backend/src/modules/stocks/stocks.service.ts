@@ -1,3 +1,4 @@
+import dayjs from 'dayjs';
 import {
   AuditService,
   AxiosHttpService,
@@ -12,6 +13,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { ENV_KEY, INJECTION_TOKEN } from '@shared/constants';
 import { BaseCRUDService } from '@shared/services/base-crud.service';
 
+import { MarketType, TimePeriod } from '../ml/ml.dto';
 import { MLService } from '../ml/ml.service';
 import { StockGroupMapping } from './stock-group-mapping.model';
 import { StockGroup } from './stock-group.model';
@@ -51,6 +53,22 @@ export class StocksService extends BaseCRUDService<Stock> {
 
   protected get baseUrl(): string {
     return this.configService.getOrThrow<string>(ENV_KEY.ML_SERVICE_URL);
+  }
+
+  private getErrorMessage(error: unknown): string {
+    if (error instanceof Error) {
+      return error.message;
+    }
+
+    if (typeof error === 'string') {
+      return error;
+    }
+
+    try {
+      return JSON.stringify(error);
+    } catch {
+      return 'Unknown error';
+    }
   }
 
   public async getStocks(query: QueryStocksDTO): Promise<OperationResult> {
@@ -121,7 +139,7 @@ export class StocksService extends BaseCRUDService<Stock> {
       this.logger.error('Error in crawlAndSave:', error);
       return {
         success: false,
-        message: `Stock crawl failed: ${error.message}`,
+        message: `Stock crawl failed: ${this.getErrorMessage(error)}`,
       };
     }
   }
@@ -388,7 +406,7 @@ export class StocksService extends BaseCRUDService<Stock> {
       this.logger.error('Error in syncClassifications:', error);
       return {
         success: false,
-        message: `Failed to sync stock classifications: ${error.message}`,
+        message: `Failed to sync stock classifications: ${this.getErrorMessage(error)}`,
       };
     }
   }
@@ -434,26 +452,27 @@ export class StocksService extends BaseCRUDService<Stock> {
       this.logger.error('Error getting classification summary:', error);
       return {
         success: false,
-        message: `Failed to get classification summary: ${error.message}`,
+        message: `Failed to get classification summary: ${this.getErrorMessage(error)}`,
       };
     }
   }
 
   public async saveHistoricalPrices(
     symbol: string,
-    prices: any[],
+    prices: Array<Record<string, unknown>>,
   ): Promise<OperationResult> {
     try {
       this.logger.log(`Saving ${prices.length} stock prices for ${symbol}...`);
       const entities = prices.map((p) => {
         const sp = new StockPrice();
+        const dateValue = p.date ?? p.time ?? '';
         sp.symbol = symbol.toUpperCase();
-        sp.date = new Date(p.date || p.time);
-        sp.open = p.open || p.Open || 0;
-        sp.high = p.high || p.High || 0;
-        sp.low = p.low || p.Low || 0;
-        sp.close = p.close || p.Close || 0;
-        sp.volume = p.volume || p.Volume || 0;
+        sp.date = new Date(String(dateValue));
+        sp.open = Number(p.open ?? p.Open ?? 0);
+        sp.high = Number(p.high ?? p.High ?? 0);
+        sp.low = Number(p.low ?? p.Low ?? 0);
+        sp.close = Number(p.close ?? p.Close ?? 0);
+        sp.volume = Number(p.volume ?? p.Volume ?? 0);
         return sp;
       });
 
@@ -472,8 +491,176 @@ export class StocksService extends BaseCRUDService<Stock> {
       this.logger.error(`Error saving historical prices for ${symbol}:`, error);
       return {
         success: false,
-        message: `Failed to save historical prices: ${error.message}`,
+        message: `Failed to save historical prices: ${this.getErrorMessage(error)}`,
       };
+    }
+  }
+
+  private async retryOperation<T>(
+    operation: () => Promise<OperationResult<T>>,
+    retries = 3,
+    delayMs = 500,
+  ): Promise<OperationResult<T>> {
+    let attempt = 0;
+
+    while (attempt < retries) {
+      const result = await operation();
+      if (result.success) {
+        return result;
+      }
+
+      attempt += 1;
+      this.logger.warn(
+        `Retry attempt ${attempt} failed: ${result.message || 'unknown error'}`,
+      );
+      await new Promise((resolve) => setTimeout(resolve, delayMs * attempt));
+    }
+
+    return {
+      success: false,
+      message: `Failed after ${retries} retries`,
+    };
+  }
+
+  public async syncTrainedStockPrices(): Promise<OperationResult> {
+    try {
+      const supportedSymbols = await this.mlService.getSupportedSymbols();
+
+      if (
+        !supportedSymbols.success ||
+        !supportedSymbols.data?.symbols?.length
+      ) {
+        return {
+          success: false,
+          message:
+            supportedSymbols.message ||
+            'Failed to retrieve trained stock symbols from ML service',
+        };
+      }
+
+      const symbols = supportedSymbols.data.symbols.slice(0, 10);
+      let syncedRecords = 0;
+      const failedSymbols: string[] = [];
+
+      for (const symbol of symbols) {
+        const historyResult = await this.retryOperation<unknown>(() =>
+          this.mlService.getMarketHistory({
+            symbol,
+            type: MarketType.STOCK,
+            period: TimePeriod.ONE_YEAR,
+          }),
+        );
+
+        if (!historyResult.success || !historyResult.data) {
+          failedSymbols.push(symbol);
+          continue;
+        }
+
+        const historyData = historyResult.data;
+        const prices = Array.isArray(historyData)
+          ? (historyData as Array<Record<string, unknown>>)
+          : Array.isArray((historyData as { data?: unknown }).data)
+            ? ((historyData as { data: unknown }).data as Array<
+                Record<string, unknown>
+              >)
+            : [];
+
+        if (!prices.length) {
+          failedSymbols.push(symbol);
+          continue;
+        }
+
+        const saveResult = await this.saveHistoricalPrices(symbol, prices);
+        if (!saveResult.success) {
+          failedSymbols.push(symbol);
+          continue;
+        }
+
+        syncedRecords += prices.length;
+      }
+
+      return {
+        success: true,
+        data: {
+          totalSymbols: symbols.length,
+          syncedRecords,
+          failedSymbols,
+        },
+        message: `Synced ${syncedRecords} price records for ${symbols.length} trained symbols`,
+      };
+    } catch (error) {
+      this.logger.error('Error syncing trained stock prices:', error);
+      return {
+        success: false,
+        message: `Failed to sync trained stock prices: ${this.getErrorMessage(error)}`,
+      };
+    }
+  }
+
+  public async getStockQuote(symbol: string): Promise<
+    OperationResult<{
+      symbol: string;
+      price: number;
+      change_percent: number;
+      volume: number;
+    }>
+  > {
+    try {
+      const prices = await this.priceRepo.find({
+        where: { symbol: symbol.toUpperCase() },
+        order: { date: 'DESC' },
+        take: 2,
+      });
+
+      if (!prices.length) {
+        return {
+          success: false,
+          message: `No historical price data found for symbol ${symbol}`,
+        };
+      }
+
+      const latest = prices[0];
+      const previous = prices[1];
+      const close = latest.close ?? 0;
+      const previousClose = previous?.close ?? close;
+      const changePercent = previousClose
+        ? Number((((close - previousClose) / previousClose) * 100).toFixed(2))
+        : 0;
+
+      return {
+        success: true,
+        data: {
+          symbol: latest.symbol,
+          price: close,
+          change_percent: changePercent,
+          volume: latest.volume ?? 0,
+        },
+      };
+    } catch (error) {
+      this.logger.error(`Error getting stock quote for ${symbol}:`, error);
+      return {
+        success: false,
+        message: `Failed to get stock quote: ${this.getErrorMessage(error)}`,
+      };
+    }
+  }
+
+  private getPeriodStartDate(period: TimePeriod): Date {
+    switch (period) {
+      case TimePeriod.ONE_DAY:
+        return dayjs().subtract(1, 'day').toDate();
+      case TimePeriod.ONE_WEEK:
+        return dayjs().subtract(1, 'week').toDate();
+      case TimePeriod.ONE_MONTH:
+        return dayjs().subtract(1, 'month').toDate();
+      case TimePeriod.THREE_MONTH:
+        return dayjs().subtract(3, 'month').toDate();
+      case TimePeriod.SIX_MONTH:
+        return dayjs().subtract(6, 'month').toDate();
+      case TimePeriod.ONE_YEAR:
+        return dayjs().subtract(1, 'year').toDate();
+      default:
+        return dayjs().subtract(1, 'month').toDate();
     }
   }
 
@@ -497,16 +684,17 @@ export class StocksService extends BaseCRUDService<Stock> {
       );
       return {
         success: false,
-        message: `Failed to get latest price date: ${error.message}`,
+        message: `Failed to get latest price date: ${this.getErrorMessage(error)}`,
       };
     }
   }
 
   public async getHistoricalPrices(
     symbol: string,
+    period?: TimePeriod,
     start?: string,
     end?: string,
-  ): Promise<OperationResult<StockPrice[]>> {
+  ): Promise<OperationResult<Array<Record<string, unknown>>>> {
     try {
       const queryBuilder = this.priceRepo
         .createQueryBuilder('sp')
@@ -515,6 +703,10 @@ export class StocksService extends BaseCRUDService<Stock> {
 
       if (start) {
         queryBuilder.andWhere('sp.date >= :start', { start: new Date(start) });
+      } else if (period) {
+        queryBuilder.andWhere('sp.date >= :start', {
+          start: this.getPeriodStartDate(period),
+        });
       }
 
       if (end) {
@@ -524,7 +716,11 @@ export class StocksService extends BaseCRUDService<Stock> {
       const list = await queryBuilder.getMany();
       return {
         success: true,
-        data: list,
+        data: list.map((item) => ({
+          date: item.date.toISOString(),
+          close: item.close,
+          volume: item.volume,
+        })),
       };
     } catch (error) {
       this.logger.error(
@@ -533,7 +729,7 @@ export class StocksService extends BaseCRUDService<Stock> {
       );
       return {
         success: false,
-        message: `Failed to get historical prices: ${error.message}`,
+        message: `Failed to get historical prices: ${this.getErrorMessage(error)}`,
       };
     }
   }

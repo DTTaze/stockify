@@ -3,6 +3,7 @@ import {
   AdminDashboardPerformanceType,
   AdminDashboardRealtimeType,
   AdminDashboardSummaryType,
+  AdminStockPriceSyncResponseType,
 } from "@/types/admin/admin.type";
 import { ApiResponse } from "@/types/api";
 
@@ -33,5 +34,12 @@ export const getAdminDashboardRealtimeHandlers = async (): Promise<
   ApiResponse<AdminDashboardRealtimeType>
 > => {
   const response = await adminServices.getDashboardRealtime();
+  return response.data;
+};
+
+export const syncAdminStockPricesHandlers = async (): Promise<
+  ApiResponse<AdminStockPriceSyncResponseType>
+> => {
+  const response = await adminServices.syncStockPrices();
   return response.data;
 };

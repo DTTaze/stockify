@@ -1,19 +1,33 @@
 import { AxiosResponse } from "axios";
 
-import { MarketQuoteParams } from "@/types/stock/stock.type";
+import { MarketQuoteParams, MarketType } from "@/types/stock/stock.type";
 
 import axiosClient from "..";
 
 export const stockServices = {
-  getIndexQuote: (params: MarketQuoteParams): Promise<AxiosResponse> =>
-    axiosClient.get(`ml/market/quote`, {
-      params,
-    }),
+  getIndexQuote: (params: MarketQuoteParams): Promise<AxiosResponse> => {
+    if (params.type === MarketType.STOCK) {
+      return axiosClient.get(`stocks/${params.symbol}/quote`, {
+        params: { period: params.period },
+      });
+    }
 
-  getQuoteHistorical: (params: MarketQuoteParams): Promise<AxiosResponse> =>
-    axiosClient.get(`ml/market/history`, {
+    return axiosClient.get(`ml/market/quote`, {
       params,
-    }),
+    });
+  },
+
+  getQuoteHistorical: (params: MarketQuoteParams): Promise<AxiosResponse> => {
+    if (params.type === MarketType.STOCK) {
+      return axiosClient.get(`stocks/${params.symbol}/history`, {
+        params: { period: params.period },
+      });
+    }
+
+    return axiosClient.get(`ml/market/history`, {
+      params,
+    });
+  },
 
   getStockCompanies: (): Promise<AxiosResponse> =>
     axiosClient.get(`stock-companies`),

@@ -5,6 +5,7 @@ import {
   AdminDashboardPerformanceType,
   AdminDashboardRealtimeType,
   AdminDashboardSummaryType,
+  AdminStockPriceSyncResponseType,
 } from "@/types/admin/admin.type";
 import { ApiResponse } from "@/types/api";
 
@@ -23,4 +24,7 @@ export const adminServices = {
   getDashboardRealtime: (): Promise<
     AxiosResponse<ApiResponse<AdminDashboardRealtimeType>>
   > => axiosClient.get("admin/dashboard/realtime"),
+  syncStockPrices: (): Promise<
+    AxiosResponse<ApiResponse<AdminStockPriceSyncResponseType>>
+  > => axiosClient.post("admin/stocks/sync-prices"),
 };

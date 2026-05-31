@@ -1,8 +1,10 @@
 import { HttpResponse } from 'mvc-common-toolkit';
 import { Observable, from, interval, map, switchMap } from 'rxjs';
 
-import { Controller, Get, Logger, Sse, UseGuards } from '@nestjs/common';
+import { Controller, Get, Logger, Post, Sse, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+
+import { StocksService } from '@modules/stocks/stocks.service';
 
 import { AdminAuthGuard } from '@shared/guards/admin.guard';
 import { AdminDashboardRealtimeDto } from '@shared/interfaces';
@@ -16,7 +18,10 @@ import { AdminDashboardService } from '../services/admin-dashboard.service';
 export class AdminController {
   protected logger = new Logger(AdminController.name);
 
-  constructor(protected adminDashboardService: AdminDashboardService) {}
+  constructor(
+    protected adminDashboardService: AdminDashboardService,
+    private readonly stocksService: StocksService,
+  ) {}
 
   @Get('dashboard/summary')
   @ApiOperation({
@@ -43,6 +48,16 @@ export class AdminController {
   })
   async getDashboardActivities(): Promise<HttpResponse> {
     return this.adminDashboardService.getRecentActivities();
+  }
+
+  @Post('stocks/sync-prices')
+  @ApiOperation({
+    summary: 'Sync trained stock prices',
+    description:
+      'Fetch the latest historical stock price data for trained symbols and store it in the database',
+  })
+  async syncStockPrices(): Promise<HttpResponse> {
+    return this.stocksService.syncTrainedStockPrices();
   }
 
   @Sse('dashboard/realtime')

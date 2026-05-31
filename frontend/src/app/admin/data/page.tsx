@@ -8,7 +8,7 @@ import { ClassificationDataSection } from "@/app/admin/data/components/Classific
 import { DataManagementHeader } from "@/app/admin/data/components/DataManagementHeader";
 import { TrainingDataSection } from "@/app/admin/data/components/TrainingDataSection";
 import { ButtonCustom } from "@/components/common/form/button";
-import { useUpdateDataManagementAll } from "@/queries/data-management/QueryHooksDataManagement";
+import { useSyncAdminStockPrices } from "@/queries/admin/QueryHooksAdmin";
 import {
   useSyncAllCategories,
   useSyncIcbIndustries,
@@ -26,14 +26,14 @@ export default function DataManagement() {
   const syncMarketGroupsMutation = useSyncMarketGroups();
   const syncIcbIndustriesMutation = useSyncIcbIndustries();
   const syncAllCategoriesMutation = useSyncAllCategories();
-  const updateAllMutation = useUpdateDataManagementAll();
+  const syncStockPricesMutation = useSyncAdminStockPrices();
 
   const isBusy =
     isTrainingBusy ||
     syncMarketGroupsMutation.isPending ||
     syncIcbIndustriesMutation.isPending ||
     syncAllCategoriesMutation.isPending ||
-    updateAllMutation.status === "pending";
+    syncStockPricesMutation.isPending;
 
   const handleSyncMarketGroups = async () => {
     try {
@@ -67,9 +67,9 @@ export default function DataManagement() {
 
   const handleSyncAllPrices = async () => {
     try {
-      await updateAllMutation.mutateAsync();
+      const result = await syncStockPricesMutation.mutateAsync();
       toast.success(
-        "Đồng bộ giá cổ phiếu và kích hoạt huấn luyện lại mô hình thành công!",
+        `Đồng bộ dữ liệu giá cổ phiếu thành công. Cập nhật ${result.syncedRecords} bản ghi cho ${result.totalSymbols} mã.`,
       );
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
@@ -108,10 +108,10 @@ export default function DataManagement() {
               <RefreshCw
                 className={cn(
                   "h-4 w-4",
-                  updateAllMutation.status === "pending" && "animate-spin",
+                  syncStockPricesMutation.isPending && "animate-spin",
                 )}
               />
-              <span>Sync Stock Prices</span>
+              <span>Cập nhật dữ liệu giá cổ phiếu</span>
             </ButtonCustom>
           </div>
         ) : (

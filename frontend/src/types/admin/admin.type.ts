@@ -63,3 +63,9 @@ export interface AdminDashboardRealtimeType {
   activeUsers: number;
   timestamp: string;
 }
+
+export interface AdminStockPriceSyncResponseType {
+  totalSymbols: number;
+  syncedRecords: number;
+  failedSymbols: string[];
+}
