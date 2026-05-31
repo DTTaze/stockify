@@ -1,9 +1,8 @@
-import { ILike, In, Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 
-import { PaginationDTO } from '@shared/common/pagination.dto';
 import { BaseCRUDService } from '@shared/services/base-crud.service';
 
 import { Role } from '../entities/role.entity';

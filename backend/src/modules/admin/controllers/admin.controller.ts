@@ -5,12 +5,7 @@ import { Controller, Get, Logger, Sse, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 
 import { AdminAuthGuard } from '@shared/guards/admin.guard';
-import {
-  AdminDashboardActivityDto,
-  AdminDashboardPerformanceDto,
-  AdminDashboardRealtimeDto,
-  AdminDashboardSummaryDto,
-} from '@shared/interfaces';
+import { AdminDashboardRealtimeDto } from '@shared/interfaces';
 
 import { AdminDashboardService } from '../services/admin-dashboard.service';
 

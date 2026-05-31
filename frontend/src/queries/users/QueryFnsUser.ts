@@ -14,6 +14,8 @@ export const getProfileQueryFn = async (): Promise<ProfileType> => {
 
 export const getUsersQueryFn = async (): Promise<AdminUserItem[]> => {
   const response = await getUsersHandler();
-  if (!response.success) throw new Error(response.message);
+  if (!response.success) {
+    throw new Error(response.message);
+  }
   return response.data;
 };

@@ -1,5 +1,3 @@
-import { HttpResponse } from 'mvc-common-toolkit';
-
 import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';

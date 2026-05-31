@@ -5,8 +5,9 @@ export const RequestUser = createParamDecorator(
     const isRequired = !isOptional;
     const user = ctx.switchToHttp().getRequest().activeUser;
 
-    if (isRequired && (!user || user.deletedAt))
+    if (isRequired && (!user || user.deletedAt)) {
       throw new Error('Invalid user');
+    }
 
     return user;
   },
@@ -17,8 +18,9 @@ export const RequestSystemUser = createParamDecorator(
     const isRequired = !isOptional;
     const user = ctx.switchToHttp().getRequest().activeSystemUser;
 
-    if (isRequired && (!user || user.deletedAt))
+    if (isRequired && (!user || user.deletedAt)) {
       throw new Error('Invalid system user');
+    }
 
     return user;
   },

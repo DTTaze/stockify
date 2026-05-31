@@ -3,7 +3,13 @@
 // eslint-disable-next-line no-restricted-syntax
 import * as LabelPrimitive from "@radix-ui/react-label";
 import { Slot } from "@radix-ui/react-slot";
-import { ComponentProps, createContext, useContext, useId } from "react";
+import {
+  ComponentProps,
+  createContext,
+  useContext,
+  useId,
+  useMemo,
+} from "react";
 import {
   Controller,
   type ControllerProps,
@@ -36,8 +42,10 @@ const FormField = <
 >({
   ...props
 }: ControllerProps<TFieldValues, TName>) => {
+  const contextValue = useMemo(() => ({ name: props.name }), [props.name]);
+
   return (
-    <FormFieldContext.Provider value={{ name: props.name }}>
+    <FormFieldContext.Provider value={contextValue}>
       <Controller {...props} />
     </FormFieldContext.Provider>
   );
@@ -76,9 +84,10 @@ const FormItemContext = createContext<FormItemContextValue>(
 
 function FormItem({ className, ...props }: ComponentProps<"div">) {
   const id = useId();
+  const contextValue = useMemo(() => ({ id }), [id]);
 
   return (
-    <FormItemContext.Provider value={{ id }}>
+    <FormItemContext.Provider value={contextValue}>
       <div
         data-slot="form-item"
         className={cn("grid gap-2", className)}

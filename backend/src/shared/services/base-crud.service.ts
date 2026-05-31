@@ -37,7 +37,9 @@ export abstract class BaseCRUDService<T extends ObjectLiteral> {
     dto: Partial<T>,
   ): Promise<T> {
     const found = await this.findOne(filter);
-    if (found) return found;
+    if (found) {
+      return found;
+    }
 
     return this.create(dto);
   }

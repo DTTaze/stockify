@@ -32,7 +32,9 @@ export function StockChart(props: Props) {
     period,
   });
 
-  if (isLoading) return <StockChartSkeleton />;
+  if (isLoading) {
+    return <StockChartSkeleton />;
+  }
 
   const chartData =
     data?.map((item: StockHistoricalDataType) => ({

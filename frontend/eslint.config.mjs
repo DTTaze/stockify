@@ -59,10 +59,26 @@ export default [
       "react-hooks/exhaustive-deps": "warn",
 
       "@typescript-eslint/no-explicit-any": "warn",
-      "@typescript-eslint/no-unused-vars": "warn",
+      "@typescript-eslint/no-unused-vars": [
+        "error",
+        {
+          argsIgnorePattern: "^_",
+          varsIgnorePattern: "^_",
+          caughtErrorsIgnorePattern: "^_",
+        },
+      ],
 
       "no-unused-vars": "off",
-      "prefer-const": "off",
+      "prefer-const": "error",
+      "no-console": ["warn", { allow: ["warn", "error"] }],
+      "no-debugger": "error",
+      "no-duplicate-imports": "error",
+      "eqeqeq": ["error", "always"],
+      "curly": ["error", "all"],
+
+      "react/no-array-index-key": "warn",
+      "react/jsx-no-constructed-context-values": "error",
+      "react/no-unstable-nested-components": ["error", { allowAsProps: true }],
 
       "no-restricted-syntax": [
         "error",

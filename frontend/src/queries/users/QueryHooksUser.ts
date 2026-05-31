@@ -38,7 +38,9 @@ export const useMutateUserStatus = () => {
   return useMutation({
     mutationFn: async ({ id, status }: UpdateUserStatusParams) => {
       const response = await updateUserStatusHandler(id, status);
-      if (!response.success) throw new Error(response.message);
+      if (!response.success) {
+        throw new Error(response.message);
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({

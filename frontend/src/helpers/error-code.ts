@@ -5,7 +5,9 @@ export const handleShowMessage = (errorCode: string) => {
     (item) => item.errorCode === errorCode,
   );
 
-  if (!findErrorCode) return "unknownError";
+  if (!findErrorCode) {
+    return "unknownError";
+  }
 
   return findErrorCode.message;
 };

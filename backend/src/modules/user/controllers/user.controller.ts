@@ -1,5 +1,3 @@
-import { HttpResponse } from 'mvc-common-toolkit';
-
 import {
   Body,
   Controller,

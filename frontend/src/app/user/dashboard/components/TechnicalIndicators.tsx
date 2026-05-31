@@ -34,7 +34,9 @@ export function TechnicalIndicators(props: TechnicalIndicatorsProps) {
   const indicators = useMemo(() => {
     const prices = data.map((item) => item.close);
 
-    if (!prices.length) return [];
+    if (!prices.length) {
+      return [];
+    }
 
     const latestPrice = prices[prices.length - 1];
 

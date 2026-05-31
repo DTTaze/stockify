@@ -43,7 +43,9 @@ export class UserRolesService extends BaseCRUDService<UserRole> {
   public async syncRoles(userId: string, roleIds: string[]): Promise<void> {
     await this.repo.delete({ userId });
 
-    if (!roleIds?.length) return;
+    if (!roleIds?.length) {
+      return;
+    }
 
     await this.bulkCreate(
       roleIds.map((roleId) => ({

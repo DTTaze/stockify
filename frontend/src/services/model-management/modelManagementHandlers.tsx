@@ -41,7 +41,9 @@ export const rollbackModelHandlers = async (
 ): Promise<ApiResponse<null>> => {
   const response = await modelManagementServices.rollbackModel(id);
 
-  if (!response.data.success) throw new Error(response.data.message);
+  if (!response.data.success) {
+    throw new Error(response.data.message);
+  }
 
   return response.data;
 };
@@ -51,7 +53,9 @@ export const restartModelHandlers = async (
 ): Promise<ApiResponse<null>> => {
   const response = await modelManagementServices.restartModel(id);
 
-  if (!response.data.success) throw new Error(response.data.message);
+  if (!response.data.success) {
+    throw new Error(response.data.message);
+  }
 
   return response.data;
 };

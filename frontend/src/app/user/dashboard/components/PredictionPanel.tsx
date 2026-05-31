@@ -34,7 +34,9 @@ export function PredictionPanel(props: PredictionPanelProps) {
   const { data: models = [] } = useGetModels();
 
   const predictions = useMemo(() => {
-    if (!prediction) return [];
+    if (!prediction) {
+      return [];
+    }
 
     const items = [];
 

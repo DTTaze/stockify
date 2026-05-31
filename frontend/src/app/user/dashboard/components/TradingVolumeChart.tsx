@@ -33,7 +33,9 @@ export default function TradingVolumeChart({
     period,
   });
 
-  if (isLoading) return <TradingVolumeChartSkeleton />;
+  if (isLoading) {
+    return <TradingVolumeChartSkeleton />;
+  }
 
   const chartData =
     data?.map((item: StockHistoricalDataType) => ({

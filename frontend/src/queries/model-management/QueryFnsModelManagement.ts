@@ -12,7 +12,9 @@ import {
 
 export const getModelSummaryQueryFn = async () => {
   const response = await getModelSummaryHandlers();
-  if (!response.success) throw new Error(response.message);
+  if (!response.success) {
+    throw new Error(response.message);
+  }
   return response.data;
 };
 

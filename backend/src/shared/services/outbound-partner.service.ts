@@ -74,7 +74,9 @@ export abstract class OutboundPartnerService {
     options: HttpRequestOption,
     emitAudit: boolean,
   ) {
-    if (!emitAudit) return;
+    if (!emitAudit) {
+      return;
+    }
 
     this.auditService.emitLog(
       new ErrorLog({

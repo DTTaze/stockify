@@ -31,7 +31,9 @@ export default function ModelManagement() {
   const [newSymbol, setNewSymbol] = useState("");
 
   const handleTrainNewModel = async () => {
-    if (!newSymbol.trim()) return;
+    if (!newSymbol.trim()) {
+      return;
+    }
     try {
       await trainMutation.mutateAsync(newSymbol.trim().toUpperCase());
       toast.success(

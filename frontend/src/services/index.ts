@@ -39,7 +39,9 @@ axiosClient.interceptors.response.use(
       logout();
     }
 
-    if (!IS_PRODUCTION) console.log(error);
+    if (!IS_PRODUCTION) {
+      console.log(error);
+    }
 
     const apiError: ApiError = { message, status };
 
