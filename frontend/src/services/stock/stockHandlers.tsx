@@ -1,5 +1,8 @@
 import { ApiResponse } from "@/types/api";
 import {
+  ClassificationStock,
+  ClassificationSummary,
+  IcbIndustry,
   MarketQuoteParams,
   StockCompaniesDataType,
   StockDataType,
@@ -55,14 +58,14 @@ export const getStocksHandlers = async (params?: {
   keyword?: string;
   offset?: number;
   limit?: number;
-}): Promise<ApiResponse<any>> => {
+}): Promise<ApiResponse<{ rows: ClassificationStock[]; total: number }>> => {
   const response = await stockServices.getStocks(params);
 
   return response.data;
 };
 
 export const syncClassificationsHandlers = async (): Promise<
-  ApiResponse<any>
+  ApiResponse<unknown>
 > => {
   const response = await stockServices.syncClassifications();
 
@@ -70,21 +73,23 @@ export const syncClassificationsHandlers = async (): Promise<
 };
 
 export const getClassificationSummaryHandlers = async (): Promise<
-  ApiResponse<any>
+  ApiResponse<ClassificationSummary>
 > => {
   const response = await stockServices.getClassificationSummary();
 
   return response.data;
 };
 
-export const getMarketGroupsHandlers = async (): Promise<ApiResponse<any>> => {
+export const getMarketGroupsHandlers = async (): Promise<
+  ApiResponse<unknown>
+> => {
   const response = await stockServices.getMarketGroups();
   return response.data;
 };
 
 export const getIcbIndustriesHandlers = async (params?: {
   level?: number;
-}): Promise<ApiResponse<any>> => {
+}): Promise<ApiResponse<IcbIndustry[]>> => {
   const response = await stockServices.getIcbIndustries(params);
   return response.data;
 };
@@ -92,14 +97,14 @@ export const getIcbIndustriesHandlers = async (params?: {
 export const getIcbStocksHandlers = async (
   icbCode: string,
   params?: { keyword?: string; limit?: number; offset?: number },
-): Promise<ApiResponse<any>> => {
+): Promise<ApiResponse<{ rows: ClassificationStock[]; total: number }>> => {
   const response = await stockServices.getIcbStocks(icbCode, params);
   return response.data;
 };
 
 export const getTickerCategoriesHandlers = async (
   ticker: string,
-): Promise<ApiResponse<any>> => {
+): Promise<ApiResponse<unknown>> => {
   const response = await stockServices.getTickerCategories(ticker);
   return response.data;
 };
@@ -121,20 +126,22 @@ export const getIndicesHandlers = async (): Promise<ApiResponse<string[]>> => {
   return response.data;
 };
 
-export const syncMarketGroupsHandlers = async (): Promise<ApiResponse<any>> => {
+export const syncMarketGroupsHandlers = async (): Promise<
+  ApiResponse<unknown>
+> => {
   const response = await stockServices.syncMarketGroups();
   return response.data;
 };
 
 export const syncIcbIndustriesHandlers = async (): Promise<
-  ApiResponse<any>
+  ApiResponse<unknown>
 > => {
   const response = await stockServices.syncIcbIndustries();
   return response.data;
 };
 
 export const syncAllCategoriesHandlers = async (): Promise<
-  ApiResponse<any>
+  ApiResponse<unknown>
 > => {
   const response = await stockServices.syncAllCategories();
   return response.data;

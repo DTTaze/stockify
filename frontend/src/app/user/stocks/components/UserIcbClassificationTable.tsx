@@ -14,13 +14,14 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/Table";
+import { ClassificationStock, IcbIndustry } from "@/types/stock/stock.type";
 
 type Props = {
-  icbIndustries: any[];
+  icbIndustries: IcbIndustry[];
   activeIcbCode: string;
   icbSearch: string;
   icbPage: number;
-  icbStocks: any[];
+  icbStocks: ClassificationStock[];
   icbTotal: number;
   icbTotalPages: number;
   isIcbLoading: boolean;
@@ -127,7 +128,7 @@ export function UserIcbClassificationTable({
                   </TableCell>
                 </TableRow>
               ) : (
-                icbStocks.map((stock: any) => (
+                icbStocks.map((stock: ClassificationStock) => (
                   <TableRow key={stock.symbol} className="hover:bg-gray-50/50">
                     <TableCell className="text-brand-900 p-4 font-bold">
                       {stock.symbol}

@@ -30,7 +30,7 @@ const ITEMS_PER_PAGE = 15;
 
 const ASSET_NAMES: Record<
   string,
-  { title: string; category: string; icon: any }
+  { title: string; category: string; icon: React.ElementType }
 > = {
   futures: {
     title: "Hợp đồng tương lai",

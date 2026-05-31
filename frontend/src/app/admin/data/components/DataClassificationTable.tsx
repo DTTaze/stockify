@@ -11,12 +11,13 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/Table";
+import { ClassificationStock } from "@/types/stock/stock.type";
 import { cn } from "@/utils";
 
 import { ClassificationTablePagination } from "./ClassificationTablePagination";
 
 type Props = {
-  stocks: any[];
+  stocks: ClassificationStock[];
   total: number;
   isLoading: boolean;
   search: string;
@@ -134,7 +135,7 @@ export function DataClassificationTable({
                   </TableCell>
                 </TableRow>
               ) : (
-                stocks.map((stock: any) => (
+                stocks.map((stock: ClassificationStock) => (
                   <TableRow key={stock.symbol} className="hover:bg-gray-50/50">
                     <TableCell className="text-brand-900 p-4 font-bold">
                       {stock.symbol}

@@ -11,11 +11,14 @@ import ModelListSkeleton from "@/app/admin/models/components/ModelListSkeleton";
 import { ButtonCustom } from "@/components/common/form/button";
 import { EMPTY_TEMPLATE_STRING } from "@/constants/common";
 import { ModelStatus } from "@/constants/stock";
+import { ModelItem } from "@/types/model-management";
 import { cn } from "@/utils";
 
 interface ModelTableProps {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  models: any[];
+  models: (ModelItem & {
+    metrics?: { accuracy?: number };
+    training_info?: { last_trained?: string };
+  })[];
   isLoading: boolean;
   onDeploy: (id: string) => void;
   onRestart: (id: string) => void;

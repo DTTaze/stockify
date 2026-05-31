@@ -1,8 +1,10 @@
+import { ModelItem } from "@/types/model-management";
 import { cn } from "@/utils";
 
 interface ModelStatsProps {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  models: any[];
+  models: (ModelItem & {
+    metrics?: { accuracy?: number };
+  })[];
   isSummaryLoading: boolean;
 }
 

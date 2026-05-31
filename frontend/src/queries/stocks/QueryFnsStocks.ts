@@ -19,6 +19,9 @@ import {
   syncMarketGroupsHandlers,
 } from "@/services/stock/stockHandlers";
 import {
+  ClassificationStock,
+  ClassificationSummary,
+  IcbIndustry,
   MarketQuoteParams,
   StockCompaniesDataType,
   StockDataType,
@@ -91,7 +94,7 @@ export const getStocksQueryFn = async (params?: {
   keyword?: string;
   offset?: number;
   limit?: number;
-}): Promise<any> => {
+}): Promise<{ rows: ClassificationStock[]; total: number }> => {
   const response = await getStocksHandlers(params);
 
   if (!response.success) {
@@ -101,7 +104,7 @@ export const getStocksQueryFn = async (params?: {
   return response.data;
 };
 
-export const syncClassificationsQueryFn = async (): Promise<any> => {
+export const syncClassificationsQueryFn = async (): Promise<unknown> => {
   const response = await syncClassificationsHandlers();
 
   if (!response.success) {
@@ -111,19 +114,20 @@ export const syncClassificationsQueryFn = async (): Promise<any> => {
   return response.data;
 };
 
-export const getClassificationSummaryQueryFn = async (): Promise<any> => {
-  const response = await getClassificationSummaryHandlers();
+export const getClassificationSummaryQueryFn =
+  async (): Promise<ClassificationSummary> => {
+    const response = await getClassificationSummaryHandlers();
 
-  if (!response.success) {
-    throw new Error(
-      response.message || "Failed to fetch classification summary",
-    );
-  }
+    if (!response.success) {
+      throw new Error(
+        response.message || "Failed to fetch classification summary",
+      );
+    }
 
-  return response.data;
-};
+    return response.data;
+  };
 
-export const getMarketGroupsQueryFn = async (): Promise<any> => {
+export const getMarketGroupsQueryFn = async (): Promise<unknown> => {
   const response = await getMarketGroupsHandlers();
   if (!response.success) {
     throw new Error(response.message || "Failed to fetch market groups");
@@ -133,7 +137,7 @@ export const getMarketGroupsQueryFn = async (): Promise<any> => {
 
 export const getIcbIndustriesQueryFn = async (params?: {
   level?: number;
-}): Promise<any> => {
+}): Promise<IcbIndustry[]> => {
   const response = await getIcbIndustriesHandlers(params);
   if (!response.success) {
     throw new Error(response.message || "Failed to fetch ICB industries");
@@ -144,7 +148,7 @@ export const getIcbIndustriesQueryFn = async (params?: {
 export const getIcbStocksQueryFn = async (
   icbCode: string,
   params?: { keyword?: string; limit?: number; offset?: number },
-): Promise<any> => {
+): Promise<{ rows: ClassificationStock[]; total: number }> => {
   const response = await getIcbStocksHandlers(icbCode, params);
   if (!response.success) {
     throw new Error(response.message || "Failed to fetch ICB stocks");
@@ -154,7 +158,7 @@ export const getIcbStocksQueryFn = async (
 
 export const getTickerCategoriesQueryFn = async (
   ticker: string,
-): Promise<any> => {
+): Promise<unknown> => {
   const response = await getTickerCategoriesHandlers(ticker);
   if (!response.success) {
     throw new Error(response.message || "Failed to fetch ticker categories");
@@ -162,7 +166,7 @@ export const getTickerCategoriesQueryFn = async (
   return response.data;
 };
 
-export const syncMarketGroupsQueryFn = async (): Promise<any> => {
+export const syncMarketGroupsQueryFn = async (): Promise<unknown> => {
   const response = await syncMarketGroupsHandlers();
   if (!response.success) {
     throw new Error(response.message || "Failed to sync market groups");
@@ -170,7 +174,7 @@ export const syncMarketGroupsQueryFn = async (): Promise<any> => {
   return response.data;
 };
 
-export const syncIcbIndustriesQueryFn = async (): Promise<any> => {
+export const syncIcbIndustriesQueryFn = async (): Promise<unknown> => {
   const response = await syncIcbIndustriesHandlers();
   if (!response.success) {
     throw new Error(response.message || "Failed to sync ICB industries");
@@ -178,7 +182,7 @@ export const syncIcbIndustriesQueryFn = async (): Promise<any> => {
   return response.data;
 };
 
-export const syncAllCategoriesQueryFn = async (): Promise<any> => {
+export const syncAllCategoriesQueryFn = async (): Promise<unknown> => {
   const response = await syncAllCategoriesHandlers();
   if (!response.success) {
     throw new Error(response.message || "Failed to sync all categories");

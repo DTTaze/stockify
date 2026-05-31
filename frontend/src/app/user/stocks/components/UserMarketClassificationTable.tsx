@@ -24,11 +24,13 @@ const MARKET_TABS = [
   { id: "ETF", label: "Quỹ ETF" },
 ];
 
+import { ClassificationStock } from "@/types/stock/stock.type";
+
 type Props = {
   activeMarketTab: string;
   marketSearch: string;
   marketPage: number;
-  marketStocks: any[];
+  marketStocks: ClassificationStock[];
   marketTotal: number;
   marketTotalPages: number;
   isMarketLoading: boolean;
@@ -130,7 +132,7 @@ export function UserMarketClassificationTable({
                     </TableCell>
                   </TableRow>
                 ) : (
-                  marketStocks.map((stock: any) => (
+                  marketStocks.map((stock: ClassificationStock) => (
                     <TableRow
                       key={stock.symbol}
                       className="hover:bg-gray-50/50"

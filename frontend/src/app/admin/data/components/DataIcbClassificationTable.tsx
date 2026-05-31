@@ -13,12 +13,13 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/Table";
+import { ClassificationStock, IcbIndustry } from "@/types/stock/stock.type";
 
 import { ClassificationTablePagination } from "./ClassificationTablePagination";
 
 type Props = {
-  industries: any[];
-  stocks: any[];
+  industries: IcbIndustry[];
+  stocks: ClassificationStock[];
   total: number;
   isLoading: boolean;
   search: string;
@@ -130,7 +131,7 @@ export function DataIcbClassificationTable({
                   </TableCell>
                 </TableRow>
               ) : (
-                stocks.map((stock: any) => (
+                stocks.map((stock: ClassificationStock) => (
                   <TableRow key={stock.symbol} className="hover:bg-gray-50/50">
                     <TableCell className="text-brand-900 p-4 font-bold">
                       {stock.symbol}

@@ -24,8 +24,7 @@ export const ADMIN_ROUTES = [
 ];
 
 function isPublicRoute(pathname: string) {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return AUTH_ROUTES.includes(pathname as any);
+  return AUTH_ROUTES.includes(pathname as publicRouteEnum);
 }
 
 function isUserRoute(pathname: string) {

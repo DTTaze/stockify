@@ -72,3 +72,30 @@ export interface StockPrediction {
 export interface SupportedSymbolsType {
   symbols: string[];
 }
+
+export interface ClassificationStock {
+  symbol: string;
+  name?: string | null;
+  organName?: string | null;
+  exchange: string;
+  indexGroup?: string | null;
+  type?: string | null;
+}
+
+export interface IcbIndustry {
+  code: string;
+  name: string;
+  enName?: string;
+  level: number;
+  stockCount: number;
+}
+
+export interface ClassificationSummary {
+  HOSE: number;
+  VN30: number;
+  HNX: number;
+  UPCOM: number;
+  CW: number;
+  ETF: number;
+  FU_INDEX: number;
+}

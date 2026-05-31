@@ -36,8 +36,9 @@ export default function DataManagement() {
     try {
       await syncMarketGroupsMutation.mutateAsync();
       toast.success("Đồng bộ dữ liệu nhóm thị trường từ vnstock thành công!");
-    } catch (err: any) {
-      toast.error(`Đồng bộ nhóm thị trường thất bại: ${err.message}`);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      toast.error(`Đồng bộ nhóm thị trường thất bại: ${message}`);
     }
   };
 
@@ -45,8 +46,9 @@ export default function DataManagement() {
     try {
       await syncIcbIndustriesMutation.mutateAsync();
       toast.success("Đồng bộ dữ liệu ngành ICB từ vnstock thành công!");
-    } catch (err: any) {
-      toast.error(`Đồng bộ ngành ICB thất bại: ${err.message}`);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      toast.error(`Đồng bộ ngành ICB thất bại: ${message}`);
     }
   };
 
@@ -54,8 +56,9 @@ export default function DataManagement() {
     try {
       await syncAllCategoriesMutation.mutateAsync();
       toast.success("Đồng bộ toàn bộ dữ liệu phân loại từ vnstock thành công!");
-    } catch (err: any) {
-      toast.error(`Đồng bộ toàn bộ phân loại thất bại: ${err.message}`);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      toast.error(`Đồng bộ toàn bộ phân loại thất bại: ${message}`);
     }
   };
 

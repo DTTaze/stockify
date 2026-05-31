@@ -56,8 +56,9 @@ export function TrainingDataSection({ isParentBusy, onBusyChange }: Props) {
     try {
       await updateSymbolMutation.mutateAsync(symbol);
       toast.success(`Cập nhật dữ liệu cho ${symbol} thành công`);
-    } catch (err: any) {
-      toast.error(`Lỗi cập nhật ${symbol}: ${err.message}`);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      toast.error(`Lỗi cập nhật ${symbol}: ${message}`);
     } finally {
       setUpdatingStock(null);
       onBusyChange(false);
