@@ -45,7 +45,20 @@ export function PerformanceChart(props: PerformanceChartProps) {
       </div>
 
       {isLoading ? (
-        <div className="h-80 rounded-3xl bg-gray-100" />
+        <div className="flex h-80 items-end gap-2 px-2 pb-6">
+          <div className="h-[25%] flex-1 animate-pulse rounded bg-gray-200/80" />
+          <div className="h-[40%] flex-1 animate-pulse rounded bg-gray-200/80" />
+          <div className="h-[30%] flex-1 animate-pulse rounded bg-gray-200/80" />
+          <div className="h-[55%] flex-1 animate-pulse rounded bg-gray-200/80" />
+          <div className="h-[45%] flex-1 animate-pulse rounded bg-gray-200/80" />
+          <div className="h-[75%] flex-1 animate-pulse rounded bg-gray-200/80" />
+          <div className="h-[50%] flex-1 animate-pulse rounded bg-gray-200/80" />
+          <div className="h-[90%] flex-1 animate-pulse rounded bg-gray-200/80" />
+          <div className="h-[60%] flex-1 animate-pulse rounded bg-gray-200/80" />
+          <div className="h-[80%] flex-1 animate-pulse rounded bg-gray-200/80" />
+          <div className="h-[40%] flex-1 animate-pulse rounded bg-gray-200/80" />
+          <div className="h-[65%] flex-1 animate-pulse rounded bg-gray-200/80" />
+        </div>
       ) : (
         <ResponsiveContainer width="100%" height={320}>
           <AreaChart data={performanceData}>

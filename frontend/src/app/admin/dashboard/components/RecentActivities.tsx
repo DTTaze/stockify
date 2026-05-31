@@ -41,7 +41,15 @@ function ActivityItem(props: ActivityItemProps) {
 }
 
 function ActivitySkeleton() {
-  return <div className="h-20 animate-pulse rounded-xl bg-gray-100" />;
+  return (
+    <div className="flex animate-pulse items-start space-x-3 rounded-xl border-2 border-gray-100 bg-white p-4">
+      <div className="h-7 w-7 shrink-0 rounded-lg bg-gray-200" />
+      <div className="flex-1 space-y-2 py-0.5">
+        <div className="h-4 w-5/6 rounded bg-gray-200" />
+        <div className="h-3 w-1/4 rounded bg-gray-200/70" />
+      </div>
+    </div>
+  );
 }
 
 function EmptyState() {

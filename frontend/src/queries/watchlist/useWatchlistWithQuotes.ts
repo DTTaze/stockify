@@ -20,7 +20,8 @@ export const initialDataQuote: StockDataType = {
 };
 
 export function useWatchlistWithQuotes() {
-  const { data: watchlistItems = [] } = useQueryWatchlist();
+  const { data: watchlistItems = [], isLoading: isWatchlistLoading } =
+    useQueryWatchlist();
 
   const quoteQueries = useQueries({
     queries: watchlistItems.map((item) => ({
@@ -55,8 +56,11 @@ export function useWatchlistWithQuotes() {
     };
   });
 
+  const isLoading = isWatchlistLoading || quoteQueries.some((q) => q.isLoading);
+
   return {
     watchlist,
     watchlistSymbols: new Set(watchlistItems.map((i) => i.symbol)),
+    isLoading,
   };
 }

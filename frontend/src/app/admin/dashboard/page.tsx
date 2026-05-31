@@ -123,7 +123,7 @@ export default function AdminDashboard() {
         </div>
       )}
 
-      <StatsCards stats={stats} />
+      <StatsCards stats={stats} isLoading={isLoading} />
 
       <div className="grid gap-6 xl:grid-cols-[1.4fr_0.6fr]">
         <PerformanceChart

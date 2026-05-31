@@ -17,7 +17,7 @@ export default function UserManagement() {
   const [searchTerm, setSearchTerm] = useState("");
   const [togglingId, setTogglingId] = useState<string | null>(null);
 
-  const { data: users = [] } = useQueryAdminUsers();
+  const { data: users = [], isLoading } = useQueryAdminUsers();
   const statusMutation = useMutateUserStatus();
 
   const handleToggleStatus = async (id: string, currentStatus: UserStatus) => {
@@ -67,12 +67,14 @@ export default function UserManagement() {
         totalCount={totalCount}
         activeCount={activeCount}
         suspendedCount={suspendedCount}
+        isLoading={isLoading}
       />
 
       <UserTable
         users={filteredUsers}
         togglingId={togglingId}
         onToggleStatus={handleToggleStatus}
+        isLoading={isLoading}
       />
     </div>
   );

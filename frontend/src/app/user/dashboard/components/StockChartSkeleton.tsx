@@ -1,6 +1,6 @@
 export function StockChartSkeleton() {
   return (
-    <div className="animate-pulse·space-y-8">
+    <div className="animate-pulse space-y-8">
       <div className="mb-6 flex items-center justify-between">
         <div className="h-8 w-40 rounded-md bg-gray-200" />
       </div>

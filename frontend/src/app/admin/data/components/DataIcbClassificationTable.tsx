@@ -5,6 +5,7 @@ import { IcbIndustrySelect } from "@/components/common/IcbIndustrySelect";
 import { Badge } from "@/components/ui/Badge";
 import { Card, CardContent } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
+import { Skeleton } from "@/components/ui/Skeleton";
 import {
   Table,
   TableBody,
@@ -113,14 +114,22 @@ export function DataIcbClassificationTable({
 
             <TableBody>
               {isLoading ? (
-                <TableRow>
-                  <TableCell
-                    colSpan={4}
-                    className="h-32 text-center text-gray-400"
-                  >
-                    Đang tải danh sách...
-                  </TableCell>
-                </TableRow>
+                Array.from({ length: 5 }).map((_, index) => (
+                  <TableRow key={index}>
+                    <TableCell className="p-4">
+                      <Skeleton className="h-5 w-16" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-5 w-48" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-5 w-14 rounded" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-5 w-12" />
+                    </TableCell>
+                  </TableRow>
+                ))
               ) : stocks.length === 0 ? (
                 <TableRow>
                   <TableCell

@@ -21,14 +21,44 @@ function useMarketIndices() {
     })),
   });
 
-  return MARKET_INDICES.map(({ label }, index) => ({
+  const isLoading = queries.some((q) => q.isLoading || !q.data);
+
+  const indices = MARKET_INDICES.map(({ label }, index) => ({
     label,
     data: queries[index].data ?? initialStockData,
   }));
+
+  return { indices, isLoading };
 }
 
 export function MarketOverview() {
-  const indices = useMarketIndices().map(({ label, data }) => ({
+  const { indices: marketIndices, isLoading } = useMarketIndices();
+
+  if (isLoading) {
+    return (
+      <div className="from-brand-900 to-brand-700 rounded-xl bg-linear-to-r p-6 text-white shadow-lg">
+        <div className="mb-4 flex items-center justify-between">
+          <div className="h-6 w-44 animate-pulse rounded-md bg-white/20" />
+          <div className="h-4 w-32 animate-pulse rounded-md bg-white/20" />
+        </div>
+
+        <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+          {[1, 2, 3, 4].map((i) => (
+            <div
+              key={i}
+              className="animate-pulse rounded-lg border border-white/20 bg-white/10 p-4 backdrop-blur-sm"
+            >
+              <div className="mb-2 h-4.5 w-16 rounded bg-white/20" />
+              <div className="mb-2 h-8 w-24 rounded bg-white/20" />
+              <div className="h-4.5 w-16 rounded bg-white/20" />
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  const indices = marketIndices.map(({ label, data }) => ({
     name: label,
     value: data.price.toLocaleString(),
     change: data.change_percent,

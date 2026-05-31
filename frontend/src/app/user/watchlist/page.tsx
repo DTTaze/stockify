@@ -23,7 +23,7 @@ export default function WatchListPage() {
   const [addSearchTerm, setAddSearchTerm] = useState("");
   const [removingSymbol, setRemovingSymbol] = useState<string | null>(null);
 
-  const { watchlist, watchlistSymbols } = useWatchlistWithQuotes();
+  const { watchlist, watchlistSymbols, isLoading } = useWatchlistWithQuotes();
   const { data: stockList = [] } = useQueryMarketList(
     MarketType.STOCK,
     showAddModal,
@@ -66,15 +66,16 @@ export default function WatchListPage() {
         onOpenAddModal={() => setShowAddModal(true)}
       />
 
-      <WatchlistSummary watchlist={watchlist} />
+      <WatchlistSummary watchlist={watchlist} isLoading={isLoading} />
 
       <WatchlistTable
         watchlist={filteredWatchlist}
         removingSymbol={removingSymbol}
         onRemove={handleRemove}
+        isLoading={isLoading}
       />
 
-      {filteredWatchlist.length === 0 && (
+      {!isLoading && filteredWatchlist.length === 0 && (
         <WatchlistEmptyState searchTerm={searchTerm} />
       )}
 
