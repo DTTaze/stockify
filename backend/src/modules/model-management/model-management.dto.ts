@@ -69,6 +69,20 @@ export class ModelItemDto {
   })
   environment: string;
   updated_at: string;
+
+  @ApiProperty({
+    description: 'Model metrics',
+    required: false,
+    example: { accuracy: 95.5 },
+  })
+  metrics?: Record<string, any>;
+
+  @ApiProperty({
+    description: 'Model training information',
+    required: false,
+    example: { last_trained: '2026-04-25T14:00:00Z', file_size: '0.12MB' },
+  })
+  training_info?: Record<string, any>;
 }
 
 export class ModelDetailDto extends ModelItemDto {

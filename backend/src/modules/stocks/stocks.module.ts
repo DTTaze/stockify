@@ -8,6 +8,7 @@ import { StockCategoriesService } from './stock-categories.service';
 import { StockGroupMapping } from './stock-group-mapping.model';
 import { StockGroup } from './stock-group.model';
 import { StockIcbMapping } from './stock-icb-mapping.model';
+import { StockPrice } from './stock-price.model';
 import { StocksController } from './stocks.controller';
 import { Stock } from './stocks.model';
 import { StocksService } from './stocks.service';
@@ -20,6 +21,7 @@ import { StocksService } from './stocks.service';
       StockGroupMapping,
       IcbIndustry,
       StockIcbMapping,
+      StockPrice,
     ]),
     MLModule,
   ],

@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Path
+from fastapi import APIRouter, Depends, Path, BackgroundTasks
 
 from .service import DataManagementService, data_management_service
 from .schemas import (
@@ -64,9 +64,10 @@ async def get_data_management_stocks(
 )
 async def update_stock_data(
     symbol: str = Path(..., description="Stock symbol to update"),
+    background_tasks: BackgroundTasks = None,
     service: DataManagementService = Depends(get_service),
 ) -> DataUpdateResponse:
-    result = service.update_stock(symbol)
+    result = service.update_stock(symbol, background_tasks)
     return DataUpdateResponse(**result)
 
 
@@ -77,6 +78,7 @@ async def update_stock_data(
     description="Refresh processed data for all supported stock symbols",
 )
 async def update_all_stock_data(
+    background_tasks: BackgroundTasks = None,
     service: DataManagementService = Depends(get_service),
 ) -> DataUpdateAllResponse:
-    return DataUpdateAllResponse(**service.update_all())
+    return DataUpdateAllResponse(**service.update_all(background_tasks))

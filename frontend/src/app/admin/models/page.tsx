@@ -46,6 +46,15 @@ export default function ModelManagement() {
     }
   };
 
+  const handleTrain = async (symbol: string) => {
+    try {
+      await trainMutation.mutateAsync(symbol.trim().toUpperCase());
+      toast.success(`Đã bắt đầu huấn luyện model cho ${symbol.toUpperCase()}`);
+    } catch {
+      toast.error("Lỗi khi khởi chạy huấn luyện");
+    }
+  };
+
   const handleDeploy = async (id: string) => {
     try {
       await deployMutation.mutateAsync(id);
@@ -130,6 +139,7 @@ export default function ModelManagement() {
       <ModelTable
         models={filteredModels}
         isLoading={isModelsLoading}
+        onTrain={handleTrain}
         onDeploy={handleDeploy}
         onRestart={handleRestart}
         onRollback={handleRollback}

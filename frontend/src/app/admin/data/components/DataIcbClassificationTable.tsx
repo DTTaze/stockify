@@ -114,8 +114,8 @@ export function DataIcbClassificationTable({
 
             <TableBody>
               {isLoading ? (
-                Array.from({ length: 5 }).map((_, index) => (
-                  <TableRow key={index}>
+                ["sk-1", "sk-2", "sk-3", "sk-4", "sk-5"].map((rowKey) => (
+                  <TableRow key={rowKey}>
                     <TableCell className="p-4">
                       <Skeleton className="h-5 w-16" />
                     </TableCell>

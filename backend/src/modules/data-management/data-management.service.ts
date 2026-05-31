@@ -41,10 +41,19 @@ export class DataManagementService extends OutboundPartnerService {
   public async getDataManagementSummary(): Promise<
     OperationResult<DataManagementSummaryDto>
   > {
-    return this.request<DataManagementSummaryDto>(
-      'get',
-      '/data-management/summary',
-    ) as any;
+    const result = await this.request<any>('get', '/data-management/summary');
+    if (!result.success || !result.data) {
+      return result as any;
+    }
+    return {
+      success: true,
+      data: {
+        totalStocks: result.data.total_stocks,
+        updated: result.data.updated,
+        needsUpdate: result.data.needs_update,
+        totalRecords: result.data.total_records,
+      },
+    };
   }
 
   public async getDataManagementStocks(
@@ -65,9 +74,16 @@ export class DataManagementService extends OutboundPartnerService {
     }
 
     const rawData = result.data;
-    const stocks: DataManagementStockDto[] = Array.isArray(rawData)
+    const rawStocks = Array.isArray(rawData)
       ? rawData
       : ((rawData as any)?.stocks ?? []);
+
+    const stocks: DataManagementStockDto[] = rawStocks.map((stock: any) => ({
+      symbol: stock.symbol,
+      lastUpdated: stock.last_updated,
+      totalRecords: stock.total_records,
+      status: stock.status,
+    }));
 
     let filtered = stocks;
 

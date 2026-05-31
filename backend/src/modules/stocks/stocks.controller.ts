@@ -1,7 +1,7 @@
 import { HttpResponse } from 'mvc-common-toolkit';
 
-import { Body, Controller, Get, Post, Query } from '@nestjs/common';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 
 import { CrawlStocksDTO, QueryStocksDTO } from './stocks.dto';
 import { StocksService } from './stocks.service';
@@ -30,5 +30,32 @@ export class StocksController {
   @Get('classification-summary')
   async getClassificationSummary(): Promise<HttpResponse> {
     return this.stocksService.getClassificationSummary();
+  }
+
+  @Get(':symbol/latest-date')
+  @ApiOperation({ summary: 'Get latest stock price date in DB' })
+  async getLatestPriceDate(
+    @Param('symbol') symbol: string,
+  ): Promise<HttpResponse> {
+    return this.stocksService.getLatestPriceDate(symbol);
+  }
+
+  @Post(':symbol/history')
+  @ApiOperation({ summary: 'Save historical prices' })
+  async saveHistoricalPrices(
+    @Param('symbol') symbol: string,
+    @Body() body: any[],
+  ): Promise<HttpResponse> {
+    return this.stocksService.saveHistoricalPrices(symbol, body);
+  }
+
+  @Get(':symbol/history')
+  @ApiOperation({ summary: 'Get stock historical prices' })
+  async getHistoricalPrices(
+    @Param('symbol') symbol: string,
+    @Query('start') start?: string,
+    @Query('end') end?: string,
+  ): Promise<HttpResponse> {
+    return this.stocksService.getHistoricalPrices(symbol, start, end);
   }
 }

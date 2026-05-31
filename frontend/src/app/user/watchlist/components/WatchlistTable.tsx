@@ -64,8 +64,8 @@ export function WatchlistTable({
 
       <TableBody className="bg-white">
         {isLoading
-          ? Array.from({ length: 3 }).map((_, index) => (
-              <TableRow key={index}>
+          ? ["sk-1", "sk-2", "sk-3"].map((rowKey) => (
+              <TableRow key={rowKey}>
                 <TableCell className="px-6 py-4">
                   <div className="flex items-center space-x-3">
                     <Skeleton className="h-5 w-5 rounded-full" />

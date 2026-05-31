@@ -25,9 +25,9 @@ export function UserStats({
 
   return (
     <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-      {cards.map((card, i) => (
+      {cards.map((card) => (
         <div
-          key={i}
+          key={card.label}
           className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm"
         >
           <div className="mb-2 text-sm text-gray-600">{card.label}</div>

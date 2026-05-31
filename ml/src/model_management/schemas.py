@@ -19,6 +19,8 @@ class ModelItem(BaseModel):
     status: str
     environment: str
     updated_at: str
+    metrics: Optional[dict] = None
+    training_info: Optional[dict] = None
 
 
 class ModelDetail(BaseModel):

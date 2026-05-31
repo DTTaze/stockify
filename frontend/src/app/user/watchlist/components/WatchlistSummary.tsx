@@ -30,9 +30,9 @@ export function WatchlistSummary({
 
   return (
     <div className={cn("grid grid-cols-1 gap-4", "md:grid-cols-4")}>
-      {cards.map((card, i) => (
+      {cards.map((card) => (
         <div
-          key={i}
+          key={card.label}
           className={cn(
             "rounded-xl border border-gray-200",
             "bg-white",

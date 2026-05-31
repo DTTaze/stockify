@@ -21,6 +21,7 @@ class VnStockConfig(BaseSettings):
     vnstock_retry_count: int = 3
 
     log_level: str = os.getenv("LOG_LEVEL", "INFO")
+    backend_url: str = "http://localhost:3060/v1/api"
 
     class Config:
         env_file = ".env"

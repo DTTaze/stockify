@@ -15,6 +15,7 @@ import { BaseCRUDService } from '@shared/services/base-crud.service';
 import { MLService } from '../ml/ml.service';
 import { StockGroupMapping } from './stock-group-mapping.model';
 import { StockGroup } from './stock-group.model';
+import { StockPrice } from './stock-price.model';
 import { ExchangeFilter, QueryStocksDTO } from './stocks.dto';
 import { Stock } from './stocks.model';
 
@@ -31,6 +32,9 @@ export class StocksService extends BaseCRUDService<Stock> {
 
     @InjectRepository(StockGroupMapping)
     protected mappingRepo: Repository<StockGroupMapping>,
+
+    @InjectRepository(StockPrice)
+    protected priceRepo: Repository<StockPrice>,
 
     private readonly configService: ConfigService,
 
@@ -431,6 +435,105 @@ export class StocksService extends BaseCRUDService<Stock> {
       return {
         success: false,
         message: `Failed to get classification summary: ${error.message}`,
+      };
+    }
+  }
+
+  public async saveHistoricalPrices(
+    symbol: string,
+    prices: any[],
+  ): Promise<OperationResult> {
+    try {
+      this.logger.log(`Saving ${prices.length} stock prices for ${symbol}...`);
+      const entities = prices.map((p) => {
+        const sp = new StockPrice();
+        sp.symbol = symbol.toUpperCase();
+        sp.date = new Date(p.date || p.time);
+        sp.open = p.open || p.Open || 0;
+        sp.high = p.high || p.High || 0;
+        sp.low = p.low || p.Low || 0;
+        sp.close = p.close || p.Close || 0;
+        sp.volume = p.volume || p.Volume || 0;
+        return sp;
+      });
+
+      // Upsert in chunks
+      const chunkSize = 200;
+      for (let i = 0; i < entities.length; i += chunkSize) {
+        const chunk = entities.slice(i, i + chunkSize);
+        await this.priceRepo.upsert(chunk, ['symbol', 'date']);
+      }
+
+      return {
+        success: true,
+        message: `Successfully saved ${prices.length} historical prices for ${symbol}`,
+      };
+    } catch (error) {
+      this.logger.error(`Error saving historical prices for ${symbol}:`, error);
+      return {
+        success: false,
+        message: `Failed to save historical prices: ${error.message}`,
+      };
+    }
+  }
+
+  public async getLatestPriceDate(
+    symbol: string,
+  ): Promise<OperationResult<string | null>> {
+    try {
+      const latest = await this.priceRepo.findOne({
+        where: { symbol: symbol.toUpperCase() },
+        order: { date: 'DESC' },
+      });
+
+      return {
+        success: true,
+        data: latest ? latest.date.toISOString() : null,
+      };
+    } catch (error) {
+      this.logger.error(
+        `Error getting latest price date for ${symbol}:`,
+        error,
+      );
+      return {
+        success: false,
+        message: `Failed to get latest price date: ${error.message}`,
+      };
+    }
+  }
+
+  public async getHistoricalPrices(
+    symbol: string,
+    start?: string,
+    end?: string,
+  ): Promise<OperationResult<StockPrice[]>> {
+    try {
+      const queryBuilder = this.priceRepo
+        .createQueryBuilder('sp')
+        .where('sp.symbol = :symbol', { symbol: symbol.toUpperCase() })
+        .orderBy('sp.date', 'ASC');
+
+      if (start) {
+        queryBuilder.andWhere('sp.date >= :start', { start: new Date(start) });
+      }
+
+      if (end) {
+        queryBuilder.andWhere('sp.date <= :end', { end: new Date(end) });
+      }
+
+      const list = await queryBuilder.getMany();
+      return {
+        success: true,
+        data: list,
+      };
+    } catch (error) {
+      this.logger.error(
+        `Error getting historical prices for ${symbol}:`,
+        error,
+      );
+      return {
+        success: false,
+        message: `Failed to get historical prices: ${error.message}`,
       };
     }
   }

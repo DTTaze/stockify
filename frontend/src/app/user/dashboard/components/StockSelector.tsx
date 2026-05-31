@@ -1,6 +1,14 @@
-import { Activity, Search, TrendingDown, TrendingUp } from "lucide-react";
+import {
+  Activity,
+  Search,
+  Sparkles,
+  TrendingDown,
+  TrendingUp,
+} from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import { ButtonCustom } from "@/components/common/form/button";
+import { useGetModels } from "@/queries/model-management/QueryHooksModelManagement";
 import {
   useQueryIndexQuote,
   useQueryStockCompanies,
@@ -27,6 +35,71 @@ interface StockSelectorProps {
 export function StockSelector(props: StockSelectorProps) {
   const { value, onChange, period, onChangePeriod } = props;
   const { data: stockCompanies = [] } = useQueryStockCompanies();
+  const { data: models = [] } = useGetModels();
+
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isOpen, setIsOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  const trainedSymbols = useMemo(
+    () => new Set(models.map((m) => m.id)),
+    [models],
+  );
+
+  const currentCompany = useMemo(() => {
+    return stockCompanies.find((c) => c.symbol === value);
+  }, [stockCompanies, value]);
+
+  useEffect(() => {
+    if (currentCompany) {
+      setSearchQuery(
+        `${currentCompany.symbol} - ${currentCompany.organizationName}`,
+      );
+    } else if (value) {
+      setSearchQuery(value);
+    }
+  }, [currentCompany, value]);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(event.target as Node)
+      ) {
+        setIsOpen(false);
+        if (currentCompany) {
+          setSearchQuery(
+            `${currentCompany.symbol} - ${currentCompany.organizationName}`,
+          );
+        } else {
+          setSearchQuery(value);
+        }
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [currentCompany, value]);
+
+  const filteredCompanies = useMemo(() => {
+    const q = searchQuery.toLowerCase().trim();
+    if (!q) {
+      return stockCompanies;
+    }
+    if (
+      currentCompany &&
+      q ===
+        `${currentCompany.symbol} - ${currentCompany.organizationName}`.toLowerCase()
+    ) {
+      return stockCompanies;
+    }
+    return stockCompanies.filter(
+      (c) =>
+        c.symbol.toLowerCase().includes(q) ||
+        c.organizationName.toLowerCase().includes(q),
+    );
+  }, [stockCompanies, searchQuery, currentCompany]);
 
   const { data } = useQueryIndexQuote({
     symbol: value,
@@ -41,19 +114,66 @@ export function StockSelector(props: StockSelectorProps) {
   return (
     <div className="flex items-center justify-between rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
       <div className="space-y-4">
-        <div className="relative w-72">
+        {/* Search Combobox */}
+        <div className="relative w-80" ref={containerRef}>
           <Search className="absolute top-1/2 left-3 h-5 w-5 -translate-y-1/2 text-gray-400" />
-          <select
-            value={value}
-            onChange={(e) => onChange(e.target.value)}
-            className="w-full appearance-none rounded-lg border border-gray-300 bg-white py-2 pr-4 pl-10 outline-none focus:ring-2 focus:ring-indigo-500"
-          >
-            {stockCompanies.map((stock) => (
-              <option key={stock.symbol} value={stock.symbol}>
-                {stock.symbol} - {stock.organizationName}
-              </option>
-            ))}
-          </select>
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => {
+              setSearchQuery(e.target.value);
+              setIsOpen(true);
+            }}
+            onFocus={() => setIsOpen(true)}
+            placeholder="Tìm mã hoặc tên công ty..."
+            className="w-full rounded-lg border border-gray-300 bg-white py-2 pr-10 pl-10 text-sm outline-none focus:ring-2 focus:ring-indigo-500"
+          />
+          {searchQuery && (
+            <button
+              onClick={() => {
+                setSearchQuery("");
+                setIsOpen(true);
+              }}
+              className="absolute top-1/2 right-3 -translate-y-1/2 cursor-pointer text-gray-400 hover:text-gray-600"
+            >
+              ×
+            </button>
+          )}
+
+          {isOpen && filteredCompanies.length > 0 && (
+            <div className="absolute right-0 left-0 z-50 mt-1 max-h-60 overflow-y-auto rounded-lg border border-gray-200 bg-white py-1 shadow-lg">
+              {filteredCompanies.map((stock) => {
+                const hasAI = trainedSymbols.has(stock.symbol);
+                return (
+                  <button
+                    key={stock.symbol}
+                    onClick={() => {
+                      onChange(stock.symbol);
+                      setSearchQuery(
+                        `${stock.symbol} - ${stock.organizationName}`,
+                      );
+                      setIsOpen(false);
+                    }}
+                    className={`flex w-full cursor-pointer items-center justify-between px-4 py-2 text-left text-sm hover:bg-gray-100 ${
+                      value === stock.symbol
+                        ? "bg-indigo-50 font-semibold text-indigo-900"
+                        : "text-gray-700"
+                    }`}
+                  >
+                    <span className="truncate">
+                      {stock.symbol} - {stock.organizationName}
+                    </span>
+                    {hasAI && (
+                      <span className="ml-2 flex items-center space-x-0.5 rounded-full bg-purple-100 px-2 py-0.5 text-xs font-bold text-purple-700 shadow-xs">
+                        <Sparkles className="h-3 w-3 animate-pulse text-purple-600" />
+                        <span>AI</span>
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          )}
         </div>
 
         <div className="flex items-center justify-between">

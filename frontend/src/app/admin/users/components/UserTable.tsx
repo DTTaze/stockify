@@ -44,8 +44,8 @@ export function UserTable({
         </thead>
         <tbody className="divide-y divide-gray-200 bg-white">
           {isLoading
-            ? Array.from({ length: 5 }).map((_, index) => (
-                <tr key={index} className="transition-colors hover:bg-blue-50">
+            ? ["sk-1", "sk-2", "sk-3", "sk-4", "sk-5"].map((rowKey) => (
+                <tr key={rowKey} className="transition-colors hover:bg-blue-50">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <Skeleton className="mb-1 h-5 w-24" />
                     <Skeleton className="h-4 w-12" />

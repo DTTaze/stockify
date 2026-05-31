@@ -20,6 +20,7 @@ interface ModelTableProps {
     training_info?: { last_trained?: string };
   })[];
   isLoading: boolean;
+  onTrain: (id: string) => void;
   onDeploy: (id: string) => void;
   onRestart: (id: string) => void;
   onRollback: (id: string) => void;
@@ -27,8 +28,15 @@ interface ModelTableProps {
 }
 
 export function ModelTable(props: ModelTableProps) {
-  const { models, isLoading, onDeploy, onRestart, onRollback, onDelete } =
-    props;
+  const {
+    models,
+    isLoading,
+    onTrain,
+    onDeploy,
+    onRestart,
+    onRollback,
+    onDelete,
+  } = props;
 
   if (isLoading) {
     return <ModelListSkeleton />;
@@ -196,7 +204,7 @@ export function ModelTable(props: ModelTableProps) {
             <div className={cn("flex items-center justify-between")}>
               <div className={cn("flex items-center space-x-3")}>
                 <ButtonCustom
-                  onClick={() => alert("Chức năng Train chưa được cấu hình")}
+                  onClick={() => onTrain(model.id)}
                   disabled={model.status === ModelStatus.TRAINING}
                   className={cn(
                     "flex items-center space-x-2",

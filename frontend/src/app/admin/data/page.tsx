@@ -8,6 +8,7 @@ import { ClassificationDataSection } from "@/app/admin/data/components/Classific
 import { DataManagementHeader } from "@/app/admin/data/components/DataManagementHeader";
 import { TrainingDataSection } from "@/app/admin/data/components/TrainingDataSection";
 import { ButtonCustom } from "@/components/common/form/button";
+import { useUpdateDataManagementAll } from "@/queries/data-management/QueryHooksDataManagement";
 import {
   useSyncAllCategories,
   useSyncIcbIndustries,
@@ -25,12 +26,14 @@ export default function DataManagement() {
   const syncMarketGroupsMutation = useSyncMarketGroups();
   const syncIcbIndustriesMutation = useSyncIcbIndustries();
   const syncAllCategoriesMutation = useSyncAllCategories();
+  const updateAllMutation = useUpdateDataManagementAll();
 
   const isBusy =
     isTrainingBusy ||
     syncMarketGroupsMutation.isPending ||
     syncIcbIndustriesMutation.isPending ||
-    syncAllCategoriesMutation.isPending;
+    syncAllCategoriesMutation.isPending ||
+    updateAllMutation.status === "pending";
 
   const handleSyncMarketGroups = async () => {
     try {
@@ -62,6 +65,18 @@ export default function DataManagement() {
     }
   };
 
+  const handleSyncAllPrices = async () => {
+    try {
+      await updateAllMutation.mutateAsync();
+      toast.success(
+        "Đồng bộ giá cổ phiếu và kích hoạt huấn luyện lại mô hình thành công!",
+      );
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      toast.error(`Đồng bộ giá thất bại: ${message}`);
+    }
+  };
+
   return (
     <div className={cn("p-6", "space-y-6")}>
       {/* Header */}
@@ -75,6 +90,29 @@ export default function DataManagement() {
                 ? "Đang cập nhật dữ liệu huấn luyện..."
                 : "Sẵn sàng"}
             </span>
+            <ButtonCustom
+              onClick={handleSyncAllPrices}
+              disabled={isBusy}
+              className={cn(
+                "flex items-center space-x-2",
+                "rounded-lg",
+                "px-4 py-2",
+                "bg-brand-900 text-white",
+                "shadow-md",
+                "transition-all",
+                "hover:bg-brand-700",
+                "disabled:opacity-50",
+                "cursor-pointer",
+              )}
+            >
+              <RefreshCw
+                className={cn(
+                  "h-4 w-4",
+                  updateAllMutation.status === "pending" && "animate-spin",
+                )}
+              />
+              <span>Sync Stock Prices</span>
+            </ButtonCustom>
           </div>
         ) : (
           <div className="flex flex-wrap items-center gap-3">
