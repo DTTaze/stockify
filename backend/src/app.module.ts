@@ -3,11 +3,14 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ScheduleModule } from '@nestjs/schedule';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
+import appConfig from '@configs/app.config';
+
 import { AdminModule } from '@modules/admin/admin.module';
 import { AuditModule } from '@modules/audit/audit.module';
 import { AuthModule } from '@modules/auth/auth.module';
 import { DataManagementModule } from '@modules/data-management/data-management.module';
 import { GlobalModule } from '@modules/global/global.module';
+import { HealthModule } from '@modules/health/health.module';
 import { MLModule } from '@modules/ml/ml.module';
 import { ModelManagementModule } from '@modules/model-management/model-management.module';
 import { StockCompaniesModule } from '@modules/stock-companies/stock-companies.module';
@@ -20,6 +23,7 @@ import { WatchlistModule } from '@modules/watchlist/watchlist.module';
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: ['.env'],
+      load: [appConfig],
     }),
 
     ScheduleModule.forRoot(),
@@ -55,6 +59,7 @@ import { WatchlistModule } from '@modules/watchlist/watchlist.module';
     StockCompaniesModule,
     WatchlistModule,
     StocksModule,
+    HealthModule,
   ],
 })
 export class AppModule {}

@@ -42,12 +42,24 @@ export class WatchlistService extends BaseCRUDService<WatchlistItem> {
       };
     }
 
-    const exists = await this.findOne({ userId, symbol: dto.symbol });
+    const exists = await this.findOne(
+      { userId, symbol: dto.symbol },
+      { withDeleted: true },
+    );
 
     if (exists) {
+      if (exists.deletedAt === null) {
+        return {
+          success: false,
+          message: 'Symbol already in watchlist',
+        };
+      }
+
+      exists.deletedAt = null;
+      const restored = await this.repo.save(exists);
       return {
-        success: false,
-        message: 'Symbol already in watchlist',
+        success: true,
+        data: restored,
       };
     }
 

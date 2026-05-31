@@ -198,7 +198,7 @@ export function WatchlistTable({
 
                     <TableCell className="px-6 py-4">
                       <div className="text-brand-900 text-sm font-semibold">
-                        {item.price.toLocaleString("vi-VN")} ₫
+                        {(item.price * 1000).toLocaleString("vi-VN")} ₫
                       </div>
                     </TableCell>
 
@@ -331,7 +331,7 @@ export function WatchlistTable({
                                     {stockPurchases.map((tx) => {
                                       const totalBuy = tx.quantity * tx.price;
                                       const totalCurrent =
-                                        tx.quantity * item.price;
+                                        tx.quantity * (item.price * 1000);
                                       const pl = totalCurrent - totalBuy;
                                       const plPct =
                                         tx.price > 0
