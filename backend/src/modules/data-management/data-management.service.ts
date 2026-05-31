@@ -49,10 +49,13 @@ export class DataManagementService extends OutboundPartnerService {
       success: true,
       data: {
         totalStocks: result.data.total_stocks,
+        total_stocks: result.data.total_stocks,
         updated: result.data.updated,
         needsUpdate: result.data.needs_update,
+        needs_update: result.data.needs_update,
         totalRecords: result.data.total_records,
-      },
+        total_records: result.data.total_records,
+      } as any,
     };
   }
 
@@ -78,10 +81,12 @@ export class DataManagementService extends OutboundPartnerService {
       ? rawData
       : ((rawData as any)?.stocks ?? []);
 
-    const stocks: DataManagementStockDto[] = rawStocks.map((stock: any) => ({
+    const stocks: any[] = rawStocks.map((stock: any) => ({
       symbol: stock.symbol,
       lastUpdated: stock.last_updated,
+      last_updated: stock.last_updated,
       totalRecords: stock.total_records,
+      total_records: stock.total_records,
       status: stock.status,
     }));
 

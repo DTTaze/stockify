@@ -1,4 +1,4 @@
-import dayjs from 'dayjs';
+import * as dayjs from 'dayjs';
 import {
   AuditService,
   AxiosHttpService,
@@ -579,20 +579,101 @@ export class StocksService extends BaseCRUDService<Stock> {
         syncedRecords += prices.length;
       }
 
+      // Also sync indices
+      const indexResult = await this.syncIndexPrices();
+
       return {
         success: true,
         data: {
           totalSymbols: symbols.length,
           syncedRecords,
           failedSymbols,
+          indicesSync: indexResult.data,
         },
-        message: `Synced ${syncedRecords} price records for ${symbols.length} trained symbols`,
+        message: `Synced ${syncedRecords} price records for ${symbols.length} trained symbols. Indices: ${indexResult.message}`,
       };
     } catch (error) {
       this.logger.error('Error syncing trained stock prices:', error);
       return {
         success: false,
         message: `Failed to sync trained stock prices: ${this.getErrorMessage(error)}`,
+      };
+    }
+  }
+
+  public async syncIndexPrices(): Promise<OperationResult> {
+    try {
+      const indices = ['VNINDEX', 'VN30', 'HNXINDEX', 'UPCOMINDEX'];
+      let syncedRecords = 0;
+      const failedIndices: string[] = [];
+
+      for (const symbol of indices) {
+        // Ensure the index stock exists in the stocks table first
+        let stock = await this.repo.findOne({ where: { symbol } });
+        if (!stock) {
+          stock = this.repo.create({
+            symbol,
+            exchange: 'INDEX',
+            name: 'Chỉ số ' + symbol,
+            type: 'index',
+          });
+          await this.repo.save(stock);
+        }
+
+        const historyResult = await this.retryOperation<unknown>(() =>
+          this.mlService.getMarketHistory({
+            symbol,
+            type: MarketType.STOCK,
+            period: TimePeriod.ONE_YEAR,
+          }),
+        );
+
+        if (!historyResult.success || !historyResult.data) {
+          this.logger.warn(
+            `Failed to fetch index history from ML for ${symbol}: ${historyResult.message}`,
+          );
+          failedIndices.push(symbol);
+          continue;
+        }
+
+        const historyData = historyResult.data;
+        const prices = Array.isArray(historyData)
+          ? (historyData as Array<Record<string, unknown>>)
+          : Array.isArray((historyData as { data?: unknown }).data)
+            ? ((historyData as { data: unknown }).data as Array<
+                Record<string, unknown>
+              >)
+            : [];
+
+        if (!prices.length) {
+          this.logger.warn(`No price points parsed for index ${symbol}`);
+          failedIndices.push(symbol);
+          continue;
+        }
+
+        const saveResult = await this.saveHistoricalPrices(symbol, prices);
+        if (!saveResult.success) {
+          failedIndices.push(symbol);
+          continue;
+        }
+
+        syncedRecords += prices.length;
+      }
+
+      return {
+        success: true,
+        data: {
+          totalIndices: indices.length,
+          syncedRecords,
+          failedIndices,
+        },
+        message: `Synced ${syncedRecords} price records for ${indices.length} indices`,
+      };
+    } catch (error) {
+      this.logger.error('Error syncing index prices:', error);
+      return {
+        success: false,
+        message: `Failed to sync index prices: ${this.getErrorMessage(error)}`,
       };
     }
   }
@@ -613,6 +694,31 @@ export class StocksService extends BaseCRUDService<Stock> {
       });
 
       if (!prices.length) {
+        try {
+          const mlQuote = await this.mlService.getMarketQuote({
+            symbol,
+            type: MarketType.STOCK,
+            period: TimePeriod.ONE_DAY,
+          });
+
+          if (mlQuote.success && mlQuote.data) {
+            return {
+              success: true,
+              data: {
+                symbol: mlQuote.data.symbol,
+                price: mlQuote.data.price,
+                change_percent: mlQuote.data.change_percent,
+                volume: mlQuote.data.volume ?? 0,
+              },
+            };
+          }
+        } catch (err) {
+          this.logger.error(
+            `Error falling back to ML service for ${symbol}:`,
+            err,
+          );
+        }
+
         return {
           success: false,
           message: `No historical price data found for symbol ${symbol}`,
@@ -645,22 +751,26 @@ export class StocksService extends BaseCRUDService<Stock> {
     }
   }
 
-  private getPeriodStartDate(period: TimePeriod): Date {
+  private getPeriodStartDate(
+    period: TimePeriod,
+    relativeTo: Date = new Date(),
+  ): Date {
+    const base = dayjs(relativeTo);
     switch (period) {
       case TimePeriod.ONE_DAY:
-        return dayjs().subtract(1, 'day').toDate();
+        return base.subtract(1, 'day').toDate();
       case TimePeriod.ONE_WEEK:
-        return dayjs().subtract(1, 'week').toDate();
+        return base.subtract(1, 'week').toDate();
       case TimePeriod.ONE_MONTH:
-        return dayjs().subtract(1, 'month').toDate();
+        return base.subtract(1, 'month').toDate();
       case TimePeriod.THREE_MONTH:
-        return dayjs().subtract(3, 'month').toDate();
+        return base.subtract(3, 'month').toDate();
       case TimePeriod.SIX_MONTH:
-        return dayjs().subtract(6, 'month').toDate();
+        return base.subtract(6, 'month').toDate();
       case TimePeriod.ONE_YEAR:
-        return dayjs().subtract(1, 'year').toDate();
+        return base.subtract(1, 'year').toDate();
       default:
-        return dayjs().subtract(1, 'month').toDate();
+        return base.subtract(1, 'month').toDate();
     }
   }
 
@@ -696,6 +806,17 @@ export class StocksService extends BaseCRUDService<Stock> {
     end?: string,
   ): Promise<OperationResult<Array<Record<string, unknown>>>> {
     try {
+      let relativeTo = new Date();
+      if (!start && !end) {
+        const latestPrice = await this.priceRepo.findOne({
+          where: { symbol: symbol.toUpperCase() },
+          order: { date: 'DESC' },
+        });
+        if (latestPrice) {
+          relativeTo = latestPrice.date;
+        }
+      }
+
       const queryBuilder = this.priceRepo
         .createQueryBuilder('sp')
         .where('sp.symbol = :symbol', { symbol: symbol.toUpperCase() })
@@ -704,9 +825,30 @@ export class StocksService extends BaseCRUDService<Stock> {
       if (start) {
         queryBuilder.andWhere('sp.date >= :start', { start: new Date(start) });
       } else if (period) {
-        queryBuilder.andWhere('sp.date >= :start', {
-          start: this.getPeriodStartDate(period),
-        });
+        if (period === TimePeriod.ONE_DAY) {
+          const subQuery = this.priceRepo
+            .createQueryBuilder('sub')
+            .select('sub.date', 'date')
+            .where('sub.symbol = :symbol', { symbol: symbol.toUpperCase() })
+            .orderBy('sub.date', 'DESC')
+            .limit(2);
+
+          const recentDates = await subQuery.getRawMany();
+          if (recentDates.length > 0) {
+            const minRecentDate = recentDates[recentDates.length - 1].date;
+            queryBuilder.andWhere('sp.date >= :start', {
+              start: minRecentDate,
+            });
+          } else {
+            queryBuilder.andWhere('sp.date >= :start', {
+              start: this.getPeriodStartDate(period, relativeTo),
+            });
+          }
+        } else {
+          queryBuilder.andWhere('sp.date >= :start', {
+            start: this.getPeriodStartDate(period, relativeTo),
+          });
+        }
       }
 
       if (end) {
@@ -714,6 +856,50 @@ export class StocksService extends BaseCRUDService<Stock> {
       }
 
       const list = await queryBuilder.getMany();
+
+      // If no data in DB for this query, fall back to ML Service
+      if (!list.length) {
+        this.logger.log(
+          `No historical data in DB for ${symbol}. Falling back to ML service...`,
+        );
+        const mlHistory = await this.mlService.getMarketHistory({
+          symbol,
+          type: MarketType.STOCK,
+          period: period || TimePeriod.ONE_MONTH,
+        });
+
+        if (mlHistory.success && mlHistory.data) {
+          const historyData = mlHistory.data;
+          const prices = Array.isArray(historyData)
+            ? (historyData as Array<Record<string, unknown>>)
+            : Array.isArray((historyData as any)?.data)
+              ? ((historyData as any).data as Array<Record<string, unknown>>)
+              : [];
+
+          if (prices.length) {
+            // Save to DB in background (don't block the request)
+            this.saveHistoricalPrices(symbol, prices).catch((err) => {
+              this.logger.error(
+                `Error background-saving historical prices for ${symbol}:`,
+                err,
+              );
+            });
+
+            return {
+              success: true,
+              data: prices.map((p) => {
+                const dateValue = p.date ?? p.time ?? '';
+                return {
+                  date: new Date(String(dateValue)).toISOString(),
+                  close: Number(p.close ?? p.Close ?? 0),
+                  volume: Number(p.volume ?? p.Volume ?? 0),
+                };
+              }),
+            };
+          }
+        }
+      }
+
       return {
         success: true,
         data: list.map((item) => ({

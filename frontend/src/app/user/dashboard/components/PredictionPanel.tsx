@@ -16,10 +16,11 @@ import { PredictionChart } from "./PredictionChart";
 
 interface PredictionPanelProps {
   stock: string;
+  onSelectStock?: (symbol: string) => void;
 }
 
 export function PredictionPanel(props: PredictionPanelProps) {
-  const { stock } = props;
+  const { stock, onSelectStock } = props;
 
   const [selectedSymbol, setSelectedSymbol] = useState<string>(stock || "VCB");
   const [selectedHorizon, setSelectedHorizon] = useState<
@@ -160,7 +161,10 @@ export function PredictionPanel(props: PredictionPanelProps) {
             {models.map((model) => (
               <button
                 key={model.id}
-                onClick={() => setSelectedSymbol(model.id)}
+                onClick={() => {
+                  setSelectedSymbol(model.id);
+                  onSelectStock?.(model.id);
+                }}
                 className={`cursor-pointer rounded-lg px-4 py-1.5 text-sm font-semibold transition-all ${
                   selectedSymbol === model.id
                     ? "bg-brand-900 text-white shadow-md"

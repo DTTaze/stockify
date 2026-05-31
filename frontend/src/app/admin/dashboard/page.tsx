@@ -1,5 +1,6 @@
 "use client";
 
+import { getCookie } from "cookies-next/client";
 import { Cpu, Database, TrendingUp, Users } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 
@@ -7,6 +8,7 @@ import { DashboardHeader } from "@/app/admin/dashboard/components/DashboardHeade
 import { PerformanceChart } from "@/app/admin/dashboard/components/PerformanceChart";
 import { RecentActivities } from "@/app/admin/dashboard/components/RecentActivities";
 import { StatsCards } from "@/app/admin/dashboard/components/StatsCards";
+import { ACCESS_TOKEN } from "@/constants/auth";
 import { STATIC_API_URL } from "@/constants/common";
 import {
   useGetAdminDashboardActivities,
@@ -29,8 +31,13 @@ export default function AdminDashboard() {
       return;
     }
 
+    const token = getCookie(ACCESS_TOKEN) as string | undefined;
     const baseUrl = STATIC_API_URL?.replace(/\/$/, "") ?? "";
-    const eventSource = new EventSource(`${baseUrl}/admin/dashboard/realtime`);
+    const eventSource = new EventSource(
+      token
+        ? `${baseUrl}/admin/dashboard/realtime?token=${encodeURIComponent(token)}`
+        : `${baseUrl}/admin/dashboard/realtime`,
+    );
 
     eventSource.onmessage = (event) => {
       try {

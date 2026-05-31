@@ -1,17 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
-import {
-  useAddToWatchlist,
-  useQueryMarketList,
-  useRemoveFromWatchlist,
-} from "@/queries/watchlist/QueryHooksWatchlist";
+import { useRemoveFromWatchlist } from "@/queries/watchlist/QueryHooksWatchlist";
 import { useWatchlistWithQuotes } from "@/queries/watchlist/useWatchlistWithQuotes";
-import { MarketType } from "@/types/stock/stock.type";
-import { MarketListItem } from "@/types/watchlist/watchlist.type";
+import { PurchaseTransaction } from "@/types/watchlist/watchlist.type";
 
-import { AddStockModal } from "./components/AddStockModal";
 import { WatchlistEmptyState } from "./components/WatchlistEmptyState";
 import { WatchlistHeader } from "./components/WatchlistHeader";
 import { WatchlistSummary } from "./components/WatchlistSummary";
@@ -19,17 +13,68 @@ import { WatchlistTable } from "./components/WatchlistTable";
 
 export default function WatchListPage() {
   const [searchTerm, setSearchTerm] = useState("");
-  const [showAddModal, setShowAddModal] = useState(false);
-  const [addSearchTerm, setAddSearchTerm] = useState("");
   const [removingSymbol, setRemovingSymbol] = useState<string | null>(null);
+  const [purchases, setPurchases] = useState<
+    Record<string, PurchaseTransaction[]>
+  >({});
 
-  const { watchlist, watchlistSymbols, isLoading } = useWatchlistWithQuotes();
-  const { data: stockList = [] } = useQueryMarketList(
-    MarketType.STOCK,
-    showAddModal,
-  );
-  const addMutation = useAddToWatchlist();
+  const { watchlist, isLoading } = useWatchlistWithQuotes();
   const removeMutation = useRemoveFromWatchlist();
+
+  // Load transactions from localStorage
+  useEffect(() => {
+    const saved = localStorage.getItem("stockify_watchlist_purchases");
+    if (saved) {
+      try {
+        setPurchases(JSON.parse(saved));
+      } catch (e) {
+        console.error("Failed to parse purchases", e);
+      }
+    }
+  }, []);
+
+  // Helper to save transactions to state and localStorage
+  const savePurchases = (
+    newPurchases: Record<string, PurchaseTransaction[]>,
+  ) => {
+    setPurchases(newPurchases);
+    localStorage.setItem(
+      "stockify_watchlist_purchases",
+      JSON.stringify(newPurchases),
+    );
+  };
+
+  const handleAddTransaction = (
+    symbol: string,
+    date: string,
+    quantity: number,
+    price: number,
+  ) => {
+    const stockPurchases = purchases[symbol] || [];
+    const newTx: PurchaseTransaction = {
+      id: crypto.randomUUID
+        ? crypto.randomUUID()
+        : Math.random().toString(36).substring(2, 9),
+      symbol,
+      purchaseDate: date,
+      quantity,
+      price,
+    };
+    const updated = {
+      ...purchases,
+      [symbol]: [...stockPurchases, newTx],
+    };
+    savePurchases(updated);
+  };
+
+  const handleDeleteTransaction = (symbol: string, transactionId: string) => {
+    const stockPurchases = purchases[symbol] || [];
+    const updated = {
+      ...purchases,
+      [symbol]: stockPurchases.filter((tx) => tx.id !== transactionId),
+    };
+    savePurchases(updated);
+  };
 
   const filteredWatchlist = watchlist.filter(
     (item) =>
@@ -37,39 +82,49 @@ export default function WatchListPage() {
       item.name.toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
-  const filteredCompanies = stockList.filter(
-    (c: MarketListItem) =>
-      c.symbol.toLowerCase().includes(addSearchTerm.toLowerCase()) ||
-      c.description.toLowerCase().includes(addSearchTerm.toLowerCase()),
-  );
-
-  const handleAdd = async (symbol: string) => {
-    await addMutation.mutateAsync(symbol);
-    setShowAddModal(false);
-    setAddSearchTerm("");
-  };
-
   const handleRemove = async (symbol: string) => {
     setRemovingSymbol(symbol);
     try {
       await removeMutation.mutateAsync(symbol);
+      // Clean up local transactions for that symbol if removed from watchlist
+      const updated = { ...purchases };
+      delete updated[symbol];
+      savePurchases(updated);
     } finally {
       setRemovingSymbol(null);
     }
   };
+
+  // Compute total portfolio value based on current prices
+  const totalPortfolioValue = useMemo(() => {
+    let sum = 0;
+    watchlist.forEach((item) => {
+      const stockPurchases = purchases[item.symbol] || [];
+      stockPurchases.forEach((p) => {
+        sum += p.quantity * item.price;
+      });
+    });
+    return sum;
+  }, [watchlist, purchases]);
 
   return (
     <div className="space-y-6 p-6">
       <WatchlistHeader
         searchTerm={searchTerm}
         onSearchTermChange={setSearchTerm}
-        onOpenAddModal={() => setShowAddModal(true)}
       />
 
-      <WatchlistSummary watchlist={watchlist} isLoading={isLoading} />
+      <WatchlistSummary
+        watchlist={watchlist}
+        totalValue={totalPortfolioValue}
+        isLoading={isLoading}
+      />
 
       <WatchlistTable
         watchlist={filteredWatchlist}
+        purchases={purchases}
+        onAddTransaction={handleAddTransaction}
+        onDeleteTransaction={handleDeleteTransaction}
         removingSymbol={removingSymbol}
         onRemove={handleRemove}
         isLoading={isLoading}
@@ -77,21 +132,6 @@ export default function WatchListPage() {
 
       {!isLoading && filteredWatchlist.length === 0 && (
         <WatchlistEmptyState searchTerm={searchTerm} />
-      )}
-
-      {showAddModal && (
-        <AddStockModal
-          addSearchTerm={addSearchTerm}
-          setAddSearchTerm={setAddSearchTerm}
-          onClose={() => {
-            setShowAddModal(false);
-            setAddSearchTerm("");
-          }}
-          filteredCompanies={filteredCompanies}
-          watchlistSymbols={watchlistSymbols}
-          handleAdd={handleAdd}
-          isPending={addMutation.isPending}
-        />
       )}
     </div>
   );

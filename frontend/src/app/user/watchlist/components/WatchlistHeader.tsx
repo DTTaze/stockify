@@ -1,17 +1,13 @@
-import { Plus, Search } from "lucide-react";
-
-import { ButtonCustom } from "@/components/common/form/button";
-import { InputCustom } from "@/components/common/form/input/InputCustom";
+import { InputSearch } from "@/components/common/form/input/InputCustom/InputSearch";
 import { cn } from "@/utils";
 
 type WatchlistHeaderProps = {
   searchTerm: string;
   onSearchTermChange: (value: string) => void;
-  onOpenAddModal: () => void;
 };
 
 export function WatchlistHeader(props: WatchlistHeaderProps) {
-  const { searchTerm, onSearchTermChange, onOpenAddModal } = props;
+  const { searchTerm, onSearchTermChange } = props;
 
   return (
     <div
@@ -29,34 +25,12 @@ export function WatchlistHeader(props: WatchlistHeaderProps) {
       </div>
 
       <div className={cn("flex items-center", "space-x-3")}>
-        <div className="relative">
-          <Search
-            className={cn(
-              "absolute top-1/2 left-3 h-5 w-5",
-              "-translate-y-1/2 transform text-gray-400",
-            )}
-          />
-
-          <InputCustom
-            type="text"
-            placeholder="Tìm cổ phiếu..."
-            value={searchTerm}
-            onChange={(e) => onSearchTermChange(e.target.value)}
-            className={cn(
-              "rounded-lg border-2 border-gray-200 py-2 pr-4 pl-10 text-sm outline-none",
-              "focus:border-accent-500 focus:ring-accent-500 transition-all focus:ring-2",
-            )}
-          />
-        </div>
-
-        <ButtonCustom
-          onClick={onOpenAddModal}
-          prefixIcon={<Plus className="h-5 w-5" />}
-          bgColor="bg-brand-900 hover:bg-brand-700"
-          className={cn("space-x-2 px-4", "shadow-md hover:shadow-lg")}
-        >
-          Thêm
-        </ButtonCustom>
+        <InputSearch
+          placeholder="Tìm cổ phiếu..."
+          value={searchTerm}
+          onChange={(e) => onSearchTermChange(e.target.value)}
+          classNameWrapper="w-64"
+        />
       </div>
     </div>
   );

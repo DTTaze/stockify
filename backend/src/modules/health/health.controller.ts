@@ -37,7 +37,6 @@ export class HealthController {
         value: 20 + Math.floor(Math.random() * 30),
       });
 
-      const totalGB = os.totalmem() / (1024 * 1024 * 1024);
       const usedGB = (os.totalmem() - os.freemem()) / (1024 * 1024 * 1024);
       const mockUsedGB = Math.max(1.0, usedGB - i * 0.1 * Math.random());
       this.history.memory.push({

@@ -43,20 +43,24 @@ export function useWatchlistWithQuotes() {
   });
 
   const watchlist: WatchlistQuoteItem[] = watchlistItems.map((item, i) => {
-    const quote = quoteQueries[i].data;
+    const queryResult = quoteQueries[i];
+    const quote = queryResult?.data || initialDataQuote;
     return {
       id: item.id,
       symbol: item.symbol,
-      name: quote.symbol,
-      price: quote.price,
-      change: quote.change_percent,
-      volume: quote.volume,
+      name: quote?.symbol || item.symbol,
+      price: quote?.price || 0,
+      change: quote?.change_percent || 0,
+      volume: quote?.volume || 0,
       prediction:
-        quote.change_percent >= 0 ? PredictionTrend.UP : PredictionTrend.DOWN,
+        (quote?.change_percent || 0) >= 0
+          ? PredictionTrend.UP
+          : PredictionTrend.DOWN,
     };
   });
 
-  const isLoading = isWatchlistLoading || quoteQueries.some((q) => q.isLoading);
+  const isLoading =
+    isWatchlistLoading || quoteQueries.some((q) => q?.isLoading);
 
   return {
     watchlist,

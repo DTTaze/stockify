@@ -23,3 +23,11 @@ export interface WatchlistQuoteItem {
   volume: number;
   prediction: PredictionTrend;
 }
+
+export interface PurchaseTransaction {
+  id: string;
+  symbol: string;
+  purchaseDate: string; // "YYYY-MM-DD"
+  quantity: number;
+  price: number;
+}

@@ -1,4 +1,4 @@
-import { ChevronLeft, ChevronRight, Search } from "lucide-react";
+import { ChevronLeft, ChevronRight, Search, Star } from "lucide-react";
 import React from "react";
 
 import { ButtonCustom } from "@/components/common/form/button";
@@ -14,6 +14,11 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/Table";
+import {
+  useAddToWatchlist,
+  useQueryWatchlist,
+  useRemoveFromWatchlist,
+} from "@/queries/watchlist/QueryHooksWatchlist";
 import { cn } from "@/utils";
 
 const MARKET_TABS = [
@@ -52,6 +57,15 @@ export function UserMarketClassificationTable({
   onMarketSearch,
   onMarketPageChange,
 }: Props) {
+  const { data: watchlistItems = [] } = useQueryWatchlist();
+  const addToWatchlist = useAddToWatchlist();
+  const removeFromWatchlist = useRemoveFromWatchlist();
+
+  const watchlistSymbols = React.useMemo(
+    () => new Set(watchlistItems.map((item) => item.symbol)),
+    [watchlistItems],
+  );
+
   return (
     <>
       {/* Market Tabs */}
@@ -111,6 +125,9 @@ export function UserMarketClassificationTable({
                   <TableHead className="text-sm font-semibold tracking-wider text-white uppercase">
                     Phân loại
                   </TableHead>
+                  <TableHead className="w-[100px] text-center text-sm font-semibold tracking-wider text-white uppercase">
+                    Theo dõi
+                  </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -132,12 +149,15 @@ export function UserMarketClassificationTable({
                       <TableCell>
                         <Skeleton className="h-5 w-12" />
                       </TableCell>
+                      <TableCell className="text-center">
+                        <Skeleton className="mx-auto h-5 w-5 rounded-full" />
+                      </TableCell>
                     </TableRow>
                   ))
                 ) : marketStocks.length === 0 ? (
                   <TableRow>
                     <TableCell
-                      colSpan={5}
+                      colSpan={6}
                       className="h-32 text-center text-gray-400"
                     >
                       Không tìm thấy mã chứng khoán nào phù hợp.
@@ -179,6 +199,36 @@ export function UserMarketClassificationTable({
                         <span className="text-sm text-gray-500 capitalize">
                           {stock.type || "stock"}
                         </span>
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <button
+                          onClick={() => {
+                            if (watchlistSymbols.has(stock.symbol)) {
+                              removeFromWatchlist.mutate(stock.symbol);
+                            } else {
+                              addToWatchlist.mutate(stock.symbol);
+                            }
+                          }}
+                          disabled={
+                            addToWatchlist.isPending ||
+                            removeFromWatchlist.isPending
+                          }
+                          className="cursor-pointer rounded-lg p-1.5 transition-colors hover:bg-gray-100 disabled:opacity-50"
+                          title={
+                            watchlistSymbols.has(stock.symbol)
+                              ? "Bỏ theo dõi"
+                              : "Theo dõi"
+                          }
+                        >
+                          <Star
+                            className={cn(
+                              "h-5 w-5 transition-transform active:scale-95",
+                              watchlistSymbols.has(stock.symbol)
+                                ? "fill-accent-500 text-accent-500"
+                                : "hover:text-accent-500 text-gray-400",
+                            )}
+                          />
+                        </button>
                       </TableCell>
                     </TableRow>
                   ))
