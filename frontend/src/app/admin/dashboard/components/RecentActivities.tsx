@@ -59,8 +59,8 @@ export function RecentActivities({
 }: RecentActivitiesProps) {
   const renderContent = () => {
     if (isLoading) {
-      return Array.from({ length: 3 }).map((_, index) => (
-        <ActivitySkeleton key={index} />
+      return ["skeleton-1", "skeleton-2", "skeleton-3"].map((key) => (
+        <ActivitySkeleton key={key} />
       ));
     }
 
@@ -68,8 +68,11 @@ export function RecentActivities({
       return <EmptyState />;
     }
 
-    return activities.map((activity, index) => (
-      <ActivityItem key={index} activity={activity} />
+    return activities.map((activity) => (
+      <ActivityItem
+        key={`${activity.timestamp}-${activity.message}`}
+        activity={activity}
+      />
     ));
   };
 

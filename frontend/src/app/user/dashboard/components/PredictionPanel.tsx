@@ -136,9 +136,9 @@ export function PredictionPanel(props: PredictionPanelProps) {
         </div>
       ) : predictions.length > 0 ? (
         <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-2">
-          {predictions.map((pred, index) => (
+          {predictions.map((pred) => (
             <div
-              key={index}
+              key={pred.day}
               className="group hover:border-accent-500 relative overflow-hidden rounded-xl border-2 border-gray-100 p-5 transition-all hover:shadow-md"
             >
               <div className="from-brand-900/5 absolute top-0 right-0 h-32 w-32 rounded-bl-full bg-linear-to-br to-transparent"></div>

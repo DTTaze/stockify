@@ -12,27 +12,27 @@ type PaginationProps = {
 };
 
 function getPageNumbers(currentPage: number, totalPages: number) {
-  const pages: (number | string)[] = [];
+  const pages: { value: number | string; key: string }[] = [];
   if (totalPages <= 7) {
     for (let i = 1; i <= totalPages; i++) {
-      pages.push(i);
+      pages.push({ value: i, key: `page-${i}` });
     }
   } else {
-    pages.push(1);
+    pages.push({ value: 1, key: "page-1" });
     if (currentPage > 3) {
-      pages.push("...");
+      pages.push({ value: "...", key: "ellipsis-start" });
     }
     const start = Math.max(2, currentPage - 1);
     const end = Math.min(totalPages - 1, currentPage + 1);
     for (let i = start; i <= end; i++) {
       if (i > 1 && i < totalPages) {
-        pages.push(i);
+        pages.push({ value: i, key: `page-${i}` });
       }
     }
     if (currentPage < totalPages - 2) {
-      pages.push("...");
+      pages.push({ value: "...", key: "ellipsis-end" });
     }
-    pages.push(totalPages);
+    pages.push({ value: totalPages, key: `page-${totalPages}` });
   }
   return pages;
 }
@@ -89,29 +89,26 @@ export function DataManagementTablePagination({
           </ButtonCustom>
 
           {/* Page Numbers */}
-          {getPageNumbers(currentPage, totalPages).map((p, idx) => {
-            if (p === "...") {
+          {getPageNumbers(currentPage, totalPages).map((p) => {
+            if (p.value === "...") {
               return (
-                <span
-                  key={`ellipsis-${idx}`}
-                  className="px-1 text-gray-400 select-none"
-                >
+                <span key={p.key} className="px-1 text-gray-400 select-none">
                   ...
                 </span>
               );
             }
             return (
               <ButtonCustom
-                key={`page-${p}`}
-                onClick={() => onPageChange(p as number)}
+                key={p.key}
+                onClick={() => onPageChange(p.value as number)}
                 className={cn(
                   "h-8 w-8 cursor-pointer rounded-lg text-xs font-semibold transition-all",
-                  currentPage === p
+                  currentPage === p.value
                     ? "bg-brand-900 text-white shadow-xs"
                     : "border border-gray-200 bg-white text-gray-600 hover:bg-gray-50",
                 )}
               >
-                {p}
+                {p.value}
               </ButtonCustom>
             );
           })}

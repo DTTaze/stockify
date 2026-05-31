@@ -28,6 +28,7 @@ export function useForgotPassword(onSuccess?: (email: string) => void) {
 
       await new Promise((r) => setTimeout(r, 1000));
 
+      // eslint-disable-next-line no-console
       console.log("Send reset link:", data.email);
 
       onSuccess?.(data.email);

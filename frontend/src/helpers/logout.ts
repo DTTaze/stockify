@@ -28,7 +28,7 @@ export const clearZustand = () => {
 
 export const logout = () => {
   try {
-    console.log("trigger logout");
+    console.warn("trigger logout");
     clearCookies();
 
     clearUserQueries();
@@ -37,7 +37,7 @@ export const logout = () => {
 
     window.location.reload();
   } catch (error) {
-    console.log(error);
+    console.error(error);
     toast.error("Logout failed");
   }
 };

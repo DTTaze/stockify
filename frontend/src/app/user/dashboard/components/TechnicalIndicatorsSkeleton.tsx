@@ -7,8 +7,8 @@ export function TechnicalIndicatorsSkeleton() {
       </div>
 
       <div className="space-y-3">
-        {Array.from({ length: 4 }).map((_, index) => (
-          <div key={index} className="rounded-xl border-2 border-gray-100 p-4">
+        {["ind-1", "ind-2", "ind-3", "ind-4"].map((id) => (
+          <div key={id} className="rounded-xl border-2 border-gray-100 p-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-3">
                 <div className="h-10 w-10 rounded-lg bg-gray-200" />

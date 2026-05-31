@@ -40,7 +40,7 @@ axiosClient.interceptors.response.use(
     }
 
     if (!IS_PRODUCTION) {
-      console.log(error);
+      console.error(error);
     }
 
     const apiError: ApiError = { message, status };

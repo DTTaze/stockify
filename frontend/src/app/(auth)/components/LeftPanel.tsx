@@ -35,8 +35,8 @@ export default function LeftPanel(props: LeftPanelProps) {
       </div>
 
       <div className="relative z-10 grid grid-cols-3 gap-8 text-white">
-        {stats?.map((item, index) => (
-          <div key={index}>
+        {stats?.map((item) => (
+          <div key={item.label}>
             <div className="hover:text-accent-500 mb-2 text-3xl">
               {item.value}
             </div>
