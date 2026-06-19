@@ -10,31 +10,53 @@ from src.vn_stock.service import StockService
 from src.vn_stock.exceptions import DataFetchException
 
 
-def test_file_cache_manager(tmp_path):
-    cache_file = tmp_path / "test_cache.json"
-    cache = FileCacheManager(str(cache_file), duration_seconds=2)
+@pytest.fixture
+def cache_file_setup(tmp_path):
+    return tmp_path / "test_cache.json"
 
-    # Cache should be empty initially
+
+def test_file_cache_manager_get_is_initially_none(cache_file_setup):
+    cache = FileCacheManager(str(cache_file_setup), duration_seconds=2)
     assert cache.get() is None
+
+
+def test_file_cache_manager_get_stale_is_initially_none(cache_file_setup):
+    cache = FileCacheManager(str(cache_file_setup), duration_seconds=2)
     assert cache.get_stale() is None
 
-    # Set cache data
+
+def test_file_cache_manager_get_returns_stored_data(cache_file_setup):
+    cache = FileCacheManager(str(cache_file_setup), duration_seconds=2)
     data = {"symbols": ["VCB", "FPT"]}
     cache.set(data)
-
-    # Cache should be retrieveable and fresh
     assert cache.get() == data
+
+
+def test_file_cache_manager_get_stale_returns_stored_data(cache_file_setup):
+    cache = FileCacheManager(str(cache_file_setup), duration_seconds=2)
+    data = {"symbols": ["VCB", "FPT"]}
+    cache.set(data)
     assert cache.get_stale() == data
 
-    # Wait for expiration
-    time.sleep(2.1)
-    assert cache.get() is None  # expired
-    assert cache.get_stale() == data  # still readable as stale
+
+def test_file_cache_manager_get_returns_none_after_expiration(cache_file_setup):
+    cache = FileCacheManager(str(cache_file_setup), duration_seconds=1)
+    data = {"symbols": ["VCB", "FPT"]}
+    cache.set(data)
+    time.sleep(1.1)
+    assert cache.get() is None
+
+
+def test_file_cache_manager_get_stale_returns_data_after_expiration(cache_file_setup):
+    cache = FileCacheManager(str(cache_file_setup), duration_seconds=1)
+    data = {"symbols": ["VCB", "FPT"]}
+    cache.set(data)
+    time.sleep(1.1)
+    assert cache.get_stale() == data
 
 
 class DummyDataSource(StockDataSource):
     def fetch_history(self, symbol: str, start_date: str, end_date: str) -> pd.DataFrame:
-        # Return mock daily data
         dates = pd.date_range(start="2026-06-01", end="2026-06-10")
         df = pd.DataFrame({
             "time": dates,
@@ -76,21 +98,37 @@ class DummyDataSource(StockDataSource):
         return ["VNINDEX"]
 
 
-def test_stock_service_quote():
+@pytest.fixture
+def stock_service_setup():
     data_source = DummyDataSource()
-    service = StockService(data_source=data_source)
+    return StockService(data_source=data_source)
 
-    quote = service.get_stock_quote("VCB", "1mo")
+
+def test_stock_service_quote_symbol(stock_service_setup):
+    quote = stock_service_setup.get_stock_quote("VCB", "1mo")
     assert quote["symbol"] == "VCB"
+
+
+def test_stock_service_quote_price(stock_service_setup):
+    quote = stock_service_setup.get_stock_quote("VCB", "1mo")
     assert quote["price"] == 10.5
+
+
+def test_stock_service_quote_volume(stock_service_setup):
+    quote = stock_service_setup.get_stock_quote("VCB", "1mo")
     assert quote["volume"] == 1000
 
 
-def test_stock_service_stocks_list():
-    data_source = DummyDataSource()
-    service = StockService(data_source=data_source)
-
-    stocks_response = service.get_stocks()
+def test_stock_service_stocks_list_length(stock_service_setup):
+    stocks_response = stock_service_setup.get_stocks()
     assert len(stocks_response.items) == 2
+
+
+def test_stock_service_stocks_list_first_symbol(stock_service_setup):
+    stocks_response = stock_service_setup.get_stocks()
     assert stocks_response.items[0].symbol == "VCB"
+
+
+def test_stock_service_stocks_list_second_symbol(stock_service_setup):
+    stocks_response = stock_service_setup.get_stocks()
     assert stocks_response.items[1].symbol == "FPT"

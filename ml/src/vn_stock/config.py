@@ -23,6 +23,10 @@ class VnStockConfig(BaseSettings):
     log_level: str = os.getenv("LOG_LEVEL", "INFO")
     backend_url: str = "http://localhost:3060/v1/api"
 
+    supported_symbols: list[str] = [
+        "VCB", "VIC", "VNM", "FPT", "HPG", "SSI", "VHM", "BID", "CTG", "TCB"
+    ]
+
     class Config:
         env_file = ".env"
         env_prefix = "VNSTOCK_"
@@ -31,3 +35,4 @@ class VnStockConfig(BaseSettings):
 
 
 vn_stock_config = VnStockConfig()
+

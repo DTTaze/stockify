@@ -9,9 +9,10 @@ from ..data.preprocessing import (
     save_processed_data,
     load_processed_data,
 )
+from ..vn_stock.config import vn_stock_config
 
-# Default symbols to train
-DEFAULT_SYMBOLS = ["VCB", "VIC", "VNM", "FPT", "HPG", "SSI", "VHM", "BID", "CTG", "TCB"]
+DEFAULT_SYMBOLS = vn_stock_config.supported_symbols
+
 
 
 def train_single_stock_model(

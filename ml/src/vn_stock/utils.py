@@ -58,8 +58,9 @@ def validate_period(period: str) -> bool:
     Returns:
         True if period is valid, False otherwise
     """
-    valid_periods = ["1d", "5d", "1mo", "3mo", "6mo", "1y"]
-    return period in valid_periods
+    from .constants import VALID_PERIODS
+
+    return period in VALID_PERIODS
 
 
 def get_period_description(period: str) -> str:
@@ -74,13 +75,14 @@ def get_period_description(period: str) -> str:
     """
     descriptions = {
         "1d": "1 Day",
-        "5d": "5 Days",
+        "1w": "1 Week",
         "1mo": "1 Month",
         "3mo": "3 Months",
         "6mo": "6 Months",
         "1y": "1 Year",
     }
     return descriptions.get(period, "Unknown")
+
 
 
 def format_currency(value: float, decimal_places: int = 2) -> str:

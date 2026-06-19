@@ -53,6 +53,40 @@ def evaluate_single_stock(symbol: str, models_dir: Path = MODELS_DIR):
         return None, None
 
 
+def _get_prediction_confidence(day: int) -> int:
+    confidence_map = {
+        1: 92,
+        3: 88,
+        7: 85,
+        14: 78,
+    }
+    return confidence_map.get(day, 75)
+
+
+def _format_day_prediction(predictions: dict, day: int, pred_actual: float, confidence: int) -> None:
+    if day == 1:
+        predictions["tomorrow"] = round(pred_actual, 2)
+        predictions["tomorrow_confidence"] = confidence
+    elif day == 3:
+        predictions["day3"] = round(pred_actual, 2)
+        predictions["day3_confidence"] = confidence
+    elif day == 7:
+        predictions["day7"] = round(pred_actual, 2)
+        predictions["day7_confidence"] = confidence
+    elif day == 14:
+        predictions["day14"] = round(pred_actual, 2)
+        predictions["day14_confidence"] = confidence
+
+
+def _shift_and_append_sequence(current_sequence: np.ndarray, pred_val: float) -> np.ndarray:
+    last_features = current_sequence[:, -1, :].copy()
+    last_features[0, 3] = pred_val
+
+    new_timestep = last_features.reshape(1, 1, -1)
+    shifted = current_sequence[:, 1:, :]
+    return np.concatenate([shifted, new_timestep], axis=1)
+
+
 def predict_future_prices(
     symbol: str,
     days_ahead: int = 14,
@@ -75,7 +109,6 @@ def predict_future_prices(
         X_test = data_splits["X_test"]
         y_test = data_splits["y_test"]
         scaler_y = scalers["scaler_y"]
-        scaler_X = scalers["scaler_X"]
 
         model_path = models_dir / symbol / f"{symbol}_lstm_model.keras"
         model = load_model(model_path)
@@ -84,16 +117,6 @@ def predict_future_prices(
         current_price = float(
             scaler_y.inverse_transform([[current_price_scaled]])[0][0]
         )
-        y_test_pred = model.predict(X_test, verbose=0)
-        y_test_actual = scaler_y.inverse_transform(y_test.reshape(-1, 1))
-        y_test_pred_actual = scaler_y.inverse_transform(y_test_pred.reshape(-1, 1))
-
-        confidence_map = {
-            1: 92,
-            3: 88,
-            7: 85,
-            14: 78,
-        }
 
         last_sequence = X_test[-1].reshape(1, X_test.shape[1], X_test.shape[2])
 
@@ -105,37 +128,20 @@ def predict_future_prices(
 
         for day in range(1, days_ahead + 1):
             pred = model.predict(current_sequence, verbose=0)
-
             pred_actual = scaler_y.inverse_transform(pred.reshape(-1, 1))
             pred_actual = float(pred_actual[0][0])
 
-            confidence = confidence_map.get(day, 75)
+            confidence = _get_prediction_confidence(day)
+            _format_day_prediction(predictions, day, pred_actual, confidence)
 
-            if day == 1:
-                predictions["tomorrow"] = round(pred_actual, 2)
-                predictions["tomorrow_confidence"] = confidence
-            elif day == 3:
-                predictions["day3"] = round(pred_actual, 2)
-                predictions["day3_confidence"] = confidence
-            elif day == 7:
-                predictions["day7"] = round(pred_actual, 2)
-                predictions["day7_confidence"] = confidence
-            elif day == 14:
-                predictions["day14"] = round(pred_actual, 2)
-                predictions["day14_confidence"] = confidence
-
-            last_features = current_sequence[:, -1, :].copy()
-            last_features[0, 3] = pred[0, 0]
-
-            new_timestep = last_features.reshape(1, 1, -1)
-            current_sequence = current_sequence[:, 1:, :]
-            current_sequence = np.concatenate([current_sequence, new_timestep], axis=1)
+            current_sequence = _shift_and_append_sequence(current_sequence, pred[0, 0])
 
         return predictions
 
     except Exception as e:
         print(f"Error predicting for {symbol}: {e}")
         return None
+
 
 
 def get_supported_symbols(models_dir: Path = MODELS_DIR) -> list[str]:

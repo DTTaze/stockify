@@ -21,8 +21,6 @@ INDICES = {
     },
 }
 
-VALID_PERIODS = ["1d", "5d", "1mo", "3mo", "6mo", "1y"]
-
 PERIOD_MAPPING = {
     "1d": 1,
     "1w": 7,
@@ -41,10 +39,11 @@ FETCH_BUFFER = {
     "1y": 400,
 }
 
-VALID_PERIODS = set(PERIOD_MAPPING.keys())
+VALID_PERIODS = list(PERIOD_MAPPING.keys())
 
 SUPPORTED_INDICES = list(INDICES.keys())
 
 DEFAULT_PERIOD = "1mo"
 
 CACHE_EXPIRATION_MINUTES = 5
+

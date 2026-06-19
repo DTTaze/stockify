@@ -29,6 +29,16 @@ class ModelManagementService:
                     model_ids.append(d.name)
         return sorted(model_ids)
 
+    def _get_fallback_metrics(self, symbol: str) -> dict:
+        h = int(hashlib.md5(symbol.encode()).hexdigest(), 16)
+        fallback_accuracy = 92.0 + (h % 60) / 10.0
+        return {
+            "accuracy": round(fallback_accuracy, 2),
+            "rmse": round(150.0 + (h % 300), 4),
+            "mae": round(100.0 + (h % 200), 4),
+            "mape": round(100.0 - fallback_accuracy, 4),
+        }
+
     def _compute_metrics(self, symbol: str) -> dict:
         try:
             from ..data.preprocessing import load_processed_data
@@ -69,14 +79,8 @@ class ModelManagementService:
             }
         except Exception as e:
             print(f"Error computing metrics for {symbol}: {e}")
-            h = int(hashlib.md5(symbol.encode()).hexdigest(), 16)
-            fallback_accuracy = 92.0 + (h % 60) / 10.0
-            return {
-                "accuracy": round(fallback_accuracy, 2),
-                "rmse": round(150.0 + (h % 300), 4),
-                "mae": round(100.0 + (h % 200), 4),
-                "mape": round(100.0 - fallback_accuracy, 4),
-            }
+            return self._get_fallback_metrics(symbol)
+
 
     def _get_or_create_metadata(self, symbol: str) -> dict:
         meta_path = self._get_metadata_path(symbol)
@@ -387,6 +391,72 @@ class ModelManagementService:
             for v in versions_list
         ]
 
+    def _determine_next_version(self, meta_path: Path, symbol: str) -> tuple[str, list[dict]]:
+        next_version = "v1.0.0"
+        existing_versions = []
+
+        if meta_path.exists():
+            try:
+                with open(meta_path, "r", encoding="utf-8") as f:
+                    old_meta = json.load(f)
+                existing_versions = old_meta.get("versions", [])
+                old_ver = old_meta.get("version", "v1.0.0")
+                if old_ver.startswith("v"):
+                    parts = old_ver[1:].split(".")
+                    if len(parts) == 3:
+                        parts[2] = str(int(parts[2]) + 1)
+                        next_version = "v" + ".".join(parts)
+            except Exception as e:
+                print(f"Error parsing old metadata for version increment of {symbol}: {e}")
+        return next_version, existing_versions
+
+    def _archive_previous_versions(self, versions: list[dict]) -> None:
+        for v in versions:
+            v["status"] = "archived"
+
+    def _save_new_metadata(
+        self,
+        symbol: str,
+        meta_path: Path,
+        next_version: str,
+        existing_versions: list[dict],
+        metrics: dict,
+        updated_at: str,
+        file_size_str: str,
+    ) -> None:
+        new_ver_id = f"v{len(existing_versions) + 1}"
+        existing_versions.append(
+            {
+                "id": new_ver_id,
+                "version": next_version,
+                "deployed_at": updated_at,
+                "status": "active",
+            }
+        )
+
+        meta = {
+            "version": next_version,
+            "status": "running",
+            "environment": "production",
+            "metrics": metrics,
+            "training_info": {
+                "last_trained": updated_at,
+                "file_size": file_size_str,
+            },
+            "deploy_history": [
+                {
+                    "version": next_version,
+                    "deployed_at": updated_at,
+                    "environment": "production",
+                    "status": "success",
+                }
+            ],
+            "versions": existing_versions,
+        }
+
+        with open(meta_path, "w", encoding="utf-8") as f:
+            json.dump(meta, f, indent=2, ensure_ascii=False)
+
     def _train_wrapper(self, symbol: str):
         symbol = symbol.upper()
         self.training_symbols.add(symbol)
@@ -398,25 +468,7 @@ class ModelManagementService:
             model_path = self._get_model_path(symbol)
             if model_path.exists():
                 meta_path = self._get_metadata_path(symbol)
-
-                next_version = "v1.0.0"
-                existing_versions = []
-
-                if meta_path.exists():
-                    try:
-                        with open(meta_path, "r", encoding="utf-8") as f:
-                            old_meta = json.load(f)
-                        existing_versions = old_meta.get("versions", [])
-                        old_ver = old_meta.get("version", "v1.0.0")
-                        if old_ver.startswith("v"):
-                            parts = old_ver[1:].split(".")
-                            if len(parts) == 3:
-                                parts[2] = str(int(parts[2]) + 1)
-                                next_version = "v" + ".".join(parts)
-                    except Exception as e:
-                        print(
-                            f"Error parsing old metadata for version increment of {symbol}: {e}"
-                        )
+                next_version, existing_versions = self._determine_next_version(meta_path, symbol)
 
                 version_file = (
                     MODELS_DIR / symbol / f"{symbol}_lstm_model_{next_version}.keras"
@@ -429,46 +481,22 @@ class ModelManagementService:
                 file_size_mb = round(stat.st_size / (1024 * 1024), 2)
                 file_size_str = f"{file_size_mb}MB"
 
-                for v in existing_versions:
-                    v["status"] = "archived"
-
-                new_ver_id = f"v{len(existing_versions) + 1}"
-                existing_versions.append(
-                    {
-                        "id": new_ver_id,
-                        "version": next_version,
-                        "deployed_at": updated_at,
-                        "status": "active",
-                    }
+                self._archive_previous_versions(existing_versions)
+                self._save_new_metadata(
+                    symbol,
+                    meta_path,
+                    next_version,
+                    existing_versions,
+                    metrics,
+                    updated_at,
+                    file_size_str,
                 )
-
-                meta = {
-                    "version": next_version,
-                    "status": "running",
-                    "environment": "production",
-                    "metrics": metrics,
-                    "training_info": {
-                        "last_trained": updated_at,
-                        "file_size": file_size_str,
-                    },
-                    "deploy_history": [
-                        {
-                            "version": next_version,
-                            "deployed_at": updated_at,
-                            "environment": "production",
-                            "status": "success",
-                        }
-                    ],
-                    "versions": existing_versions,
-                }
-
-                with open(meta_path, "w", encoding="utf-8") as f:
-                    json.dump(meta, f, indent=2, ensure_ascii=False)
 
         except Exception as e:
             print(f"Error training model for {symbol}: {e}")
         finally:
             self.training_symbols.discard(symbol)
+
 
     def train_model(self, symbol: str, background_tasks) -> ActionResponse:
         symbol = symbol.upper()

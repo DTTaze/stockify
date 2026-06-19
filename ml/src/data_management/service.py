@@ -33,8 +33,7 @@ class DataManagementService:
         self.stock_service = stock_service or default_stock_service
 
     def get_supported_symbols(self) -> List[str]:
-        from ..models.train import DEFAULT_SYMBOLS
-        return DEFAULT_SYMBOLS
+        return vn_stock_config.supported_symbols
 
     def get_stock_items(self) -> List[Dict[str, Optional[Any]]]:
         symbols = self.get_supported_symbols()
@@ -70,30 +69,19 @@ class DataManagementService:
             "total_records": total_records,
         }
 
-    def update_stock(
-        self, symbol: str, background_tasks=None
-    ) -> Dict[str, Optional[Any]]:
-        normalized = symbol.upper()
-
-        # 1. Fetch latest price date from NestJS via BackendClient
-        latest_date_str = self.backend_client.get_latest_date(normalized)
-
-        # 2. Crawl vnstock incrementally using injected StockService
+    def _determine_start_date(self, latest_date_str: Optional[str]) -> str:
         if latest_date_str and isinstance(latest_date_str, str):
             latest_dt = datetime.fromisoformat(latest_date_str.replace("Z", "+00:00"))
-            start_date = (latest_dt + timedelta(days=1)).strftime("%Y-%m-%d")
-        else:
-            start_date = "2024-01-01"
+            return (latest_dt + timedelta(days=1)).strftime("%Y-%m-%d")
+        return "2024-01-01"
 
+    def _fetch_incremental_data(self, symbol: str, start_date: str) -> List[Dict[str, Any]]:
         end_date = datetime.now().strftime("%Y-%m-%d")
-
         new_data_points = []
         try:
-            # Sleep to prevent hitting rate limits
             time.sleep(2)
-
             df = self.stock_service.data_source.fetch_history(
-                symbol=normalized,
+                symbol=symbol,
                 start_date=start_date,
                 end_date=end_date,
             )
@@ -111,83 +99,84 @@ class DataManagementService:
                         }
                     )
         except Exception as e:
-            logger.error(f"Error crawling incremental data for {normalized}: {e}")
-            if not (RAW_DATA_DIR / f"{normalized}.csv").exists():
+            logger.error(f"Error crawling incremental data for {symbol}: {e}")
+            if not (RAW_DATA_DIR / f"{symbol}.csv").exists():
                 raise DataFetchException(f"Failed to fetch stock history: {e}")
+        return new_data_points
 
-        # 3. Post new data points to NestJS via BackendClient
+    def _save_history_to_csv(self, symbol: str, history_list: List[Dict[str, Any]]) -> pd.DataFrame:
+        records = [
+            {
+                "Date": item.get("date"),
+                "Open": float(item.get("open") or 0),
+                "High": float(item.get("high") or 0),
+                "Low": float(item.get("low") or 0),
+                "Close": float(item.get("close") or 0),
+                "Volume": float(item.get("volume") or 0),
+            }
+            for item in history_list
+        ]
+        full_df = pd.DataFrame(records)
+        full_df["Date"] = pd.to_datetime(full_df["Date"])
+        full_df = full_df.sort_values("Date").reset_index(drop=True)
+
+        raw_path = RAW_DATA_DIR / f"{symbol}.csv"
+        dummy_row = pd.DataFrame(
+            [
+                {
+                    "Date": "2000-01-01",
+                    "Open": 0,
+                    "High": 0,
+                    "Low": 0,
+                    "Close": 0,
+                    "Volume": 0,
+                }
+            ]
+        )
+        csv_df = pd.concat([dummy_row, full_df], ignore_index=True)
+        csv_df.to_csv(raw_path, index=False)
+
+        logger.info(f"Updated raw CSV for {symbol} with {len(full_df)} records.")
+        return full_df
+
+    def _trigger_training(self, symbol: str, background_tasks) -> str:
+        if background_tasks is not None:
+            from ..models.train import train_multi_stock_models
+            background_tasks.add_task(train_multi_stock_models, [symbol])
+            return f"Data updated. AI training started in background for {symbol}."
+        return f"Data for {symbol} has been updated."
+
+    def update_stock(
+        self, symbol: str, background_tasks=None
+    ) -> Dict[str, Optional[Any]]:
+        normalized = symbol.upper()
+
+        latest_date_str = self.backend_client.get_latest_date(normalized)
+        start_date = self._determine_start_date(latest_date_str)
+        new_data_points = self._fetch_incremental_data(normalized, start_date)
+
         if new_data_points:
             self.backend_client.post_history(normalized, new_data_points)
 
-        # 4. Fetch full history from NestJS via BackendClient
         full_df = None
         history_list = self.backend_client.get_history(normalized)
         if history_list:
             try:
-                records = []
-                for item in history_list:
-                    records.append(
-                        {
-                            "Date": item.get("date"),
-                            "Open": float(item.get("open") or 0),
-                            "High": float(item.get("high") or 0),
-                            "Low": float(item.get("low") or 0),
-                            "Close": float(item.get("close") or 0),
-                            "Volume": float(item.get("volume") or 0),
-                        }
-                    )
-                full_df = pd.DataFrame(records)
-                full_df["Date"] = pd.to_datetime(full_df["Date"])
-                full_df = full_df.sort_values("Date").reset_index(drop=True)
-
-                # Write to CSV with dummy row under header due to skiprows=[1] in load_data
-                raw_path = RAW_DATA_DIR / f"{normalized}.csv"
-                dummy_row = pd.DataFrame(
-                    [
-                        {
-                            "Date": "2000-01-01",
-                            "Open": 0,
-                            "High": 0,
-                            "Low": 0,
-                            "Close": 0,
-                            "Volume": 0,
-                        }
-                    ]
-                )
-                csv_df = pd.concat([dummy_row, full_df], ignore_index=True)
-                csv_df.to_csv(raw_path, index=False)
-
-                logger.info(
-                    f"Updated raw CSV for {normalized} with {len(full_df)} records."
-                )
+                full_df = self._save_history_to_csv(normalized, history_list)
             except Exception as e:
                 logger.error(f"Failed to process history from NestJS: {e}")
 
-        # Fallback to local file if fetch failed
         if full_df is None:
             raw_path = RAW_DATA_DIR / f"{normalized}.csv"
             if raw_path.exists():
                 full_df = load_data(raw_path)
             else:
-                raise DataFetchException(
-                    f"No history available for symbol {normalized}"
-                )
+                raise DataFetchException(f"No history available for symbol {normalized}")
 
-        # 5. Process single stock splits and scale
         data_splits, scalers = process_single_stock(normalized, full_df)
         save_processed_data(normalized, data_splits, scalers)
 
-        # 6. Trigger automated retraining of model in background task
-        if background_tasks is not None:
-            from ..models.train import train_multi_stock_models
-
-            background_tasks.add_task(train_multi_stock_models, [normalized])
-            message = (
-                f"Data updated. AI training started in background for {normalized}."
-            )
-        else:
-            message = f"Data for {normalized} has been updated."
-
+        message = self._trigger_training(normalized, background_tasks)
         last_updated = self._get_last_updated(normalized)
 
         return {
@@ -196,6 +185,7 @@ class DataManagementService:
             "message": message,
             "last_updated": last_updated.isoformat() if last_updated else None,
         }
+
 
     def update_all(self, background_tasks=None) -> Dict[str, object]:
         symbols = self.get_supported_symbols()
