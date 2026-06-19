@@ -1,0 +1,73 @@
+version: '3.8'
+
+services:
+  # 1. SQL Server Database Container
+  mssql:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: stockify-db
+    ports:
+      - "1433:1433"
+    environment:
+      - ACCEPT_EULA=Y
+      - MSSQL_SA_PASSWORD=SecurePassword123!
+    volumes:
+      - mssql-data:/var/opt/mssql
+    restart: always
+
+  # 2. FastAPI Python ML Service
+  ml-service:
+    build:
+      context: ./ml
+      dockerfile: Dockerfile
+    container_name: stockify-ml
+    ports:
+      - "8000:8000"
+    environment:
+      - PORT=8000
+      - HOST=0.0.0.0
+    restart: always
+
+  # 3. NestJS Backend API Service
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: stockify-backend
+    ports:
+      - "3001:3001"
+    environment:
+      - PORT=3001
+      - SERVICE_NAME=stockify-backend
+      - NODE_ENV=production
+      - DB_HOST=mssql
+      - DB_PORT=1433
+      - DB_USERNAME=sa
+      - DB_PASSWORD=SecurePassword123!
+      - DB_DATABASE=stockify
+      - JWT_SECRET=super-secret-jwt-key
+      - JWT_EXPIRES_IN=30d
+      - ML_SERVICE_URL=http://ml-service:8000
+    depends_on:
+      - mssql
+      - ml-service
+    restart: always
+
+  # 4. Next.js Web Dashboard
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        # Build-time API url configuration for static page generation / client calls
+        - NEXT_PUBLIC_API_URL=http://localhost:3001
+    container_name: stockify-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:3001
+    depends_on:
+      - backend
+    restart: always
+
+volumes:
+  mssql-data:

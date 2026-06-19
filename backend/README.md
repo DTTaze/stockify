@@ -1,98 +1,95 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# Stockify Backend API 🖥️
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+Dịch vụ backend của ứng dụng Stockify được xây dựng bằng NestJS, cung cấp REST API cho hệ thống quản lý danh sách theo dõi, đồng bộ hóa danh mục chứng khoán và quản trị hệ thống.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+---
 
-## Description
+## 🛠️ Tính Năng Chính
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+- **Hệ thống xác thực & Watchlist**: Đăng nhập, đăng ký và quản lý danh sách các mã cổ phiếu cần theo dõi (Watchlist) của người dùng.
+- **Đồng bộ hóa dữ liệu**: Gọi API đến ML microservice để đồng bộ hóa:
+  - Danh sách công ty chứng khoán (`stock-companies`).
+  - Danh sách mã cổ phiếu và phân loại sàn (HOSE, HNX, UPCOM, VN30, CW, ETF...).
+  - Dữ liệu ngành theo tiêu chuẩn ICB (phân cấp 4 cấp độ) và bản đồ liên kết cổ phiếu - ngành.
+  - Giá lịch sử cổ phiếu và các chỉ số thị trường (`VNINDEX`, `VN30`...).
+- **Kiến trúc Clean Code**:
+  - Kế thừa lớp cơ sở chung (`BaseCRUDService`) để giảm thiểu trùng lặp mã CRUD cho TypeORM.
+  - Tuyệt đối loại bỏ các endpoint trùng lặp hoặc không sử dụng (như gom nhóm xử lý quote tại route `/stocks/:symbol/quote` có cơ chế tự động fallback thông minh).
+- **Giám sát & Tracing**: Tích hợp OpenTelemetry cho việc trace log hiệu suất và đo lường CPU/Memory thực tế của server (`/health/monitoring`).
 
-## Project setup
+---
 
-```bash
-$ yarn install
+## 📂 Cấu Trúc Thư Mục src/
+
+```
+src/
+├── app.module.ts       # Module gốc của ứng dụng
+├── main.ts             # Điểm khởi chạy ứng dụng (bootstrap)
+├── setup.ts            # Các cấu hình middleware chung
+├── configs/            # Các file cấu hình hệ thống (App, Database)
+├── modules/            # Các Module chức năng
+│   ├── auth/           # Xác thực người dùng (JWT)
+│   ├── user/           # Quản lý tài khoản
+│   ├── stocks/         # Quản lý thông tin cổ phiếu & giá lịch sử
+│   ├── stock-companies/# Quản lý công ty niêm yết
+│   ├── watchlist/      # Quản lý danh mục theo dõi của người dùng
+│   ├── ml/             # Proxy kết nối với FastAPI AI microservice
+│   └── health/         # Healthcheck & Thu thập hiệu năng giám sát
+├── shared/             # Các decorator, guard, helper dùng chung
+└── tracing.ts          # Cấu hình OpenTelemetry
 ```
 
-## Compile and run the project
+---
 
-```bash
-# development
-$ yarn run start
+## ⚙️ Cấu Hình Môi Trường (.env)
 
-# watch mode
-$ yarn run start:dev
+Tạo file `.env` tại thư mục `/backend` dựa theo file `.env.example`:
 
-# production mode
-$ yarn run start:prod
+```env
+PORT=3001
+SERVICE_NAME=stockfify-backend
+NODE_ENV=development
+
+# Cấu hình Database SQL Server
+DB_HOST=localhost
+DB_PORT=1433
+DB_USERNAME=sa
+DB_PASSWORD=YourPassword
+DB_DATABASE=stockify
+
+# JWT Secret
+JWT_SECRET=super-secret-key
+JWT_EXPIRES_IN=30d
+
+# Địa chỉ FastAPI Machine Learning Service
+ML_SERVICE_URL=http://localhost:8000
 ```
 
-## Run tests
+---
 
+## 🚀 Lệnh Khởi Chạy
+
+### 1. Cài đặt dependencies:
 ```bash
-# unit tests
-$ yarn run test
-
-# e2e tests
-$ yarn run test:e2e
-
-# test coverage
-$ yarn run test:cov
+yarn install
 ```
 
-## Deployment
-
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
-
+### 2. Chạy ở chế độ Development (Watch mode):
 ```bash
-$ yarn install -g @nestjs/mau
-$ mau deploy
+yarn run start:dev
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+### 3. Build mã nguồn và chạy Production:
+```bash
+yarn run build
+yarn run start:prod
+```
 
-## Resources
+### 4. Định dạng và kiểm tra lỗi mã nguồn (Linting):
+```bash
+# Định dạng tự động
+yarn format
 
-Check out a few resources that may come in handy when working with NestJS:
-
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
-
-## Support
-
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
-
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
-
-## License
-
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+# Kiểm tra cú pháp & Clean Code
+yarn run lint
+```
