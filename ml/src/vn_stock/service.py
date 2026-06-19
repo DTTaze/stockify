@@ -1,22 +1,14 @@
 import logging
 import os
-import json
-import time
 from datetime import datetime, timedelta
-from typing import List
-
-from matplotlib.dates import relativedelta
+from typing import List, Dict, Any, Optional
 import pandas as pd
-
-try:
-    from vnstock import Quote, Listing
-except ImportError:
-    Quote = None
-    Listing = None
 
 from .constants import FETCH_BUFFER, INDICES, PERIOD_MAPPING, VALID_PERIODS
 from .exceptions import IndexNotFoundException, DataFetchException
 from . import schemas
+from .data_source import StockDataSource, FallbackDataSource
+from .cache import Cache, FileCacheManager
 
 logger = logging.getLogger(__name__)
 
@@ -25,21 +17,21 @@ CACHE_DURATION = 43200  # 12 hours
 
 
 class StockService:
-    """Service for Vietnamese stock & index"""
+    """Service for Vietnamese stock & index, adhering to SOLID principles."""
 
-    def __init__(self):
-        if Quote is None:
-            logger.warning("vnstock not installed")
-            self.client = None
-        else:
-            self.client = Quote
+    def __init__(
+        self,
+        data_source: Optional[StockDataSource] = None,
+        cache: Optional[Cache] = None,
+    ):
+        """Injectable dependencies for data fetching and caching (DIP)."""
+        self.data_source = data_source or FallbackDataSource()
+        self.cache = cache or FileCacheManager(CACHE_FILE_PATH, CACHE_DURATION)
 
     def get_index_quote(self, index_code: str, period: str) -> schemas.MarketQuote:
         index_key = index_code.lower()
-
         if index_key not in INDICES:
             raise IndexNotFoundException(index_code)
-
         return self._get_quote(INDICES[index_key]["code"], period)
 
     def get_stock_quote(self, symbol: str, period: str) -> schemas.MarketQuote:
@@ -68,35 +60,27 @@ class StockService:
     def _get_first_and_latest(self, df: pd.DataFrame):
         if df.empty:
             return None, None
-
         return df.iloc[0], df.iloc[-1]
 
-    def _get_quote(self, symbol: str, period: str):
-        if not self.client:
-            raise DataFetchException("Vnstock client not initialized")
-
+    def _get_quote(self, symbol: str, period: str) -> Dict[str, Any]:
         if period not in VALID_PERIODS:
             raise DataFetchException(f"Invalid period: {period}")
 
         try:
-            quote = self.client(symbol=symbol, source="VCI")
-
             end_date = datetime.now()
-
             buffer_days = FETCH_BUFFER.get(period, 30)
             start_date = end_date - timedelta(days=buffer_days)
 
-            df = quote.history(
-                start=start_date.strftime("%Y-%m-%d"),
-                end=end_date.strftime("%Y-%m-%d"),
-                interval="1D",
+            df = self.data_source.fetch_history(
+                symbol=symbol,
+                start_date=start_date.strftime("%Y-%m-%d"),
+                end_date=end_date.strftime("%Y-%m-%d"),
             )
 
             if df is None or df.empty:
                 raise DataFetchException(f"No data for {symbol}")
 
             df = self._prepare_df_by_period(df, period)
-
             first, latest = self._get_first_and_latest(df)
 
             if first is None or latest is None:
@@ -106,8 +90,7 @@ class StockService:
             first_close_price = float(first.get("close", 0))
 
             if first_close_price == 0:
-                change = 0
-                change_percent = 0
+                change_percent = 0.0
             else:
                 change = close_price - first_close_price
                 change_percent = (change / first_close_price) * 100
@@ -118,7 +101,7 @@ class StockService:
                 "change_percent": round(change_percent, 2),
                 "volume": int(latest.get("volume", 0)),
             }
-        except SystemExit as e:
+        except SystemExit:
             raise DataFetchException("VNStock rate limit exceeded")
         except Exception as e:
             logger.error(f"Quote error {symbol}: {e}", exc_info=True)
@@ -128,7 +111,6 @@ class StockService:
         self, index_code: str, period: str
     ) -> schemas.MarketHistoricalResponse:
         index_key = index_code.lower()
-
         if index_key not in INDICES:
             raise IndexNotFoundException(index_code)
 
@@ -147,32 +129,24 @@ class StockService:
         period: str,
         market_type: schemas.MarketType,
     ) -> schemas.MarketHistoricalResponse:
-
-        if not self.client:
-            raise DataFetchException("Vnstock client not initialized")
-
         if period not in VALID_PERIODS:
             raise DataFetchException(f"Invalid period: {period}")
 
         try:
             days = PERIOD_MAPPING[period]
-
-            quote = self.client(symbol=symbol, source="VCI")
-
             end_date = datetime.now()
             start_date = end_date - timedelta(days=days)
 
-            df = quote.history(
-                start=start_date.strftime("%Y-%m-%d"),
-                end=end_date.strftime("%Y-%m-%d"),
-                interval="1D",
+            df = self.data_source.fetch_history(
+                symbol=symbol,
+                start_date=start_date.strftime("%Y-%m-%d"),
+                end_date=end_date.strftime("%Y-%m-%d"),
             )
 
             if df is None or len(df) == 0:
                 raise DataFetchException(f"No historical data for {symbol}")
 
             data: List[schemas.HistoricalData] = []
-
             for _, row in df.iterrows():
                 data.append(
                     schemas.HistoricalData(
@@ -189,7 +163,6 @@ class StockService:
                 period=period,
                 data=data,
             )
-
         except Exception as e:
             logger.error(f"Historical error {symbol}: {e}", exc_info=True)
             raise DataFetchException(str(e))
@@ -204,19 +177,12 @@ class StockService:
             )
             for v in INDICES.values()
         ]
-
         return schemas.MarketListResponse(items=items)
 
     def get_stocks(self) -> schemas.MarketListResponse:
-        if Listing is None:
-            raise DataFetchException("Listing not available")
-
         try:
-            listing = Listing(source="VCI")
-            df = listing.all_symbols()
-
+            df = self.data_source.fetch_all_symbols()
             items = []
-
             for _, row in df.iterrows():
                 items.append(
                     schemas.MarketInfo(
@@ -226,9 +192,7 @@ class StockService:
                         type=schemas.MarketType.STOCK,
                     )
                 )
-
             return schemas.MarketListResponse(items=items)
-
         except Exception as e:
             logger.error(f"Stock list error: {e}", exc_info=True)
             raise DataFetchException(str(e))
@@ -250,7 +214,7 @@ class StockService:
             return "DELISTED"
         return ex
 
-    def _parse_row_to_stock_dict(self, row: pd.Series, default_exchange: str) -> dict:
+    def _parse_row_to_stock_dict(self, row: pd.Series, default_exchange: str) -> Optional[dict]:
         sym = row.get("symbol")
         if not sym:
             return None
@@ -269,30 +233,7 @@ class StockService:
             "type": str(stock_type).lower() if pd.notna(stock_type) else "stock",
         }
 
-    def _fetch_symbols_from_source(
-        self, source: str, exchanges_to_fetch: List[str], exchange_upper: str
-    ) -> List[dict]:
-        listing = Listing(source=source)
-        symbols_dict = {}
-        for ex in exchanges_to_fetch:
-            df = listing.symbols_by_exchange(exchange=ex, to_df=True)
-            if df is None or df.empty:
-                continue
-            for _, row in df.iterrows():
-                stock_dict = self._parse_row_to_stock_dict(row, ex)
-                if stock_dict:
-                    if (
-                        exchange_upper != "ALL"
-                        and stock_dict["exchange"] != exchange_upper
-                    ):
-                        continue
-                    symbols_dict[stock_dict["symbol"]] = stock_dict
-        return list(symbols_dict.values())
-
     def get_stocks_by_exchange(self, exchange: str) -> List[dict]:
-        if Listing is None:
-            raise DataFetchException("Listing not available")
-
         exchange_upper = exchange.upper()
         exchanges_to_fetch = ["HOSE", "HNX", "UPCOM"]
         if exchange_upper in exchanges_to_fetch:
@@ -302,28 +243,25 @@ class StockService:
                 f"Invalid exchange: {exchange}. Supported: HOSE, HNX, UPCOM, ALL"
             )
 
-        # Try VCI first, fallback to KBS
         try:
-            logger.info("Attempting to fetch symbols using VCI source...")
-            return self._fetch_symbols_from_source(
-                "VCI", exchanges_to_fetch, exchange_upper
-            )
+            results_dict = {}
+            for ex in exchanges_to_fetch:
+                df = self.data_source.fetch_symbols_by_exchange(ex)
+                if df is None or df.empty:
+                    continue
+                for _, row in df.iterrows():
+                    stock_dict = self._parse_row_to_stock_dict(row, ex)
+                    if stock_dict:
+                        # If filtering specifically by exchange and it mapped elsewhere, skip
+                        if exchange_upper != "ALL" and stock_dict["exchange"] != exchange_upper:
+                            continue
+                        results_dict[stock_dict["symbol"]] = stock_dict
+            return list(results_dict.values())
         except Exception as e:
-            logger.warning(f"VCI source failed: {e}. Falling back to KBS source.")
-            try:
-                return self._fetch_symbols_from_source(
-                    "KBS", exchanges_to_fetch, exchange_upper
-                )
-            except Exception as e_kbs:
-                logger.error(
-                    f"Error fetching symbols by exchange: {e_kbs}", exc_info=True
-                )
-                raise DataFetchException(str(e_kbs))
+            logger.error(f"Error fetching stocks by exchange: {e}", exc_info=True)
+            raise DataFetchException(str(e))
 
     def get_stock_details(self, exchange: str) -> List[dict]:
-        if Listing is None:
-            raise DataFetchException("Listing not available")
-
         exchange_upper = exchange.upper()
         valid_exchanges = ["HOSE", "HNX", "UPCOM", "DELISTED", "ALL"]
         if exchange_upper not in valid_exchanges:
@@ -331,126 +269,72 @@ class StockService:
                 f"Invalid exchange: {exchange}. Supported: HOSE, HNX, UPCOM, DELISTED, ALL"
             )
 
-        df = None
-
-        # 1. Try VCI Listing first
         try:
-            logger.info("Fetching stock details using VCI Listing...")
-            listing = Listing(source="VCI")
-            df = listing.symbols_by_exchange(to_df=True)
+            # For details, fetching all symbols is robust and handles camelCase rename internally if HTTP source
+            df = self.data_source.fetch_all_symbols()
+            if df.empty:
+                raise DataFetchException("Failed to fetch symbols from all available sources.")
+
+            results = []
+            for _, row in df.iterrows():
+                sym = row.get("symbol")
+                if not sym:
+                    continue
+                sym_str = str(sym).upper()
+
+                row_exchange = self._normalize_exchange(
+                    row.get("exchange"), fallback_exchange=""
+                )
+
+                if exchange_upper != "ALL" and row_exchange != exchange_upper:
+                    continue
+
+                stock_type = row.get("type")
+                if stock_type:
+                    stock_type = str(stock_type).lower()
+
+                results.append(
+                    {
+                        "symbol": sym_str,
+                        "exchange": row_exchange,
+                        "type": stock_type if pd.notna(stock_type) else None,
+                        "sid": int(row.get("sid")) if pd.notna(row.get("sid")) else None,
+                        "organ_name": (
+                            str(row.get("organ_name"))
+                            if pd.notna(row.get("organ_name"))
+                            else None
+                        ),
+                        "organ_short_name": (
+                            str(row.get("organ_short_name"))
+                            if pd.notna(row.get("organ_short_name"))
+                            else None
+                        ),
+                        "en_organ_name": (
+                            str(row.get("en_organ_name"))
+                            if pd.notna(row.get("en_organ_name"))
+                            else None
+                        ),
+                        "en_organ_short_name": (
+                            str(row.get("en_organ_short_name"))
+                            if pd.notna(row.get("en_organ_short_name"))
+                            else None
+                        ),
+                        "product_grp_id": (
+                            str(row.get("product_grp_id"))
+                            if pd.notna(row.get("product_grp_id"))
+                            else None
+                        ),
+                        "icb_code2": (
+                            str(row.get("icb_code2"))
+                            if pd.notna(row.get("icb_code2"))
+                            else None
+                        ),
+                    }
+                )
+            return results
         except Exception as e:
-            logger.warning(f"VCI Listing failed: {e}. Trying direct HTTP fallback...")
-
-        # 2. Try Direct HTTP request fallback to Vietcap if VCI Listing failed
-        if df is None or df.empty:
-            try:
-                import requests
-
-                url = "https://trading.vietcap.com.vn/api/price/symbols/getAll"
-                headers = {
-                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
-                }
-                r = requests.get(url, headers=headers, timeout=15)
-                if r.status_code == 200:
-                    json_data = r.json()
-                    df_raw = pd.DataFrame(json_data)
-                    if not df_raw.empty:
-                        # Map raw camelCase fields to match symbols_by_exchange columns
-                        df = df_raw.rename(
-                            columns={
-                                "board": "exchange",
-                                "enOrganName": "en_organ_name",
-                                "enOrganShortName": "en_organ_short_name",
-                                "organShortName": "organ_short_name",
-                                "organName": "organ_name",
-                                "productGrpID": "product_grp_id",
-                                "icbCode2": "icb_code2",
-                            }
-                        )
-                        logger.info(
-                            "Successfully fetched stock details via direct HTTP fallback."
-                        )
-            except Exception as e_direct:
-                logger.warning(
-                    f"Direct HTTP fallback failed: {e_direct}. Trying KBS fallback..."
-                )
-
-        # 3. Try KBS Listing fallback as a last resort (active stocks only)
-        if df is None or df.empty:
-            try:
-                logger.info("Attempting fallback to KBS Listing source...")
-                listing = Listing(source="KBS")
-                df_kbs = listing.symbols_by_exchange(get_all=True)
-                if not df_kbs.empty:
-                    df = df_kbs.rename(columns={"id": "sid"})
-                    logger.info(
-                        "Successfully loaded active stock symbols via KBS fallback."
-                    )
-            except Exception as e_kbs:
-                logger.error(f"All fallback options failed: {e_kbs}", exc_info=True)
-                raise DataFetchException(
-                    "Failed to fetch symbols from all available sources."
-                )
-
-        # Process the dataframe
-        results = []
-        for _, row in df.iterrows():
-            sym = row.get("symbol")
-            if not sym:
-                continue
-            sym_str = str(sym).upper()
-
-            row_exchange = self._normalize_exchange(
-                row.get("exchange"), fallback_exchange=""
-            )
-
-            # Filter by exchange if not ALL
-            if exchange_upper != "ALL" and row_exchange != exchange_upper:
-                continue
-
-            stock_type = row.get("type")
-            if stock_type:
-                stock_type = str(stock_type).lower()
-
-            results.append(
-                {
-                    "symbol": sym_str,
-                    "exchange": row_exchange,
-                    "type": stock_type if pd.notna(stock_type) else None,
-                    "sid": int(row.get("sid")) if pd.notna(row.get("sid")) else None,
-                    "organ_name": (
-                        str(row.get("organ_name"))
-                        if pd.notna(row.get("organ_name"))
-                        else None
-                    ),
-                    "organ_short_name": (
-                        str(row.get("organ_short_name"))
-                        if pd.notna(row.get("organ_short_name"))
-                        else None
-                    ),
-                    "en_organ_name": (
-                        str(row.get("en_organ_name"))
-                        if pd.notna(row.get("en_organ_name"))
-                        else None
-                    ),
-                    "en_organ_short_name": (
-                        str(row.get("en_organ_short_name"))
-                        if pd.notna(row.get("en_organ_short_name"))
-                        else None
-                    ),
-                    "product_grp_id": (
-                        str(row.get("product_grp_id"))
-                        if pd.notna(row.get("product_grp_id"))
-                        else None
-                    ),
-                    "icb_code2": (
-                        str(row.get("icb_code2"))
-                        if pd.notna(row.get("icb_code2"))
-                        else None
-                    ),
-                }
-            )
-        return results
+            logger.error(f"Error fetching stock details: {e}", exc_info=True)
+            raise DataFetchException(str(e))
 
     def get_symbols_by_group(self, group: str) -> List[str]:
         group_upper = group.upper()
@@ -458,9 +342,6 @@ class StockService:
         return grouped.get(group_upper, [])
 
     def _fetch_grouped_symbols_from_api(self) -> dict:
-        if Listing is None:
-            raise DataFetchException("Listing not available")
-
         result = {
             "HOSE": [],
             "VN30": [],
@@ -473,67 +354,39 @@ class StockService:
             "INDEX": [],
         }
 
-        # Step 1: Fetch general list via exchange API (1 call instead of 5 calls)
-        all_symbols_df = None
-        for source in ["KBS", "VCI"]:
-            try:
-                logger.info(f"Fetching exchange symbols from {source}...")
-                listing = Listing(source=source)
-                df = listing.symbols_by_exchange(exchange="HOSE", to_df=True)
-                if df is not None and not df.empty:
-                    all_symbols_df = df
-                    logger.info(f"Successfully fetched {len(df)} symbols from {source}")
-                    break
-            except BaseException as e:
-                logger.warning(f"Failed to fetch exchange symbols from {source}: {e}")
-                time.sleep(1)
+        try:
+            # HOSE, HNX, UPCOM and CW/ETF details via single all_symbols call
+            df = self.data_source.fetch_all_symbols()
+            if not df.empty:
+                # HOSE
+                hose_mask = df["exchange"].isin(["HOSE", "HSX"])
+                result["HOSE"] = df[hose_mask]["symbol"].dropna().tolist()
 
-        if all_symbols_df is not None:
-            # HOSE
-            hose_mask = all_symbols_df["exchange"].isin(["HOSE", "HSX"])
-            result["HOSE"] = all_symbols_df[hose_mask]["symbol"].dropna().tolist()
+                # HNX
+                hnx_mask = df["exchange"] == "HNX"
+                result["HNX"] = df[hnx_mask]["symbol"].dropna().tolist()
 
-            # HNX
-            hnx_mask = all_symbols_df["exchange"] == "HNX"
-            result["HNX"] = all_symbols_df[hnx_mask]["symbol"].dropna().tolist()
+                # UPCOM
+                upcom_mask = df["exchange"] == "UPCOM"
+                result["UPCOM"] = df[upcom_mask]["symbol"].dropna().tolist()
 
-            # UPCOM
-            upcom_mask = all_symbols_df["exchange"] == "UPCOM"
-            result["UPCOM"] = all_symbols_df[upcom_mask]["symbol"].dropna().tolist()
+                # CW
+                cw_mask = df["type"].isin(["cw", "warrant"])
+                result["CW"] = df[cw_mask]["symbol"].dropna().tolist()
 
-            # CW
-            cw_mask = all_symbols_df["type"].isin(["cw", "warrant"])
-            result["CW"] = all_symbols_df[cw_mask]["symbol"].dropna().tolist()
+                # ETF
+                etf_mask = df["type"].isin(["fund", "etf"])
+                result["ETF"] = df[etf_mask]["symbol"].dropna().tolist()
+        except Exception as e:
+            logger.warning(f"Failed to extract exchanges from all symbols: {e}")
 
-            # ETF
-            etf_mask = all_symbols_df["type"].isin(["fund", "etf"])
-            result["ETF"] = all_symbols_df[etf_mask]["symbol"].dropna().tolist()
+        # Fetch index group list (VN30)
+        try:
+            result["VN30"] = self.data_source.fetch_symbols_by_group("VN30")
+        except Exception as e:
+            logger.warning(f"Failed to fetch VN30: {e}")
 
-        # Step 2: Fetch group index lists
-        for group in ["VN30"]:
-            group_symbols = []
-            for source in ["KBS", "VCI"]:
-                try:
-                    logger.info(f"Fetching group {group} symbols from {source}...")
-                    listing = Listing(source=source)
-                    res = listing.symbols_by_group(group_name=group)
-                    if res is not None:
-                        if hasattr(res, "tolist"):
-                            group_symbols = res.tolist()
-                        elif isinstance(res, list):
-                            group_symbols = res
-                        else:
-                            group_symbols = list(res)
-                        logger.info(
-                            f"Successfully fetched {len(group_symbols)} symbols for {group} from {source}"
-                        )
-                        break
-                except BaseException as e:
-                    logger.warning(f"Failed to fetch group {group} from {source}: {e}")
-                    time.sleep(1)
-            result[group] = group_symbols
-
-        # Step 3: Fetch derivative & debt securities / indices
+        # Fetch derivatives, government bonds, indices
         result["FU_INDEX"] = self.get_futures()
         result["FU_BOND"] = self.get_government_bonds()
         result["INDEX"] = self.get_all_indices()
@@ -542,53 +395,24 @@ class StockService:
 
     def get_grouped_symbols(self) -> dict:
         # 1. Try to load from cache
-        if os.path.exists(CACHE_FILE_PATH):
-            try:
-                with open(CACHE_FILE_PATH, "r", encoding="utf-8") as f:
-                    cache_data = json.load(f)
+        cached = self.cache.get()
+        if cached is not None:
+            return cached
 
-                # Check if cache is still fresh
-                if time.time() - cache_data.get("timestamp", 0) < CACHE_DURATION:
-                    logger.info("Using fresh cached grouped symbols.")
-                    return cache_data.get("data", {})
-            except Exception as e:
-                logger.warning(f"Failed to read cache file: {e}")
-
-        # 2. Cache is missing or expired, fetch it
+        # 2. Cache missed or expired, fetch it
         logger.info("Cache missed or expired. Fetching fresh grouped symbols.")
-        result = {}
         try:
             result = self._fetch_grouped_symbols_from_api()
-
-            # If successful, save to cache
-            if result and all(result.values()):
-                try:
-                    with open(CACHE_FILE_PATH, "w", encoding="utf-8") as f:
-                        json.dump(
-                            {"timestamp": time.time(), "data": result},
-                            f,
-                            ensure_ascii=False,
-                            indent=2,
-                        )
-                    logger.info("Grouped symbols cache updated.")
-                except Exception as e:
-                    logger.warning(f"Failed to write cache file: {e}")
+            if result and any(result.values()):
+                self.cache.set(result)
                 return result
         except BaseException as e:
             logger.error(f"Critical error during API fetch of grouped symbols: {e}")
-            # Do NOT propagate BaseException to prevent FastAPI server from crashing
 
-        # 3. Fallback: if fetch failed, load stale cache if available
-        if os.path.exists(CACHE_FILE_PATH):
-            try:
-                with open(CACHE_FILE_PATH, "r", encoding="utf-8") as f:
-                    cache_data = json.load(f)
-                logger.info(
-                    "Using stale cached grouped symbols after API fetch failure."
-                )
-                return cache_data.get("data", {})
-            except Exception as e:
-                logger.warning(f"Failed to read stale cache file: {e}")
+        # 3. Fallback: load stale cache if available
+        stale = self.cache.get_stale()
+        if stale is not None:
+            return stale
 
         return {
             "HOSE": [],
@@ -603,11 +427,8 @@ class StockService:
         }
 
     def get_icb_industries(self) -> List[dict]:
-        if Listing is None:
-            raise DataFetchException("Listing not available")
         try:
-            listing = Listing(source="VCI")
-            df = listing.industries_icb()
+            df = self.data_source.fetch_industries_icb()
             if df is None or df.empty:
                 return []
 
@@ -615,74 +436,20 @@ class StockService:
             for _, row in df.iterrows():
                 results.append(
                     {
-                        "icb_name": (
-                            str(row.get("icb_name"))
-                            if pd.notna(row.get("icb_name"))
-                            else ""
-                        ),
-                        "en_icb_name": (
-                            str(row.get("en_icb_name"))
-                            if pd.notna(row.get("en_icb_name"))
-                            else None
-                        ),
-                        "icb_code": (
-                            str(row.get("icb_code"))
-                            if pd.notna(row.get("icb_code"))
-                            else ""
-                        ),
-                        "level": (
-                            int(row.get("level")) if pd.notna(row.get("level")) else 0
-                        ),
+                        "icb_name": str(row.get("icb_name")) if pd.notna(row.get("icb_name")) else "",
+                        "en_icb_name": str(row.get("en_icb_name")) if pd.notna(row.get("en_icb_name")) else None,
+                        "icb_code": str(row.get("icb_code")) if pd.notna(row.get("icb_code")) else "",
+                        "level": int(row.get("level")) if pd.notna(row.get("level")) else 0,
                     }
                 )
             return results
         except Exception as e:
             logger.error(f"Error fetching ICB industries: {e}", exc_info=True)
-            try:
-                logger.info("Retrying fetch of ICB industries via KBS source...")
-                listing = Listing(source="KBS")
-                df = listing.industries_icb()
-                if df is None or df.empty:
-                    return []
-                results = []
-                for _, row in df.iterrows():
-                    results.append(
-                        {
-                            "icb_name": (
-                                str(row.get("icb_name"))
-                                if pd.notna(row.get("icb_name"))
-                                else ""
-                            ),
-                            "en_icb_name": (
-                                str(row.get("en_icb_name"))
-                                if pd.notna(row.get("en_icb_name"))
-                                else None
-                            ),
-                            "icb_code": (
-                                str(row.get("icb_code"))
-                                if pd.notna(row.get("icb_code"))
-                                else ""
-                            ),
-                            "level": (
-                                int(row.get("level"))
-                                if pd.notna(row.get("level"))
-                                else 0
-                            ),
-                        }
-                    )
-                return results
-            except Exception as e_kbs:
-                logger.error(
-                    f"KBS fallback failed for ICB industries: {e_kbs}", exc_info=True
-                )
-                raise DataFetchException(str(e_kbs))
+            raise DataFetchException(str(e))
 
     def get_symbols_by_industries(self) -> List[dict]:
-        if Listing is None:
-            raise DataFetchException("Listing not available")
         try:
-            listing = Listing(source="VCI")
-            df = listing.symbols_by_industries()
+            df = self.data_source.fetch_symbols_by_industries()
             if df is None or df.empty:
                 return []
 
@@ -691,141 +458,38 @@ class StockService:
                 results.append(
                     {
                         "symbol": str(row.get("symbol")).upper(),
-                        "organ_name": (
-                            str(row.get("organ_name"))
-                            if pd.notna(row.get("organ_name"))
-                            else None
-                        ),
-                        "com_type_code": (
-                            str(row.get("com_type_code"))
-                            if pd.notna(row.get("com_type_code"))
-                            else None
-                        ),
-                        "icb_level": (
-                            int(row.get("icb_level"))
-                            if pd.notna(row.get("icb_level"))
-                            else 0
-                        ),
-                        "icb_code": (
-                            str(row.get("icb_code"))
-                            if pd.notna(row.get("icb_code"))
-                            else ""
-                        ),
-                        "icb_name": (
-                            str(row.get("icb_name"))
-                            if pd.notna(row.get("icb_name"))
-                            else ""
-                        ),
+                        "organ_name": str(row.get("organ_name")) if pd.notna(row.get("organ_name")) else None,
+                        "com_type_code": str(row.get("com_type_code")) if pd.notna(row.get("com_type_code")) else None,
+                        "icb_level": int(row.get("icb_level")) if pd.notna(row.get("icb_level")) else 0,
+                        "icb_code": str(row.get("icb_code")) if pd.notna(row.get("icb_code")) else "",
+                        "icb_name": str(row.get("icb_name")) if pd.notna(row.get("icb_name")) else "",
                     }
                 )
             return results
         except Exception as e:
             logger.error(f"Error fetching symbols by industries: {e}", exc_info=True)
-            try:
-                logger.info("Retrying fetch of symbols by industries via KBS source...")
-                listing = Listing(source="KBS")
-                df = listing.symbols_by_industries()
-                if df is None or df.empty:
-                    return []
-                results = []
-                for _, row in df.iterrows():
-                    results.append(
-                        {
-                            "symbol": str(row.get("symbol")).upper(),
-                            "organ_name": (
-                                str(row.get("organ_name"))
-                                if pd.notna(row.get("organ_name"))
-                                else None
-                            ),
-                            "com_type_code": (
-                                str(row.get("com_type_code"))
-                                if pd.notna(row.get("com_type_code"))
-                                else None
-                            ),
-                            "icb_level": (
-                                int(row.get("icb_level"))
-                                if pd.notna(row.get("icb_level"))
-                                else 0
-                            ),
-                            "icb_code": (
-                                str(row.get("icb_code"))
-                                if pd.notna(row.get("icb_code"))
-                                else ""
-                            ),
-                            "icb_name": (
-                                str(row.get("icb_name"))
-                                if pd.notna(row.get("icb_name"))
-                                else ""
-                            ),
-                        }
-                    )
-                return results
-            except Exception as e_kbs:
-                logger.error(
-                    f"KBS fallback failed for symbols by industries: {e_kbs}",
-                    exc_info=True,
-                )
-                raise DataFetchException(str(e_kbs))
+            raise DataFetchException(str(e))
 
     def get_futures(self) -> List[str]:
-        if Listing is None:
-            return []
-        for source in ["KBS", "VCI"]:
-            try:
-                listing = Listing(source=source)
-                res = listing.all_future_indices()
-                if res is not None:
-                    if hasattr(res, "tolist"):
-                        return res.tolist()
-                    return list(res)
-            except Exception as e:
-                logger.warning(f"Failed to fetch futures from {source}: {e}")
-        return ["VN30F1M", "VN30F2M", "VN30F2306", "VN30F2309"]
+        try:
+            return self.data_source.fetch_all_future_indices()
+        except Exception as e:
+            logger.warning(f"Failed to fetch futures: {e}")
+            return ["VN30F1M", "VN30F2M", "VN30F2306", "VN30F2309"]
 
     def get_government_bonds(self) -> List[str]:
-        if Listing is None:
+        try:
+            return self.data_source.fetch_all_government_bonds()
+        except Exception as e:
+            logger.warning(f"Failed to fetch government bonds: {e}")
             return []
-        for source in ["VCI", "KBS"]:
-            try:
-                listing = Listing(source=source)
-                res = listing.all_government_bonds()
-                if res is not None:
-                    if hasattr(res, "tolist"):
-                        return res.tolist()
-                    return list(res)
-            except Exception as e:
-                logger.warning(f"Failed to fetch government bonds from {source}: {e}")
-
-        for source in ["KBS", "VCI"]:
-            try:
-                listing = Listing(source=source)
-                if hasattr(listing, "all_bonds"):
-                    res = listing.all_bonds()
-                    if res is not None:
-                        if hasattr(res, "tolist"):
-                            return res.tolist()
-                        return list(res)
-            except Exception:
-                pass
-        return []
 
     def get_all_indices(self) -> List[str]:
-        if Listing is None:
+        try:
+            return self.data_source.fetch_all_indices()
+        except Exception as e:
+            logger.warning(f"Failed to fetch all indices: {e}")
             return ["VNINDEX", "VN30", "HNXINDEX", "HNX30", "UPCOMINDEX"]
-        for source in ["KBS", "VCI"]:
-            try:
-                listing = Listing(source=source)
-                if hasattr(listing, "all_indices"):
-                    res = getattr(listing, "all_indices")()
-                    if res is not None:
-                        if hasattr(res, "tolist"):
-                            return res.tolist()
-                        elif hasattr(res, "symbol"):
-                            return res["symbol"].tolist()
-                        return list(res)
-            except Exception:
-                pass
-        return ["VNINDEX", "VN30", "HNXINDEX", "HNX30", "UPCOMINDEX"]
 
 
 stock_service = StockService()

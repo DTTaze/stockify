@@ -1,31 +1,42 @@
 import logging
 import numpy as np
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Any
+import pandas as pd
+import time
 
 from ..data.preprocessing import (
     load_data,
-    load_multi_stock_data,
     process_single_stock,
     save_processed_data,
 )
-from ..models.predict import get_supported_symbols
 from ..vn_stock.exceptions import DataFetchException
 from ..utils.paths import PROCESSED_DATA_DIR, RAW_DATA_DIR
+from ..vn_stock.service import StockService, stock_service as default_stock_service
+from ..vn_stock.config import vn_stock_config
+from .backend_client import BackendClient
 
 logger = logging.getLogger(__name__)
 
 
 class DataManagementService:
-    """Service to manage ML processed stock data"""
+    """Service to manage ML processed stock data, following SOLID principles."""
+
+    def __init__(
+        self,
+        backend_client: Optional[BackendClient] = None,
+        stock_service: Optional[StockService] = None,
+    ):
+        """Injectable dependencies for backend client and stock service (DIP)."""
+        self.backend_client = backend_client or BackendClient(vn_stock_config.backend_url)
+        self.stock_service = stock_service or default_stock_service
 
     def get_supported_symbols(self) -> List[str]:
         from ..models.train import DEFAULT_SYMBOLS
-
         return DEFAULT_SYMBOLS
 
-    def get_stock_items(self) -> List[Dict[str, Optional[str]]]:
+    def get_stock_items(self) -> List[Dict[str, Optional[Any]]]:
         symbols = self.get_supported_symbols()
         stocks = []
 
@@ -61,36 +72,13 @@ class DataManagementService:
 
     def update_stock(
         self, symbol: str, background_tasks=None
-    ) -> Dict[str, Optional[str]]:
+    ) -> Dict[str, Optional[Any]]:
         normalized = symbol.upper()
 
-        # 1. Fetch latest price date from NestJS
-        from ..vn_stock.config import vn_stock_config
-        import requests
-        import pandas as pd
-        import time
-        from datetime import timedelta
+        # 1. Fetch latest price date from NestJS via BackendClient
+        latest_date_str = self.backend_client.get_latest_date(normalized)
 
-        backend_url = vn_stock_config.backend_url
-        latest_date_str = None
-        try:
-            r = requests.get(
-                f"{backend_url}/stocks/{normalized}/latest-date", timeout=10
-            )
-            if r.status_code == 200:
-                res_data = r.json()
-                if res_data.get("success"):
-                    latest_date_val = res_data.get("data")
-                    if isinstance(latest_date_val, dict):
-                        latest_date_str = latest_date_val.get("data")
-                    else:
-                        latest_date_str = latest_date_val
-        except Exception as e:
-            logger.warning(
-                f"Failed to get latest date from NestJS for {normalized}: {e}"
-            )
-
-        # 2. Crawl vnstock incrementally
+        # 2. Crawl vnstock incrementally using injected StockService
         if latest_date_str and isinstance(latest_date_str, str):
             latest_dt = datetime.fromisoformat(latest_date_str.replace("Z", "+00:00"))
             start_date = (latest_dt + timedelta(days=1)).strftime("%Y-%m-%d")
@@ -104,10 +92,11 @@ class DataManagementService:
             # Sleep to prevent hitting rate limits
             time.sleep(2)
 
-            from vnstock import Quote
-
-            quote = Quote(symbol=normalized, source="VCI")
-            df = quote.history(start=start_date, end=end_date, interval="1D")
+            df = self.stock_service.data_source.fetch_history(
+                symbol=normalized,
+                start_date=start_date,
+                end_date=end_date,
+            )
 
             if df is not None and not df.empty:
                 for _, row in df.iterrows():
@@ -124,71 +113,55 @@ class DataManagementService:
         except Exception as e:
             logger.error(f"Error crawling incremental data for {normalized}: {e}")
             if not (RAW_DATA_DIR / f"{normalized}.csv").exists():
-                raise DataFetchException(f"Failed to fetch vnstock data: {e}")
+                raise DataFetchException(f"Failed to fetch stock history: {e}")
 
-        # 3. Post new data points to NestJS
+        # 3. Post new data points to NestJS via BackendClient
         if new_data_points:
-            try:
-                headers = {"Content-Type": "application/json"}
-                r = requests.post(
-                    f"{backend_url}/stocks/{normalized}/history",
-                    json=new_data_points,
-                    headers=headers,
-                    timeout=15,
-                )
-                if r.status_code not in [200, 201]:
-                    logger.warning(
-                        f"NestJS returned status {r.status_code} while saving history for {normalized}"
-                    )
-            except Exception as e:
-                logger.error(f"Failed to POST historical prices to NestJS: {e}")
+            self.backend_client.post_history(normalized, new_data_points)
 
-        # 4. Fetch full history from NestJS
+        # 4. Fetch full history from NestJS via BackendClient
         full_df = None
-        try:
-            r = requests.get(f"{backend_url}/stocks/{normalized}/history", timeout=20)
-            if r.status_code == 200:
-                res_data = r.json()
-                if res_data.get("success") and res_data.get("data"):
-                    history_list = res_data.get("data")
-                    records = []
-                    for item in history_list:
-                        records.append(
-                            {
-                                "Date": item.get("date"),
-                                "Open": float(item.get("open") or 0),
-                                "High": float(item.get("high") or 0),
-                                "Low": float(item.get("low") or 0),
-                                "Close": float(item.get("close") or 0),
-                                "Volume": float(item.get("volume") or 0),
-                            }
-                        )
-                    full_df = pd.DataFrame(records)
-                    full_df["Date"] = pd.to_datetime(full_df["Date"])
-                    full_df = full_df.sort_values("Date").reset_index(drop=True)
-
-                    # Write to CSV with dummy row under header due to skiprows=[1] in load_data
-                    raw_path = RAW_DATA_DIR / f"{normalized}.csv"
-                    dummy_row = pd.DataFrame(
-                        [
-                            {
-                                "Date": "2000-01-01",
-                                "Open": 0,
-                                "High": 0,
-                                "Low": 0,
-                                "Close": 0,
-                                "Volume": 0,
-                            }
-                        ]
+        history_list = self.backend_client.get_history(normalized)
+        if history_list:
+            try:
+                records = []
+                for item in history_list:
+                    records.append(
+                        {
+                            "Date": item.get("date"),
+                            "Open": float(item.get("open") or 0),
+                            "High": float(item.get("high") or 0),
+                            "Low": float(item.get("low") or 0),
+                            "Close": float(item.get("close") or 0),
+                            "Volume": float(item.get("volume") or 0),
+                        }
                     )
-                    csv_df = pd.concat([dummy_row, full_df], ignore_index=True)
-                    csv_df.to_csv(raw_path, index=False)
+                full_df = pd.DataFrame(records)
+                full_df["Date"] = pd.to_datetime(full_df["Date"])
+                full_df = full_df.sort_values("Date").reset_index(drop=True)
 
-                    logger.info(
-                        f"Updated raw CSV for {normalized} with {len(full_df)} records."
-                    )
-        except Exception as e:
-            logger.error(f"Failed to fetch complete history from NestJS: {e}")
+                # Write to CSV with dummy row under header due to skiprows=[1] in load_data
+                raw_path = RAW_DATA_DIR / f"{normalized}.csv"
+                dummy_row = pd.DataFrame(
+                    [
+                        {
+                            "Date": "2000-01-01",
+                            "Open": 0,
+                            "High": 0,
+                            "Low": 0,
+                            "Close": 0,
+                            "Volume": 0,
+                        }
+                    ]
+                )
+                csv_df = pd.concat([dummy_row, full_df], ignore_index=True)
+                csv_df.to_csv(raw_path, index=False)
+
+                logger.info(
+                    f"Updated raw CSV for {normalized} with {len(full_df)} records."
+                )
+            except Exception as e:
+                logger.error(f"Failed to process history from NestJS: {e}")
 
         # Fallback to local file if fetch failed
         if full_df is None:
@@ -276,20 +249,6 @@ class DataManagementService:
 
         age_in_days = (datetime.now() - last_updated).days
         return "updated" if age_in_days <= 1 else "needs_update"
-
-    def _load_symbol_data(self, symbol: str):
-        raw_path = RAW_DATA_DIR / f"{symbol}.csv"
-
-        if raw_path.exists():
-            return load_data(raw_path)
-
-        data = load_multi_stock_data([symbol])
-        if symbol in data and not data[symbol].empty:
-            return data[symbol]
-
-        raise DataFetchException(
-            f"Unable to fetch raw data for symbol {symbol}. Ensure raw CSV exists or vnstock is configured.",
-        )
 
 
 data_management_service = DataManagementService()

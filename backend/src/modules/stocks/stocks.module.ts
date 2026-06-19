@@ -12,6 +12,8 @@ import { StockPrice } from './stock-price.model';
 import { StocksController } from './stocks.controller';
 import { Stock } from './stocks.model';
 import { StocksService } from './stocks.service';
+import { StocksClassificationSyncService } from './stocks-classification-sync.service';
+import { StocksPriceSyncService } from './stocks-price-sync.service';
 
 @Module({
   imports: [
@@ -26,7 +28,17 @@ import { StocksService } from './stocks.service';
     MLModule,
   ],
   controllers: [StocksController, StockCategoriesController],
-  providers: [StocksService, StockCategoriesService],
-  exports: [StocksService, StockCategoriesService],
+  providers: [
+    StocksService,
+    StockCategoriesService,
+    StocksClassificationSyncService,
+    StocksPriceSyncService,
+  ],
+  exports: [
+    StocksService,
+    StockCategoriesService,
+    StocksClassificationSyncService,
+    StocksPriceSyncService,
+  ],
 })
 export class StocksModule {}
