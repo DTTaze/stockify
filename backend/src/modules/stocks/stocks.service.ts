@@ -17,10 +17,10 @@ import { BaseCRUDService } from '@shared/services/base-crud.service';
 import { MarketType, TimePeriod } from '../ml/ml.dto';
 import { MLService } from '../ml/ml.service';
 import { StockPrice } from './stock-price.model';
-import { ExchangeFilter, QueryStocksDTO } from './stocks.dto';
-import { Stock } from './stocks.model';
 import { StocksClassificationSyncService } from './stocks-classification-sync.service';
 import { StocksPriceSyncService } from './stocks-price-sync.service';
+import { ExchangeFilter, QueryStocksDTO } from './stocks.dto';
+import { Stock } from './stocks.model';
 
 @Injectable()
 export class StocksService extends BaseCRUDService<Stock> {
@@ -52,7 +52,6 @@ export class StocksService extends BaseCRUDService<Stock> {
   protected get baseUrl(): string {
     return this.configService.getOrThrow<string>(ENV_KEY.ML_SERVICE_URL);
   }
-
 
   public async getStocks(query: QueryStocksDTO): Promise<OperationResult> {
     const filter: any = {};
@@ -105,9 +104,8 @@ export class StocksService extends BaseCRUDService<Stock> {
         `Fetched ${crawledItems.length} stocks. Upserting into DB...`,
       );
 
-      const insertedCount = await this.classificationSyncService.upsertStocksInChunks(
-        crawledItems,
-      );
+      const insertedCount =
+        await this.classificationSyncService.upsertStocksInChunks(crawledItems);
 
       this.logger.log(
         `Successfully synced ${insertedCount} stocks into the database.`,
@@ -377,14 +375,22 @@ export class StocksService extends BaseCRUDService<Stock> {
     end?: string,
   ): Promise<OperationResult<Array<Record<string, unknown>>>> {
     try {
-      const queryBuilder = await this.buildHistoricalQuery(symbol, period, start, end);
+      const queryBuilder = await this.buildHistoricalQuery(
+        symbol,
+        period,
+        start,
+        end,
+      );
       const list = await queryBuilder.getMany();
 
       if (!list.length) {
         this.logger.log(
           `No historical data in DB for ${symbol}. Falling back to ML service...`,
         );
-        const prices = await this.fetchAndSaveHistoricalPricesFromMl(symbol, period);
+        const prices = await this.fetchAndSaveHistoricalPricesFromMl(
+          symbol,
+          period,
+        );
         if (prices.length) {
           return {
             success: true,
@@ -425,7 +431,10 @@ export class StocksService extends BaseCRUDService<Stock> {
     period: string,
   ): Promise<OperationResult> {
     try {
-      const result = await this.getHistoricalPrices(symbol, period as TimePeriod);
+      const result = await this.getHistoricalPrices(
+        symbol,
+        period as TimePeriod,
+      );
       if (!result.success || !result.data) {
         return result;
       }
@@ -446,4 +455,3 @@ export class StocksService extends BaseCRUDService<Stock> {
     }
   }
 }
-

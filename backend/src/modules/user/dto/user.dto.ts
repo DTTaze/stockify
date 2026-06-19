@@ -6,13 +6,23 @@ import {
   IsString,
 } from 'class-validator';
 
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
+import { PaginationDTO } from '@shared/common/pagination.dto';
 import { ENTITY_STATUS } from '@shared/constants';
 import {
   OnlyTextAndNumbers,
   TrimAndLowercase,
 } from '@shared/decorators/sanitize-input.decorator';
+
+export class QueryUsersDTO extends PaginationDTO {
+  @ApiPropertyOptional({
+    description: 'Keyword to search username or email',
+  })
+  @IsString()
+  @IsOptional()
+  keyword?: string;
+}
 
 export class UpdateUserStatusDTO {
   @ApiProperty({ enum: ENTITY_STATUS, example: ENTITY_STATUS.SUSPENDED })

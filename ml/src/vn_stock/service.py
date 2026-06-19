@@ -214,7 +214,9 @@ class StockService:
             return "DELISTED"
         return ex
 
-    def _parse_row_to_stock_dict(self, row: pd.Series, default_exchange: str) -> Optional[dict]:
+    def _parse_row_to_stock_dict(
+        self, row: pd.Series, default_exchange: str
+    ) -> Optional[dict]:
         sym = row.get("symbol")
         if not sym:
             return None
@@ -253,7 +255,10 @@ class StockService:
                     stock_dict = self._parse_row_to_stock_dict(row, ex)
                     if stock_dict:
                         # If filtering specifically by exchange and it mapped elsewhere, skip
-                        if exchange_upper != "ALL" and stock_dict["exchange"] != exchange_upper:
+                        if (
+                            exchange_upper != "ALL"
+                            and stock_dict["exchange"] != exchange_upper
+                        ):
                             continue
                         results_dict[stock_dict["symbol"]] = stock_dict
             return list(results_dict.values())
@@ -273,7 +278,9 @@ class StockService:
             # For details, fetching all symbols is robust and handles camelCase rename internally if HTTP source
             df = self.data_source.fetch_all_symbols()
             if df.empty:
-                raise DataFetchException("Failed to fetch symbols from all available sources.")
+                raise DataFetchException(
+                    "Failed to fetch symbols from all available sources."
+                )
 
             results = []
             for _, row in df.iterrows():
@@ -298,7 +305,9 @@ class StockService:
                         "symbol": sym_str,
                         "exchange": row_exchange,
                         "type": stock_type if pd.notna(stock_type) else None,
-                        "sid": int(row.get("sid")) if pd.notna(row.get("sid")) else None,
+                        "sid": (
+                            int(row.get("sid")) if pd.notna(row.get("sid")) else None
+                        ),
                         "organ_name": (
                             str(row.get("organ_name"))
                             if pd.notna(row.get("organ_name"))
@@ -436,10 +445,24 @@ class StockService:
             for _, row in df.iterrows():
                 results.append(
                     {
-                        "icb_name": str(row.get("icb_name")) if pd.notna(row.get("icb_name")) else "",
-                        "en_icb_name": str(row.get("en_icb_name")) if pd.notna(row.get("en_icb_name")) else None,
-                        "icb_code": str(row.get("icb_code")) if pd.notna(row.get("icb_code")) else "",
-                        "level": int(row.get("level")) if pd.notna(row.get("level")) else 0,
+                        "icb_name": (
+                            str(row.get("icb_name"))
+                            if pd.notna(row.get("icb_name"))
+                            else ""
+                        ),
+                        "en_icb_name": (
+                            str(row.get("en_icb_name"))
+                            if pd.notna(row.get("en_icb_name"))
+                            else None
+                        ),
+                        "icb_code": (
+                            str(row.get("icb_code"))
+                            if pd.notna(row.get("icb_code"))
+                            else ""
+                        ),
+                        "level": (
+                            int(row.get("level")) if pd.notna(row.get("level")) else 0
+                        ),
                     }
                 )
             return results
@@ -458,11 +481,31 @@ class StockService:
                 results.append(
                     {
                         "symbol": str(row.get("symbol")).upper(),
-                        "organ_name": str(row.get("organ_name")) if pd.notna(row.get("organ_name")) else None,
-                        "com_type_code": str(row.get("com_type_code")) if pd.notna(row.get("com_type_code")) else None,
-                        "icb_level": int(row.get("icb_level")) if pd.notna(row.get("icb_level")) else 0,
-                        "icb_code": str(row.get("icb_code")) if pd.notna(row.get("icb_code")) else "",
-                        "icb_name": str(row.get("icb_name")) if pd.notna(row.get("icb_name")) else "",
+                        "organ_name": (
+                            str(row.get("organ_name"))
+                            if pd.notna(row.get("organ_name"))
+                            else None
+                        ),
+                        "com_type_code": (
+                            str(row.get("com_type_code"))
+                            if pd.notna(row.get("com_type_code"))
+                            else None
+                        ),
+                        "icb_level": (
+                            int(row.get("icb_level"))
+                            if pd.notna(row.get("icb_level"))
+                            else 0
+                        ),
+                        "icb_code": (
+                            str(row.get("icb_code"))
+                            if pd.notna(row.get("icb_code"))
+                            else ""
+                        ),
+                        "icb_name": (
+                            str(row.get("icb_name"))
+                            if pd.notna(row.get("icb_name"))
+                            else ""
+                        ),
                     }
                 )
             return results

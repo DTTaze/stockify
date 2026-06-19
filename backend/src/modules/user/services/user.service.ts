@@ -1,14 +1,18 @@
 import * as bcrypt from 'bcrypt';
-import { Repository } from 'typeorm';
+import { ILike, Repository } from 'typeorm';
 
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 
-import { VerifyUniquenessUserDTO } from '@modules/user/dto/user.dto';
+import {
+  QueryUsersDTO,
+  VerifyUniquenessUserDTO,
+} from '@modules/user/dto/user.dto';
 import { User } from '@modules/user/entities/user.entity';
 
 import { ENTITY_STATUS, ERR_CODE } from '@shared/constants';
 import { generateConflictResult } from '@shared/helpers/operation-result.helper';
+import { parseSort } from '@shared/helpers/query.helper';
 
 @Injectable()
 export class UserService {
@@ -122,6 +126,57 @@ export class UserService {
       select: ['id', 'email', 'username', 'status', 'createdAt', 'updatedAt'],
       order: { createdAt: 'DESC' },
     });
+  }
+
+  async findPaginated(query: QueryUsersDTO) {
+    const limit = query.limit || 10;
+    const offset = query.offset || 0;
+    const sort = query.sort || '-createdAt';
+    const keyword = query.keyword;
+
+    const baseStatuses = [
+      ENTITY_STATUS.ACTIVE,
+      ENTITY_STATUS.SUSPENDED,
+      ENTITY_STATUS.INACTIVE,
+    ];
+
+    let where: any = baseStatuses.map((status) => ({ status }));
+
+    if (keyword) {
+      where = [];
+      for (const status of baseStatuses) {
+        where.push({ status, username: ILike(`%${keyword}%`) });
+        where.push({ status, email: ILike(`%${keyword}%`) });
+      }
+    }
+
+    const parsedSort = parseSort(sort);
+
+    const [rows, total] = await this.repo.findAndCount({
+      where,
+      select: ['id', 'email', 'username', 'status', 'createdAt', 'updatedAt'],
+      order: parsedSort as any,
+      take: limit,
+      skip: offset,
+    });
+
+    const [activeCount, suspendedCount, inactiveCount] = await Promise.all([
+      this.repo.count({ where: { status: ENTITY_STATUS.ACTIVE } }),
+      this.repo.count({ where: { status: ENTITY_STATUS.SUSPENDED } }),
+      this.repo.count({ where: { status: ENTITY_STATUS.INACTIVE } }),
+    ]);
+
+    return {
+      rows,
+      total,
+      limit,
+      offset,
+      stats: {
+        totalCount: activeCount + suspendedCount + inactiveCount,
+        activeCount,
+        suspendedCount,
+      },
+    };
   }
 
   async findRecentUsers(limit = 3) {

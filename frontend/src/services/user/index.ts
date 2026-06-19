@@ -1,13 +1,19 @@
 import { AxiosResponse } from "axios";
 
 import { ApiResponse } from "@/types/api";
-import { AdminUserItem, UserStatus } from "@/types/user/user.type";
+import {
+  UserPaginatedResponseType,
+  UserQueryType,
+  UserStatus,
+} from "@/types/user/user.type";
 
 import axiosClient from "..";
 
 export const userServices = {
-  getUsers: (): Promise<AxiosResponse<ApiResponse<AdminUserItem[]>>> =>
-    axiosClient.get("user"),
+  getUsers: (
+    params: UserQueryType,
+  ): Promise<AxiosResponse<ApiResponse<UserPaginatedResponseType>>> =>
+    axiosClient.get("user", { params }),
 
   updateUserStatus: (
     id: string,

@@ -1,14 +1,15 @@
+import { OperationResult } from 'mvc-common-toolkit';
+import { Repository } from 'typeorm';
+
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { OperationResult } from 'mvc-common-toolkit';
 
 import { getErrorMessage } from '@shared/helpers/common';
 
-import { Stock } from './stocks.model';
-import { StockPrice } from './stock-price.model';
-import { MLService } from '../ml/ml.service';
 import { MarketType, TimePeriod } from '../ml/ml.dto';
+import { MLService } from '../ml/ml.service';
+import { StockPrice } from './stock-price.model';
+import { Stock } from './stocks.model';
 
 @Injectable()
 export class StocksPriceSyncService {
@@ -23,7 +24,6 @@ export class StocksPriceSyncService {
 
     private readonly mlService: MLService,
   ) {}
-
 
   public async saveHistoricalPrices(
     symbol: string,

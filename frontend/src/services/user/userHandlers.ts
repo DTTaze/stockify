@@ -1,12 +1,16 @@
 import { ApiResponse } from "@/types/api";
-import { AdminUserItem, UserStatus } from "@/types/user/user.type";
+import {
+  UserPaginatedResponseType,
+  UserQueryType,
+  UserStatus,
+} from "@/types/user/user.type";
 
 import { userServices } from ".";
 
-export const getUsersHandler = async (): Promise<
-  ApiResponse<AdminUserItem[]>
-> => {
-  const response = await userServices.getUsers();
+export const getUsersHandler = async (
+  params: UserQueryType,
+): Promise<ApiResponse<UserPaginatedResponseType>> => {
+  const response = await userServices.getUsers(params);
   return response.data;
 };
 

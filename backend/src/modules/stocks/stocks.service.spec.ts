@@ -1,16 +1,15 @@
+import { ConfigService } from '@nestjs/config';
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { ConfigService } from '@nestjs/config';
-import { Repository } from 'typeorm';
-import { AxiosHttpService, AuditService } from 'mvc-common-toolkit';
 
-import { StocksService } from './stocks.service';
-import { Stock } from './stocks.model';
-import { StockPrice } from './stock-price.model';
+import { INJECTION_TOKEN } from '@shared/constants';
+
 import { MLService } from '../ml/ml.service';
+import { StockPrice } from './stock-price.model';
 import { StocksClassificationSyncService } from './stocks-classification-sync.service';
 import { StocksPriceSyncService } from './stocks-price-sync.service';
-import { INJECTION_TOKEN } from '@shared/constants';
+import { Stock } from './stocks.model';
+import { StocksService } from './stocks.service';
 
 describe('StocksService', () => {
   let service: StocksService;
@@ -36,7 +35,7 @@ describe('StocksService', () => {
 
   const mockHttpService = {};
   const mockAuditService = {};
-  
+
   const mockMLService = {
     getMarketQuote: jest.fn(),
     getMarketHistory: jest.fn(),
@@ -116,9 +115,7 @@ describe('StocksService', () => {
 
       const result = await service.syncClassifications();
       expect(result).toEqual(mockResult);
-      expect(
-        classificationSyncService.syncClassifications,
-      ).toHaveBeenCalled();
+      expect(classificationSyncService.syncClassifications).toHaveBeenCalled();
     });
   });
 

@@ -15,13 +15,11 @@ class InvalidPeriodException(HTTPException):
 
     def __init__(self, period: str):
         from .constants import VALID_PERIODS
+
         supported_str = ", ".join(VALID_PERIODS)
-        self.detail = (
-            f"Invalid period '{period}'. Supported periods: {supported_str}"
-        )
+        self.detail = f"Invalid period '{period}'. Supported periods: {supported_str}"
         self.error_code = "INVALID_PERIOD"
         super().__init__(status_code=status.HTTP_400_BAD_REQUEST, detail=self.detail)
-
 
 
 class DataFetchException(HTTPException):

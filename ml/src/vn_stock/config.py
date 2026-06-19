@@ -24,7 +24,16 @@ class VnStockConfig(BaseSettings):
     backend_url: str = "http://localhost:3060/v1/api"
 
     supported_symbols: list[str] = [
-        "VCB", "VIC", "VNM", "FPT", "HPG", "SSI", "VHM", "BID", "CTG", "TCB"
+        "VCB",
+        "VIC",
+        "VNM",
+        "FPT",
+        "HPG",
+        "SSI",
+        "VHM",
+        "BID",
+        "CTG",
+        "TCB",
     ]
 
     class Config:
@@ -35,4 +44,3 @@ class VnStockConfig(BaseSettings):
 
 
 vn_stock_config = VnStockConfig()
-

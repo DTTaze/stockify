@@ -7,6 +7,7 @@ from typing import Any, Optional
 
 logger = logging.getLogger(__name__)
 
+
 class Cache(ABC):
     """Abstract interface defining standard cache operations."""
 
@@ -40,14 +41,14 @@ class FileCacheManager(Cache):
         try:
             with open(self.file_path, "r", encoding="utf-8") as f:
                 cache_data = json.load(f)
-            
+
             # Verify cache age
             if time.time() - cache_data.get("timestamp", 0) < self.duration:
                 logger.info(f"Cache hit (fresh) for {os.path.basename(self.file_path)}")
                 return cache_data.get("data")
         except Exception as e:
             logger.warning(f"Failed to read cache file {self.file_path}: {e}")
-            
+
         return None
 
     def get_stale(self) -> Optional[Any]:
@@ -61,7 +62,7 @@ class FileCacheManager(Cache):
             return cache_data.get("data")
         except Exception as e:
             logger.warning(f"Failed to read stale cache file {self.file_path}: {e}")
-            
+
         return None
 
     def set(self, data: Any) -> None:
@@ -74,7 +75,7 @@ class FileCacheManager(Cache):
                     ensure_ascii=False,
                     indent=2,
                 )
-            
+
             # Atomic swap on POSIX/Windows (if destination doesn't exist, rename. Otherwise use replace)
             if hasattr(os, "replace"):
                 os.replace(temp_path, self.file_path)
@@ -82,8 +83,10 @@ class FileCacheManager(Cache):
                 if os.path.exists(self.file_path):
                     os.remove(self.file_path)
                 os.rename(temp_path, self.file_path)
-            
-            logger.info(f"Cache successfully written to {os.path.basename(self.file_path)}")
+
+            logger.info(
+                f"Cache successfully written to {os.path.basename(self.file_path)}"
+            )
         except Exception as e:
             logger.warning(f"Failed to write cache file {self.file_path}: {e}")
             if os.path.exists(temp_path):

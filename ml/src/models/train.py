@@ -14,7 +14,6 @@ from ..vn_stock.config import vn_stock_config
 DEFAULT_SYMBOLS = vn_stock_config.supported_symbols
 
 
-
 def train_single_stock_model(
     symbol: str, data_splits: dict, model_dir: Path = MODELS_DIR
 ):

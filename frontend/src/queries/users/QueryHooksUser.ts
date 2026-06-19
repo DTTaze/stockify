@@ -1,7 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { updateUserStatusHandler } from "@/services/user/userHandlers";
-import { AdminUserItem, ProfileType, UserStatus } from "@/types/user/user.type";
+import {
+  ProfileType,
+  UserPaginatedResponseType,
+  UserQueryType,
+  UserStatus,
+} from "@/types/user/user.type";
 
 import { getProfileQueryFn, getUsersQueryFn } from "./QueryFnsUser";
 import { QueryKeysUser } from "./QueryKeysUser";
@@ -22,10 +27,10 @@ export const useQueryProfile = (isAuthenticated?: boolean) =>
     enabled: !!isAuthenticated,
   });
 
-export const useQueryAdminUsers = () =>
-  useQuery<AdminUserItem[]>({
-    queryKey: [QueryKeysUser.USER, QueryKeysUser.USER_LIST],
-    queryFn: getUsersQueryFn,
+export const useQueryAdminUsers = (params: UserQueryType) =>
+  useQuery<UserPaginatedResponseType>({
+    queryKey: [QueryKeysUser.USER, QueryKeysUser.USER_LIST, params],
+    queryFn: () => getUsersQueryFn(params),
   });
 
 interface UpdateUserStatusParams {
@@ -45,7 +50,6 @@ export const useMutateUserStatus = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: [QueryKeysUser.USER, QueryKeysUser.USER_LIST],
-        exact: true,
       });
     },
   });

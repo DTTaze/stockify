@@ -5,6 +5,7 @@ import {
   Logger,
   Param,
   Patch,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
@@ -12,7 +13,7 @@ import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { AdminAuthGuard } from '@shared/guards/admin.guard';
 import { generateNotFoundResult } from '@shared/helpers/operation-result.helper';
 
-import { UpdateUserStatusDTO } from '../dto/user.dto';
+import { QueryUsersDTO, UpdateUserStatusDTO } from '../dto/user.dto';
 import { UserService } from '../services/user.service';
 
 @ApiTags('User')
@@ -26,11 +27,12 @@ export class UserController {
 
   @Get()
   @ApiOperation({
-    summary: 'Get all users',
-    description: 'Retrieve list of all non-deleted users',
+    summary: 'Get all users with pagination and search',
+    description:
+      'Retrieve list of all non-deleted users with offset, limit, and keyword search',
   })
-  async getUsers(): Promise<any> {
-    return this.userService.findAll();
+  async getUsers(@Query() query: QueryUsersDTO): Promise<any> {
+    return this.userService.findPaginated(query);
   }
 
   @Patch(':id/status')

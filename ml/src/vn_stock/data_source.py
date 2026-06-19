@@ -7,11 +7,14 @@ import time
 
 logger = logging.getLogger(__name__)
 
+
 class StockDataSource(ABC):
     """Abstract interface defining the contract for stock data providers."""
 
     @abstractmethod
-    def fetch_history(self, symbol: str, start_date: str, end_date: str) -> pd.DataFrame:
+    def fetch_history(
+        self, symbol: str, start_date: str, end_date: str
+    ) -> pd.DataFrame:
         """Fetch historical daily OHLCV data for a given symbol."""
         pass
 
@@ -63,6 +66,7 @@ class VnstockDataSource(StockDataSource):
         self.source = source
         try:
             from vnstock import Quote, Listing
+
             self._Quote = Quote
             self._Listing = Listing
         except ImportError:
@@ -73,7 +77,9 @@ class VnstockDataSource(StockDataSource):
         if self._Quote is None or self._Listing is None:
             raise ImportError("vnstock library is not installed or available.")
 
-    def fetch_history(self, symbol: str, start_date: str, end_date: str) -> pd.DataFrame:
+    def fetch_history(
+        self, symbol: str, start_date: str, end_date: str
+    ) -> pd.DataFrame:
         self._ensure_library()
         quote = self._Quote(symbol=symbol, source=self.source)
         df = quote.history(start=start_date, end=end_date, interval="1D")
@@ -122,7 +128,7 @@ class VnstockDataSource(StockDataSource):
     def fetch_all_government_bonds(self) -> List[str]:
         self._ensure_library()
         listing = self._Listing(source=self.source)
-        
+
         # Try both common naming conventions in vnstock library
         if hasattr(listing, "all_government_bonds"):
             res = listing.all_government_bonds()
@@ -161,7 +167,9 @@ class DirectHttpDataSource(StockDataSource):
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
         }
 
-    def fetch_history(self, symbol: str, start_date: str, end_date: str) -> pd.DataFrame:
+    def fetch_history(
+        self, symbol: str, start_date: str, end_date: str
+    ) -> pd.DataFrame:
         raise NotImplementedError("Direct HTTP history fetch not implemented yet.")
 
     def fetch_symbols_by_exchange(self, exchange: str) -> pd.DataFrame:
@@ -226,41 +234,57 @@ class FallbackDataSource(StockDataSource):
         self.secondary = VnstockDataSource(source=secondary_source)
         self.http_fallback = DirectHttpDataSource()
 
-    def fetch_history(self, symbol: str, start_date: str, end_date: str) -> pd.DataFrame:
+    def fetch_history(
+        self, symbol: str, start_date: str, end_date: str
+    ) -> pd.DataFrame:
         try:
             return self.primary.fetch_history(symbol, start_date, end_date)
         except Exception as e:
-            logger.warning(f"Primary fetch_history failed for {symbol}: {e}. Trying secondary source.")
+            logger.warning(
+                f"Primary fetch_history failed for {symbol}: {e}. Trying secondary source."
+            )
             try:
                 return self.secondary.fetch_history(symbol, start_date, end_date)
             except Exception as e2:
-                logger.error(f"Both primary and secondary fetch_history failed for {symbol}: {e2}")
+                logger.error(
+                    f"Both primary and secondary fetch_history failed for {symbol}: {e2}"
+                )
                 raise
 
     def fetch_symbols_by_exchange(self, exchange: str) -> pd.DataFrame:
         try:
             return self.primary.fetch_symbols_by_exchange(exchange)
         except Exception as e:
-            logger.warning(f"Primary fetch_symbols_by_exchange failed: {e}. Trying secondary source.")
+            logger.warning(
+                f"Primary fetch_symbols_by_exchange failed: {e}. Trying secondary source."
+            )
             try:
                 return self.secondary.fetch_symbols_by_exchange(exchange)
             except Exception as e2:
-                logger.warning(f"Secondary fetch_symbols_by_exchange failed: {e2}. Trying HTTP fallback.")
+                logger.warning(
+                    f"Secondary fetch_symbols_by_exchange failed: {e2}. Trying HTTP fallback."
+                )
                 try:
                     return self.http_fallback.fetch_symbols_by_exchange(exchange)
                 except Exception as e3:
-                    logger.error(f"All data sources failed for fetch_symbols_by_exchange: {e3}")
+                    logger.error(
+                        f"All data sources failed for fetch_symbols_by_exchange: {e3}"
+                    )
                     raise
 
     def fetch_all_symbols(self) -> pd.DataFrame:
         try:
             return self.primary.fetch_all_symbols()
         except Exception as e:
-            logger.warning(f"Primary fetch_all_symbols failed: {e}. Trying secondary source.")
+            logger.warning(
+                f"Primary fetch_all_symbols failed: {e}. Trying secondary source."
+            )
             try:
                 return self.secondary.fetch_all_symbols()
             except Exception as e2:
-                logger.warning(f"Secondary fetch_all_symbols failed: {e2}. Trying HTTP fallback.")
+                logger.warning(
+                    f"Secondary fetch_all_symbols failed: {e2}. Trying HTTP fallback."
+                )
                 try:
                     return self.http_fallback.fetch_all_symbols()
                 except Exception as e3:
@@ -271,18 +295,24 @@ class FallbackDataSource(StockDataSource):
         try:
             return self.primary.fetch_symbols_by_group(group_name)
         except Exception as e:
-            logger.warning(f"Primary fetch_symbols_by_group failed: {e}. Trying secondary source.")
+            logger.warning(
+                f"Primary fetch_symbols_by_group failed: {e}. Trying secondary source."
+            )
             try:
                 return self.secondary.fetch_symbols_by_group(group_name)
             except Exception as e2:
-                logger.error(f"All data sources failed for fetch_symbols_by_group ({group_name}): {e2}")
+                logger.error(
+                    f"All data sources failed for fetch_symbols_by_group ({group_name}): {e2}"
+                )
                 return []
 
     def fetch_industries_icb(self) -> pd.DataFrame:
         try:
             return self.primary.fetch_industries_icb()
         except Exception as e:
-            logger.warning(f"Primary fetch_industries_icb failed: {e}. Trying secondary source.")
+            logger.warning(
+                f"Primary fetch_industries_icb failed: {e}. Trying secondary source."
+            )
             try:
                 return self.secondary.fetch_industries_icb()
             except Exception as e2:
@@ -293,42 +323,58 @@ class FallbackDataSource(StockDataSource):
         try:
             return self.primary.fetch_symbols_by_industries()
         except Exception as e:
-            logger.warning(f"Primary fetch_symbols_by_industries failed: {e}. Trying secondary source.")
+            logger.warning(
+                f"Primary fetch_symbols_by_industries failed: {e}. Trying secondary source."
+            )
             try:
                 return self.secondary.fetch_symbols_by_industries()
             except Exception as e2:
-                logger.error(f"All data sources failed for fetch_symbols_by_industries: {e2}")
+                logger.error(
+                    f"All data sources failed for fetch_symbols_by_industries: {e2}"
+                )
                 raise
 
     def fetch_all_future_indices(self) -> List[str]:
         try:
             return self.primary.fetch_all_future_indices()
         except Exception as e:
-            logger.warning(f"Primary fetch_all_future_indices failed: {e}. Trying secondary source.")
+            logger.warning(
+                f"Primary fetch_all_future_indices failed: {e}. Trying secondary source."
+            )
             try:
                 return self.secondary.fetch_all_future_indices()
             except Exception as e2:
-                logger.warning(f"All data sources failed for fetch_all_future_indices. Falling back to default list.")
+                logger.warning(
+                    f"All data sources failed for fetch_all_future_indices. Falling back to default list."
+                )
                 return ["VN30F1M", "VN30F2M", "VN30F2306", "VN30F2309"]
 
     def fetch_all_government_bonds(self) -> List[str]:
         try:
             return self.primary.fetch_all_government_bonds()
         except Exception as e:
-            logger.warning(f"Primary fetch_all_government_bonds failed: {e}. Trying secondary source.")
+            logger.warning(
+                f"Primary fetch_all_government_bonds failed: {e}. Trying secondary source."
+            )
             try:
                 return self.secondary.fetch_all_government_bonds()
             except Exception as e2:
-                logger.warning(f"All data sources failed for fetch_all_government_bonds.")
+                logger.warning(
+                    f"All data sources failed for fetch_all_government_bonds."
+                )
                 return []
 
     def fetch_all_indices(self) -> List[str]:
         try:
             return self.primary.fetch_all_indices()
         except Exception as e:
-            logger.warning(f"Primary fetch_all_indices failed: {e}. Trying secondary source.")
+            logger.warning(
+                f"Primary fetch_all_indices failed: {e}. Trying secondary source."
+            )
             try:
                 return self.secondary.fetch_all_indices()
             except Exception as e2:
-                logger.warning(f"All data sources failed for fetch_all_indices. Returning default indices list.")
+                logger.warning(
+                    f"All data sources failed for fetch_all_indices. Returning default indices list."
+                )
                 return ["VNINDEX", "VN30", "HNXINDEX", "HNX30", "UPCOMINDEX"]

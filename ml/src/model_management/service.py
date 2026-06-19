@@ -81,7 +81,6 @@ class ModelManagementService:
             print(f"Error computing metrics for {symbol}: {e}")
             return self._get_fallback_metrics(symbol)
 
-
     def _get_or_create_metadata(self, symbol: str) -> dict:
         meta_path = self._get_metadata_path(symbol)
         model_path = self._get_model_path(symbol)
@@ -391,7 +390,9 @@ class ModelManagementService:
             for v in versions_list
         ]
 
-    def _determine_next_version(self, meta_path: Path, symbol: str) -> tuple[str, list[dict]]:
+    def _determine_next_version(
+        self, meta_path: Path, symbol: str
+    ) -> tuple[str, list[dict]]:
         next_version = "v1.0.0"
         existing_versions = []
 
@@ -407,7 +408,9 @@ class ModelManagementService:
                         parts[2] = str(int(parts[2]) + 1)
                         next_version = "v" + ".".join(parts)
             except Exception as e:
-                print(f"Error parsing old metadata for version increment of {symbol}: {e}")
+                print(
+                    f"Error parsing old metadata for version increment of {symbol}: {e}"
+                )
         return next_version, existing_versions
 
     def _archive_previous_versions(self, versions: list[dict]) -> None:
@@ -468,7 +471,9 @@ class ModelManagementService:
             model_path = self._get_model_path(symbol)
             if model_path.exists():
                 meta_path = self._get_metadata_path(symbol)
-                next_version, existing_versions = self._determine_next_version(meta_path, symbol)
+                next_version, existing_versions = self._determine_next_version(
+                    meta_path, symbol
+                )
 
                 version_file = (
                     MODELS_DIR / symbol / f"{symbol}_lstm_model_{next_version}.keras"
@@ -496,7 +501,6 @@ class ModelManagementService:
             print(f"Error training model for {symbol}: {e}")
         finally:
             self.training_symbols.discard(symbol)
-
 
     def train_model(self, symbol: str, background_tasks) -> ActionResponse:
         symbol = symbol.upper()

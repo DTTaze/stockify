@@ -29,7 +29,9 @@ class DataManagementService:
         stock_service: Optional[StockService] = None,
     ):
         """Injectable dependencies for backend client and stock service (DIP)."""
-        self.backend_client = backend_client or BackendClient(vn_stock_config.backend_url)
+        self.backend_client = backend_client or BackendClient(
+            vn_stock_config.backend_url
+        )
         self.stock_service = stock_service or default_stock_service
 
     def get_supported_symbols(self) -> List[str]:
@@ -75,7 +77,9 @@ class DataManagementService:
             return (latest_dt + timedelta(days=1)).strftime("%Y-%m-%d")
         return "2024-01-01"
 
-    def _fetch_incremental_data(self, symbol: str, start_date: str) -> List[Dict[str, Any]]:
+    def _fetch_incremental_data(
+        self, symbol: str, start_date: str
+    ) -> List[Dict[str, Any]]:
         end_date = datetime.now().strftime("%Y-%m-%d")
         new_data_points = []
         try:
@@ -104,7 +108,9 @@ class DataManagementService:
                 raise DataFetchException(f"Failed to fetch stock history: {e}")
         return new_data_points
 
-    def _save_history_to_csv(self, symbol: str, history_list: List[Dict[str, Any]]) -> pd.DataFrame:
+    def _save_history_to_csv(
+        self, symbol: str, history_list: List[Dict[str, Any]]
+    ) -> pd.DataFrame:
         records = [
             {
                 "Date": item.get("date"),
@@ -142,6 +148,7 @@ class DataManagementService:
     def _trigger_training(self, symbol: str, background_tasks) -> str:
         if background_tasks is not None:
             from ..models.train import train_multi_stock_models
+
             background_tasks.add_task(train_multi_stock_models, [symbol])
             return f"Data updated. AI training started in background for {symbol}."
         return f"Data for {symbol} has been updated."
@@ -171,7 +178,9 @@ class DataManagementService:
             if raw_path.exists():
                 full_df = load_data(raw_path)
             else:
-                raise DataFetchException(f"No history available for symbol {normalized}")
+                raise DataFetchException(
+                    f"No history available for symbol {normalized}"
+                )
 
         data_splits, scalers = process_single_stock(normalized, full_df)
         save_processed_data(normalized, data_splits, scalers)
@@ -185,7 +194,6 @@ class DataManagementService:
             "message": message,
             "last_updated": last_updated.isoformat() if last_updated else None,
         }
-
 
     def update_all(self, background_tasks=None) -> Dict[str, object]:
         symbols = self.get_supported_symbols()

@@ -63,7 +63,9 @@ def _get_prediction_confidence(day: int) -> int:
     return confidence_map.get(day, 75)
 
 
-def _format_day_prediction(predictions: dict, day: int, pred_actual: float, confidence: int) -> None:
+def _format_day_prediction(
+    predictions: dict, day: int, pred_actual: float, confidence: int
+) -> None:
     if day == 1:
         predictions["tomorrow"] = round(pred_actual, 2)
         predictions["tomorrow_confidence"] = confidence
@@ -78,7 +80,9 @@ def _format_day_prediction(predictions: dict, day: int, pred_actual: float, conf
         predictions["day14_confidence"] = confidence
 
 
-def _shift_and_append_sequence(current_sequence: np.ndarray, pred_val: float) -> np.ndarray:
+def _shift_and_append_sequence(
+    current_sequence: np.ndarray, pred_val: float
+) -> np.ndarray:
     last_features = current_sequence[:, -1, :].copy()
     last_features[0, 3] = pred_val
 
@@ -141,7 +145,6 @@ def predict_future_prices(
     except Exception as e:
         print(f"Error predicting for {symbol}: {e}")
         return None
-
 
 
 def get_supported_symbols(models_dir: Path = MODELS_DIR) -> list[str]:

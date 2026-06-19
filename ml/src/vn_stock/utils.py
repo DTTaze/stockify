@@ -84,7 +84,6 @@ def get_period_description(period: str) -> str:
     return descriptions.get(period, "Unknown")
 
 
-
 def format_currency(value: float, decimal_places: int = 2) -> str:
     """
     Format a number as currency.

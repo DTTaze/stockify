@@ -21,3 +21,23 @@ export interface AdminUserItem {
   createdAt: string;
   updatedAt: string;
 }
+
+export interface UserQueryType {
+  limit: number;
+  offset: number;
+  keyword?: string;
+}
+
+export interface UserStatsType {
+  totalCount: number;
+  activeCount: number;
+  suspendedCount: number;
+}
+
+export interface UserPaginatedResponseType {
+  rows: AdminUserItem[];
+  total: number;
+  limit: number;
+  offset: number;
+  stats: UserStatsType;
+}

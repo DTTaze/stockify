@@ -12,13 +12,15 @@ def mock_backend_response():
     mock_response.status_code = 200
     mock_response.json.return_value = {
         "success": True,
-        "data": "2026-06-18T00:00:00.000Z"
+        "data": "2026-06-18T00:00:00.000Z",
     }
     return mock_response
 
 
 @patch("src.data_management.backend_client.requests")
-def test_backend_client_get_latest_date_returns_value(mock_requests, mock_backend_response):
+def test_backend_client_get_latest_date_returns_value(
+    mock_requests, mock_backend_response
+):
     client = BackendClient("http://localhost:3000")
     mock_requests.get.return_value = mock_backend_response
 
@@ -27,12 +29,16 @@ def test_backend_client_get_latest_date_returns_value(mock_requests, mock_backen
 
 
 @patch("src.data_management.backend_client.requests")
-def test_backend_client_get_latest_date_calls_correct_url(mock_requests, mock_backend_response):
+def test_backend_client_get_latest_date_calls_correct_url(
+    mock_requests, mock_backend_response
+):
     client = BackendClient("http://localhost:3000")
     mock_requests.get.return_value = mock_backend_response
 
     client.get_latest_date("VCB")
-    mock_requests.get.assert_called_with("http://localhost:3000/stocks/VCB/latest-date", timeout=10)
+    mock_requests.get.assert_called_with(
+        "http://localhost:3000/stocks/VCB/latest-date", timeout=10
+    )
 
 
 @patch("src.data_management.backend_client.requests")
@@ -60,7 +66,7 @@ def test_backend_client_post_history_calls_correct_url(mock_requests):
         "http://localhost:3000/stocks/VCB/history",
         json=data_points,
         headers={"Content-Type": "application/json"},
-        timeout=15
+        timeout=15,
     )
 
 
@@ -68,10 +74,14 @@ def test_backend_client_post_history_calls_correct_url(mock_requests):
 def mock_summary_service():
     mock_backend = MagicMock()
     mock_stock_service = MagicMock()
-    
-    service = DataManagementService(backend_client=mock_backend, stock_service=mock_stock_service)
+
+    service = DataManagementService(
+        backend_client=mock_backend, stock_service=mock_stock_service
+    )
     service.get_supported_symbols = MagicMock(return_value=["VCB", "FPT"])
-    service._get_total_records = MagicMock(side_effect=lambda sym: 100 if sym == "VCB" else 50)
+    service._get_total_records = MagicMock(
+        side_effect=lambda sym: 100 if sym == "VCB" else 50
+    )
     service._get_last_updated = MagicMock(return_value=None)
     service._get_status = MagicMock(return_value="needs_update")
     return service

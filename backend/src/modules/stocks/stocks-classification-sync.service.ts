@@ -1,14 +1,15 @@
+import { OperationResult } from 'mvc-common-toolkit';
+import { Repository } from 'typeorm';
+
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { OperationResult } from 'mvc-common-toolkit';
 
 import { getErrorMessage } from '@shared/helpers/common';
 
-import { Stock } from './stocks.model';
-import { StockGroup } from './stock-group.model';
-import { StockGroupMapping } from './stock-group-mapping.model';
 import { MLService } from '../ml/ml.service';
+import { StockGroupMapping } from './stock-group-mapping.model';
+import { StockGroup } from './stock-group.model';
+import { Stock } from './stocks.model';
 
 @Injectable()
 export class StocksClassificationSyncService {
@@ -26,7 +27,6 @@ export class StocksClassificationSyncService {
 
     private readonly mlService: MLService,
   ) {}
-
 
   public async upsertStocksInChunks(
     crawledItems: any[],

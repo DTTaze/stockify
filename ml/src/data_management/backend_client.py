@@ -4,6 +4,7 @@ from typing import Optional, List, Dict, Any
 
 logger = logging.getLogger(__name__)
 
+
 class BackendClient:
     """Encapsulates HTTP calls to the NestJS backend, complying with SRP."""
 
@@ -24,7 +25,9 @@ class BackendClient:
                         return latest_date_val.get("data")
                     return latest_date_val
             else:
-                logger.warning(f"Backend returned status {r.status_code} for latest-date {symbol}")
+                logger.warning(
+                    f"Backend returned status {r.status_code} for latest-date {symbol}"
+                )
         except Exception as e:
             logger.warning(f"Failed to get latest date from NestJS for {symbol}: {e}")
         return None
@@ -45,9 +48,13 @@ class BackendClient:
             )
             if r.status_code in [200, 201]:
                 return True
-            logger.warning(f"NestJS returned status {r.status_code} while saving history for {symbol}")
+            logger.warning(
+                f"NestJS returned status {r.status_code} while saving history for {symbol}"
+            )
         except Exception as e:
-            logger.error(f"Failed to POST historical prices to NestJS for {symbol}: {e}")
+            logger.error(
+                f"Failed to POST historical prices to NestJS for {symbol}: {e}"
+            )
         return False
 
     def get_history(self, symbol: str) -> Optional[List[Dict[str, Any]]]:
@@ -61,7 +68,11 @@ class BackendClient:
                 if res_data.get("success") and res_data.get("data"):
                     return res_data.get("data")
             else:
-                logger.warning(f"Backend returned status {r.status_code} for history of {symbol}")
+                logger.warning(
+                    f"Backend returned status {r.status_code} for history of {symbol}"
+                )
         except Exception as e:
-            logger.error(f"Failed to fetch complete history from NestJS for {symbol}: {e}")
+            logger.error(
+                f"Failed to fetch complete history from NestJS for {symbol}: {e}"
+            )
         return None

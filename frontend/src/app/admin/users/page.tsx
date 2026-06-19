@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 import { InputSearch } from "@/components/common/form/input/InputCustom/InputSearch";
@@ -12,12 +12,35 @@ import { UserStatus } from "@/types/user/user.type";
 
 import { UserStats } from "./components/UserStats";
 import { UserTable } from "./components/UserTable";
+import { UserTablePagination } from "./components/UserTablePagination";
 
 export default function UserManagement() {
   const [searchTerm, setSearchTerm] = useState("");
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [limit, setLimit] = useState(10);
   const [togglingId, setTogglingId] = useState<string | null>(null);
 
-  const { data: users = [], isLoading } = useQueryAdminUsers();
+  // Debounce search term to prevent excessive API requests
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+      setCurrentPage(1); // Reset to first page on search
+    }, 400);
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [searchTerm]);
+
+  const offset = (currentPage - 1) * limit;
+
+  const { data, isLoading } = useQueryAdminUsers({
+    limit,
+    offset,
+    keyword: debouncedSearchTerm || undefined,
+  });
+
   const statusMutation = useMutateUserStatus();
 
   const handleToggleStatus = async (id: string, currentStatus: UserStatus) => {
@@ -35,19 +58,15 @@ export default function UserManagement() {
     }
   };
 
-  const filteredUsers = users.filter(
-    (user) =>
-      user.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchTerm.toLowerCase()),
-  );
+  const users = data?.rows || [];
+  const total = data?.total || 0;
+  const totalPages = Math.ceil(total / limit);
 
-  const totalCount = users.length;
-  const activeCount = users.filter(
-    (u) => u.status === UserStatus.ACTIVE,
-  ).length;
-  const suspendedCount = users.filter(
-    (u) => u.status === UserStatus.SUSPENDED,
-  ).length;
+  const stats = data?.stats || {
+    totalCount: 0,
+    activeCount: 0,
+    suspendedCount: 0,
+  };
 
   return (
     <div className="space-y-6 p-6">
@@ -64,18 +83,31 @@ export default function UserManagement() {
       </div>
 
       <UserStats
-        totalCount={totalCount}
-        activeCount={activeCount}
-        suspendedCount={suspendedCount}
+        totalCount={stats.totalCount}
+        activeCount={stats.activeCount}
+        suspendedCount={stats.suspendedCount}
         isLoading={isLoading}
       />
 
-      <UserTable
-        users={filteredUsers}
-        togglingId={togglingId}
-        onToggleStatus={handleToggleStatus}
-        isLoading={isLoading}
-      />
+      <div className="space-y-4">
+        <UserTable
+          users={users}
+          togglingId={togglingId}
+          onToggleStatus={handleToggleStatus}
+          isLoading={isLoading}
+        />
+
+        <UserTablePagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={setCurrentPage}
+          limit={limit}
+          onLimitChange={(newLimit) => {
+            setLimit(newLimit);
+            setCurrentPage(1);
+          }}
+        />
+      </div>
     </div>
   );
 }

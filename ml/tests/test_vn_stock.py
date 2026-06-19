@@ -56,28 +56,51 @@ def test_file_cache_manager_get_stale_returns_data_after_expiration(cache_file_s
 
 
 class DummyDataSource(StockDataSource):
-    def fetch_history(self, symbol: str, start_date: str, end_date: str) -> pd.DataFrame:
+    def fetch_history(
+        self, symbol: str, start_date: str, end_date: str
+    ) -> pd.DataFrame:
         dates = pd.date_range(start="2026-06-01", end="2026-06-10")
-        df = pd.DataFrame({
-            "time": dates,
-            "open": [10.0] * len(dates),
-            "high": [11.0] * len(dates),
-            "low": [9.0] * len(dates),
-            "close": [10.5] * len(dates),
-            "volume": [1000] * len(dates),
-        })
+        df = pd.DataFrame(
+            {
+                "time": dates,
+                "open": [10.0] * len(dates),
+                "high": [11.0] * len(dates),
+                "low": [9.0] * len(dates),
+                "close": [10.5] * len(dates),
+                "volume": [1000] * len(dates),
+            }
+        )
         return df
 
     def fetch_symbols_by_exchange(self, exchange: str) -> pd.DataFrame:
-        return pd.DataFrame([
-            {"symbol": "VCB", "exchange": "HOSE", "organ_name": "Vietcombank", "type": "stock"}
-        ])
+        return pd.DataFrame(
+            [
+                {
+                    "symbol": "VCB",
+                    "exchange": "HOSE",
+                    "organ_name": "Vietcombank",
+                    "type": "stock",
+                }
+            ]
+        )
 
     def fetch_all_symbols(self) -> pd.DataFrame:
-        return pd.DataFrame([
-            {"symbol": "VCB", "exchange": "HOSE", "organ_name": "Vietcombank", "type": "stock"},
-            {"symbol": "FPT", "exchange": "HOSE", "organ_name": "FPT Group", "type": "stock"}
-        ])
+        return pd.DataFrame(
+            [
+                {
+                    "symbol": "VCB",
+                    "exchange": "HOSE",
+                    "organ_name": "Vietcombank",
+                    "type": "stock",
+                },
+                {
+                    "symbol": "FPT",
+                    "exchange": "HOSE",
+                    "organ_name": "FPT Group",
+                    "type": "stock",
+                },
+            ]
+        )
 
     def fetch_symbols_by_group(self, group_name: str) -> list:
         return ["VCB"]
