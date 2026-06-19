@@ -35,15 +35,12 @@ export class StocksController {
 
   @Get(':symbol/quote')
   @ApiOperation({
-    summary: 'Get stock quote from database',
+    summary: 'Get latest stock quote',
     description:
-      'Compute current price, change percent, and volume from stored data',
+      'Compute current price, change percent, and volume from stored data, falling back to ML service if needed',
   })
-  async getQuoteFromDb(
-    @Param('symbol') symbol: string,
-    @Query('period') period?: string,
-  ): Promise<HttpResponse> {
-    return this.stocksService.getQuoteFromDb(symbol, period || '1d');
+  async getStockQuote(@Param('symbol') symbol: string): Promise<HttpResponse> {
+    return this.stocksService.getStockQuote(symbol);
   }
 
   @Get(':symbol/historical')
@@ -65,12 +62,6 @@ export class StocksController {
     @Param('symbol') symbol: string,
   ): Promise<HttpResponse> {
     return this.stocksService.getLatestPriceDate(symbol);
-  }
-
-  @Get(':symbol/quote')
-  @ApiOperation({ summary: 'Get latest stock quote from DB' })
-  async getStockQuote(@Param('symbol') symbol: string): Promise<HttpResponse> {
-    return this.stocksService.getStockQuote(symbol);
   }
 
   @Post(':symbol/history')
