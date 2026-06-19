@@ -3,6 +3,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { OperationResult } from 'mvc-common-toolkit';
 
+import { getErrorMessage } from '@shared/helpers/common';
+
 import { Stock } from './stocks.model';
 import { StockGroup } from './stock-group.model';
 import { StockGroupMapping } from './stock-group-mapping.model';
@@ -25,19 +27,6 @@ export class StocksClassificationSyncService {
     private readonly mlService: MLService,
   ) {}
 
-  private getErrorMessage(error: unknown): string {
-    if (error instanceof Error) {
-      return error.message;
-    }
-    if (typeof error === 'string') {
-      return error;
-    }
-    try {
-      return JSON.stringify(error);
-    } catch {
-      return 'Unknown error';
-    }
-  }
 
   public async upsertStocksInChunks(
     crawledItems: any[],
@@ -301,7 +290,7 @@ export class StocksClassificationSyncService {
       this.logger.error('Error in syncClassifications:', error);
       return {
         success: false,
-        message: `Failed to sync stock classifications: ${this.getErrorMessage(error)}`,
+        message: `Failed to sync stock classifications: ${getErrorMessage(error)}`,
       };
     }
   }
@@ -347,7 +336,7 @@ export class StocksClassificationSyncService {
       this.logger.error('Error getting classification summary:', error);
       return {
         success: false,
-        message: `Failed to get classification summary: ${this.getErrorMessage(error)}`,
+        message: `Failed to get classification summary: ${getErrorMessage(error)}`,
       };
     }
   }

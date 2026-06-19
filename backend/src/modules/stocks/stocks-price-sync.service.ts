@@ -3,6 +3,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { OperationResult } from 'mvc-common-toolkit';
 
+import { getErrorMessage } from '@shared/helpers/common';
+
 import { Stock } from './stocks.model';
 import { StockPrice } from './stock-price.model';
 import { MLService } from '../ml/ml.service';
@@ -22,19 +24,6 @@ export class StocksPriceSyncService {
     private readonly mlService: MLService,
   ) {}
 
-  private getErrorMessage(error: unknown): string {
-    if (error instanceof Error) {
-      return error.message;
-    }
-    if (typeof error === 'string') {
-      return error;
-    }
-    try {
-      return JSON.stringify(error);
-    } catch {
-      return 'Unknown error';
-    }
-  }
 
   public async saveHistoricalPrices(
     symbol: string,
@@ -70,7 +59,7 @@ export class StocksPriceSyncService {
       this.logger.error(`Error saving historical prices for ${symbol}:`, error);
       return {
         success: false,
-        message: `Failed to save historical prices: ${this.getErrorMessage(error)}`,
+        message: `Failed to save historical prices: ${getErrorMessage(error)}`,
       };
     }
   }
@@ -175,7 +164,7 @@ export class StocksPriceSyncService {
       this.logger.error('Error syncing trained stock prices:', error);
       return {
         success: false,
-        message: `Failed to sync trained stock prices: ${this.getErrorMessage(error)}`,
+        message: `Failed to sync trained stock prices: ${getErrorMessage(error)}`,
       };
     }
   }
@@ -252,7 +241,7 @@ export class StocksPriceSyncService {
       this.logger.error('Error syncing index prices:', error);
       return {
         success: false,
-        message: `Failed to sync index prices: ${this.getErrorMessage(error)}`,
+        message: `Failed to sync index prices: ${getErrorMessage(error)}`,
       };
     }
   }

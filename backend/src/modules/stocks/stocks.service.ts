@@ -11,6 +11,7 @@ import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 
 import { ENV_KEY, INJECTION_TOKEN } from '@shared/constants';
+import { getErrorMessage } from '@shared/helpers/common';
 import { BaseCRUDService } from '@shared/services/base-crud.service';
 
 import { MarketType, TimePeriod } from '../ml/ml.dto';
@@ -52,19 +53,6 @@ export class StocksService extends BaseCRUDService<Stock> {
     return this.configService.getOrThrow<string>(ENV_KEY.ML_SERVICE_URL);
   }
 
-  private getErrorMessage(error: unknown): string {
-    if (error instanceof Error) {
-      return error.message;
-    }
-    if (typeof error === 'string') {
-      return error;
-    }
-    try {
-      return JSON.stringify(error);
-    } catch {
-      return 'Unknown error';
-    }
-  }
 
   public async getStocks(query: QueryStocksDTO): Promise<OperationResult> {
     const filter: any = {};
@@ -136,7 +124,7 @@ export class StocksService extends BaseCRUDService<Stock> {
       this.logger.error('Error in crawlAndSave:', error);
       return {
         success: false,
-        message: `Stock crawl failed: ${this.getErrorMessage(error)}`,
+        message: `Stock crawl failed: ${getErrorMessage(error)}`,
       };
     }
   }
@@ -238,7 +226,7 @@ export class StocksService extends BaseCRUDService<Stock> {
       this.logger.error(`Error getting stock quote for ${symbol}:`, error);
       return {
         success: false,
-        message: `Failed to get stock quote: ${this.getErrorMessage(error)}`,
+        message: `Failed to get stock quote: ${getErrorMessage(error)}`,
       };
     }
   }
@@ -286,9 +274,100 @@ export class StocksService extends BaseCRUDService<Stock> {
       );
       return {
         success: false,
-        message: `Failed to get latest price date: ${this.getErrorMessage(error)}`,
+        message: `Failed to get latest price date: ${getErrorMessage(error)}`,
       };
     }
+  }
+
+  private async buildHistoricalQuery(
+    symbol: string,
+    period?: TimePeriod,
+    start?: string,
+    end?: string,
+  ) {
+    let relativeTo = new Date();
+    if (!start && !end) {
+      const latestPrice = await this.priceRepo.findOne({
+        where: { symbol: symbol.toUpperCase() },
+        order: { date: 'DESC' },
+      });
+      if (latestPrice) {
+        relativeTo = latestPrice.date;
+      }
+    }
+
+    const queryBuilder = this.priceRepo
+      .createQueryBuilder('sp')
+      .where('sp.symbol = :symbol', { symbol: symbol.toUpperCase() })
+      .orderBy('sp.date', 'ASC');
+
+    if (start) {
+      queryBuilder.andWhere('sp.date >= :start', { start: new Date(start) });
+    } else if (period) {
+      if (period === TimePeriod.ONE_DAY) {
+        const subQuery = this.priceRepo
+          .createQueryBuilder('sub')
+          .select('sub.date', 'date')
+          .where('sub.symbol = :symbol', { symbol: symbol.toUpperCase() })
+          .orderBy('sub.date', 'DESC')
+          .limit(2);
+
+        const recentDates = await subQuery.getRawMany();
+        if (recentDates.length > 0) {
+          const minRecentDate = recentDates[recentDates.length - 1].date;
+          queryBuilder.andWhere('sp.date >= :start', {
+            start: minRecentDate,
+          });
+        } else {
+          queryBuilder.andWhere('sp.date >= :start', {
+            start: this.getPeriodStartDate(period, relativeTo),
+          });
+        }
+      } else {
+        queryBuilder.andWhere('sp.date >= :start', {
+          start: this.getPeriodStartDate(period, relativeTo),
+        });
+      }
+    }
+
+    if (end) {
+      queryBuilder.andWhere('sp.date <= :end', { end: new Date(end) });
+    }
+
+    return queryBuilder;
+  }
+
+  private async fetchAndSaveHistoricalPricesFromMl(
+    symbol: string,
+    period?: TimePeriod,
+  ): Promise<Array<Record<string, unknown>>> {
+    const mlHistory = await this.mlService.getMarketHistory({
+      symbol,
+      type: MarketType.STOCK,
+      period: period || TimePeriod.ONE_MONTH,
+    });
+
+    if (!mlHistory.success || !mlHistory.data) {
+      return [];
+    }
+
+    const historyData = mlHistory.data;
+    const prices = Array.isArray(historyData)
+      ? (historyData as Array<Record<string, unknown>>)
+      : Array.isArray((historyData as any)?.data)
+        ? ((historyData as any).data as Array<Record<string, unknown>>)
+        : [];
+
+    if (prices.length) {
+      this.saveHistoricalPrices(symbol, prices).catch((err) => {
+        this.logger.error(
+          `Error background-saving historical prices for ${symbol}:`,
+          err,
+        );
+      });
+    }
+
+    return prices;
   }
 
   public async getHistoricalPrices(
@@ -298,95 +377,26 @@ export class StocksService extends BaseCRUDService<Stock> {
     end?: string,
   ): Promise<OperationResult<Array<Record<string, unknown>>>> {
     try {
-      let relativeTo = new Date();
-      if (!start && !end) {
-        const latestPrice = await this.priceRepo.findOne({
-          where: { symbol: symbol.toUpperCase() },
-          order: { date: 'DESC' },
-        });
-        if (latestPrice) {
-          relativeTo = latestPrice.date;
-        }
-      }
-
-      const queryBuilder = this.priceRepo
-        .createQueryBuilder('sp')
-        .where('sp.symbol = :symbol', { symbol: symbol.toUpperCase() })
-        .orderBy('sp.date', 'ASC');
-
-      if (start) {
-        queryBuilder.andWhere('sp.date >= :start', { start: new Date(start) });
-      } else if (period) {
-        if (period === TimePeriod.ONE_DAY) {
-          const subQuery = this.priceRepo
-            .createQueryBuilder('sub')
-            .select('sub.date', 'date')
-            .where('sub.symbol = :symbol', { symbol: symbol.toUpperCase() })
-            .orderBy('sub.date', 'DESC')
-            .limit(2);
-
-          const recentDates = await subQuery.getRawMany();
-          if (recentDates.length > 0) {
-            const minRecentDate = recentDates[recentDates.length - 1].date;
-            queryBuilder.andWhere('sp.date >= :start', {
-              start: minRecentDate,
-            });
-          } else {
-            queryBuilder.andWhere('sp.date >= :start', {
-              start: this.getPeriodStartDate(period, relativeTo),
-            });
-          }
-        } else {
-          queryBuilder.andWhere('sp.date >= :start', {
-            start: this.getPeriodStartDate(period, relativeTo),
-          });
-        }
-      }
-
-      if (end) {
-        queryBuilder.andWhere('sp.date <= :end', { end: new Date(end) });
-      }
-
+      const queryBuilder = await this.buildHistoricalQuery(symbol, period, start, end);
       const list = await queryBuilder.getMany();
 
       if (!list.length) {
         this.logger.log(
           `No historical data in DB for ${symbol}. Falling back to ML service...`,
         );
-        const mlHistory = await this.mlService.getMarketHistory({
-          symbol,
-          type: MarketType.STOCK,
-          period: period || TimePeriod.ONE_MONTH,
-        });
-
-        if (mlHistory.success && mlHistory.data) {
-          const historyData = mlHistory.data;
-          const prices = Array.isArray(historyData)
-            ? (historyData as Array<Record<string, unknown>>)
-            : Array.isArray((historyData as any)?.data)
-              ? ((historyData as any).data as Array<Record<string, unknown>>)
-              : [];
-
-          if (prices.length) {
-            this.saveHistoricalPrices(symbol, prices).catch((err) => {
-              this.logger.error(
-                `Error background-saving historical prices for ${symbol}:`,
-                err,
-              );
-            });
-
-            return {
-              success: true,
-              data: prices.map((p) => {
-                const dateValue = p.date ?? p.time ?? '';
-                return {
-                  date: new Date(String(dateValue)).toISOString(),
-                  close: Number(p.close ?? p.Close ?? 0),
-                  volume: Number(p.volume ?? p.Volume ?? 0),
-                };
-              }),
-            };
-          }
+        const prices = await this.fetchAndSaveHistoricalPricesFromMl(symbol, period);
+        if (prices.length) {
+          return {
+            success: true,
+            data: prices.map((p) => {
+              const dateValue = p.date ?? p.time ?? '';
+              return {
+                date: new Date(String(dateValue)).toISOString(),
+                close: Number(p.close ?? p.Close ?? 0),
+                volume: Number(p.volume ?? p.Volume ?? 0),
+              };
+            }),
+          };
         }
       }
 
@@ -405,7 +415,7 @@ export class StocksService extends BaseCRUDService<Stock> {
       );
       return {
         success: false,
-        message: `Failed to get historical prices: ${this.getErrorMessage(error)}`,
+        message: `Failed to get historical prices: ${getErrorMessage(error)}`,
       };
     }
   }
@@ -415,23 +425,18 @@ export class StocksService extends BaseCRUDService<Stock> {
     period: string,
   ): Promise<OperationResult> {
     try {
-      const startDate = this.getPeriodStartDate(period as TimePeriod);
-      const upperSymbol = symbol.toUpperCase();
-
-      const list = await this.priceRepo
-        .createQueryBuilder('sp')
-        .where('sp.symbol = :symbol', { symbol: upperSymbol })
-        .andWhere('sp.date >= :start', { start: startDate })
-        .orderBy('sp.date', 'ASC')
-        .getMany();
-
-      const data = list.map((p) => ({
-        date: p.date,
-        close: p.close,
-        volume: Number(p.volume),
-      }));
-
-      return { success: true, data };
+      const result = await this.getHistoricalPrices(symbol, period as TimePeriod);
+      if (!result.success || !result.data) {
+        return result;
+      }
+      return {
+        success: true,
+        data: result.data.map((p: any) => ({
+          date: new Date(p.date),
+          close: p.close,
+          volume: p.volume,
+        })),
+      };
     } catch (error) {
       this.logger.error(`Error in getHistoricalByPeriod for ${symbol}:`, error);
       return {
@@ -441,3 +446,4 @@ export class StocksService extends BaseCRUDService<Stock> {
     }
   }
 }
+
