@@ -1,10 +1,11 @@
 import os
 import time
+import json
 import pytest
 import pandas as pd
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
-from src.vn_stock.cache import FileCacheManager
+from src.vn_stock.cache import FileCacheManager, RedisCacheManager
 from src.vn_stock.data_source import StockDataSource
 from src.vn_stock.service import StockService
 from src.vn_stock.exceptions import DataFetchException
@@ -155,3 +156,83 @@ def test_stock_service_stocks_list_first_symbol(stock_service_setup):
 def test_stock_service_stocks_list_second_symbol(stock_service_setup):
     stocks_response = stock_service_setup.get_stocks()
     assert stocks_response.items[1].symbol == "FPT"
+
+
+def test_redis_cache_manager_get_is_initially_none():
+    with patch("src.vn_stock.cache.redis.Redis") as mock_redis_class:
+        mock_client = MagicMock()
+        mock_client.get.return_value = None
+        mock_redis_class.return_value = mock_client
+
+        cache = RedisCacheManager(key="test_key", duration_seconds=10)
+        assert cache.get() is None
+        mock_client.get.assert_called_once_with("test_key")
+
+
+def test_redis_cache_manager_get_returns_stored_data():
+    with patch("src.vn_stock.cache.redis.Redis") as mock_redis_class:
+        mock_client = MagicMock()
+        payload = json.dumps({"timestamp": time.time(), "data": {"symbols": ["VCB"]}})
+        mock_client.get.return_value = payload
+        mock_redis_class.return_value = mock_client
+
+        cache = RedisCacheManager(key="test_key", duration_seconds=10)
+        assert cache.get() == {"symbols": ["VCB"]}
+
+
+def test_redis_cache_manager_get_returns_none_after_expiration():
+    with patch("src.vn_stock.cache.redis.Redis") as mock_redis_class:
+        mock_client = MagicMock()
+        payload = json.dumps({"timestamp": time.time() - 20, "data": {"symbols": ["VCB"]}})
+        mock_client.get.return_value = payload
+        mock_redis_class.return_value = mock_client
+
+        cache = RedisCacheManager(key="test_key", duration_seconds=10)
+        assert cache.get() is None
+
+
+def test_redis_cache_manager_get_stale_returns_data_after_expiration():
+    with patch("src.vn_stock.cache.redis.Redis") as mock_redis_class:
+        mock_client = MagicMock()
+        payload = json.dumps({"timestamp": time.time() - 20, "data": {"symbols": ["VCB"]}})
+        mock_client.get.return_value = payload
+        mock_redis_class.return_value = mock_client
+
+        cache = RedisCacheManager(key="test_key", duration_seconds=10)
+        assert cache.get_stale() == {"symbols": ["VCB"]}
+
+
+def test_redis_cache_manager_set_stores_data():
+    with patch("src.vn_stock.cache.redis.Redis") as mock_redis_class:
+        mock_client = MagicMock()
+        mock_redis_class.return_value = mock_client
+
+        cache = RedisCacheManager(key="test_key", duration_seconds=10)
+        data = {"symbols": ["VCB"]}
+        cache.set(data)
+
+        mock_client.set.assert_called_once()
+        args, kwargs = mock_client.set.call_args
+        assert args[0] == "test_key"
+        # Verify JSON
+        val = json.loads(args[1])
+        assert val["data"] == data
+        assert "timestamp" in val
+        assert kwargs["ex"] == 604800  # max(10*2, 604800)
+
+
+def test_redis_cache_manager_connection_error_handled_gracefully():
+    with patch("src.vn_stock.cache.redis.Redis") as mock_redis_class:
+        mock_client = MagicMock()
+        mock_client.get.side_effect = Exception("Redis connection refused")
+        mock_client.set.side_effect = Exception("Redis connection refused")
+        mock_redis_class.return_value = mock_client
+
+        cache = RedisCacheManager(key="test_key", duration_seconds=10)
+
+        # Should not raise exception, just return None
+        assert cache.get() is None
+        assert cache.get_stale() is None
+        # Should not raise exception
+        cache.set({"symbols": ["VCB"]})
+

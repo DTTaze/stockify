@@ -39,3 +39,5 @@ pydantic==2.9.2
 pydantic-settings==2.4.0
 vnstock3>=0.1.0
 python-multipart==0.0.9
+redis>=5.0.0
+

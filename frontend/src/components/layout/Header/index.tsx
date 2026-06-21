@@ -1,23 +1,8 @@
 "use client";
 
-import {
-  Activity,
-  Bell,
-  Cpu,
-  Database,
-  LayoutDashboard,
-  LogOut,
-  Menu,
-  Shield,
-  Star,
-  TrendingUp,
-  User,
-  Users,
-  X,
-} from "lucide-react";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { useMemo, useState } from "react";
+import { Bell, LogOut, Menu, Moon, Sun, User, X } from "lucide-react";
+import { useTheme } from "next-themes";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 import { ButtonCustom } from "@/components/common/form/button";
@@ -25,16 +10,37 @@ import { HeaderSkeleton } from "@/components/layout/Header/HeaderSkeleton";
 import { ROLE_NAME } from "@/constants/auth";
 import { useIsAuthenticated } from "@/hooks/common/useIsAuthenticated";
 import { useLogout } from "@/hooks/common/useLogout";
+import { Link, usePathname } from "@/i18n/navigation";
+import { useLanguage } from "@/providers/LanguageProvider";
 import {
   initialDataProfile,
   useQueryProfile,
 } from "@/queries/users/QueryHooksUser";
+
+import { type NavItem, useHeaderConfig } from "./useHeaderConfig";
 
 export default function Header() {
   const pathname = usePathname();
   const { handleLogout } = useLogout();
   const isAuthenticated = useIsAuthenticated();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { locale, setLocale, t } = useLanguage();
+  const { resolvedTheme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const isDark = mounted ? resolvedTheme === "dark" : false;
+
+  const toggleTheme = () => {
+    setTheme(resolvedTheme === "dark" ? "light" : "dark");
+  };
+
+  const toggleLanguage = () => {
+    setLocale(locale === "vi" ? "en" : "vi");
+  };
 
   const {
     data: profile = initialDataProfile,
@@ -47,75 +53,7 @@ export default function Header() {
     toast.error("Unable to get user information, please log in again!");
   }
 
-  const config = useMemo(() => {
-    if (profile.roles.includes(ROLE_NAME.ADMIN)) {
-      return {
-        logo: (
-          <div className="bg-accent-500 rounded-lg p-2.5">
-            <Shield className="text-brand-900 h-7 w-7" />
-          </div>
-        ),
-        title: "ADMIN PANEL",
-        subtitle: "System Management",
-        badgeLabel: "Administrator",
-        username: profile.username || "Admin",
-        navItems: [
-          {
-            path: "/admin/dashboard",
-            label: "Dashboard",
-            icon: LayoutDashboard,
-          },
-          {
-            path: "/admin/users",
-            label: "Quản lý User",
-            icon: Users,
-          },
-          {
-            path: "/admin/data",
-            label: "Quản lý Dữ liệu",
-            icon: Database,
-          },
-          {
-            path: "/admin/models",
-            label: "Quản lý Model",
-            icon: Cpu,
-          },
-          {
-            path: "/admin/monitoring",
-            label: "Theo dõi Hệ thống",
-            icon: Activity,
-          },
-        ],
-        showNotification: false,
-      };
-    }
-
-    return {
-      logo: <TrendingUp className="hover:text-accent-500 h-8 w-8" />,
-      title: "DRAGON PREDICT",
-      subtitle: "Investment Intelligence",
-      badgeLabel: "Investor",
-      username: profile.username,
-      navItems: [
-        {
-          path: "/user/dashboard",
-          label: "Dashboard",
-          icon: LayoutDashboard,
-        },
-        {
-          path: "/user/watchlist",
-          label: "Watchlist",
-          icon: Star,
-        },
-        {
-          path: "/user/stocks",
-          label: "Danh mục",
-          icon: Database,
-        },
-      ],
-      showNotification: true,
-    };
-  }, [profile]);
+  const config = useHeaderConfig(profile, t);
 
   if (isFetching || isAuthenticated === undefined) {
     return <HeaderSkeleton />;
@@ -123,7 +61,7 @@ export default function Header() {
 
   return (
     <>
-      <header className="border-brand-700 bg-brand-900 border-b text-white">
+      <header className="border-brand-700 bg-brand-900 border-b text-white dark:border-neutral-800 dark:bg-neutral-950">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex h-20 items-center justify-between">
             <div className="flex items-center space-x-4">
@@ -136,6 +74,32 @@ export default function Header() {
             </div>
 
             <div className="hidden items-center space-x-6 md:flex">
+              {/* Language Selector */}
+              <ButtonCustom
+                onClick={toggleLanguage}
+                className="flex cursor-pointer items-center space-x-1 rounded-lg bg-white/10 px-3 py-2 font-mono text-xs font-bold text-white uppercase select-none hover:bg-white/20"
+                title={
+                  locale === "vi"
+                    ? "Switch to English"
+                    : "Chuyển sang Tiếng Việt"
+                }
+              >
+                <span>{locale === "vi" ? "EN" : "VI"}</span>
+              </ButtonCustom>
+
+              {/* Theme Toggle */}
+              <ButtonCustom
+                onClick={toggleTheme}
+                className="cursor-pointer rounded-lg bg-white/10 p-2 text-white hover:bg-white/20"
+                title={isDark ? "Light Mode" : "Dark Mode"}
+              >
+                {isDark ? (
+                  <Sun className="h-5 w-5" />
+                ) : (
+                  <Moon className="h-5 w-5" />
+                )}
+              </ButtonCustom>
+
               {config.showNotification && (
                 <ButtonCustom className="relative rounded-lg p-2 hover:bg-white/10">
                   <Bell className="h-5 w-5" />
@@ -165,7 +129,7 @@ export default function Header() {
                 className="flex items-center space-x-2 rounded-lg bg-white/10 px-4 py-2 hover:bg-white/20"
               >
                 <LogOut className="h-4 w-4" />
-                <span className="text-sm">Đăng xuất</span>
+                <span className="text-sm">{t("logout")}</span>
               </ButtonCustom>
             </div>
 
@@ -183,10 +147,10 @@ export default function Header() {
         </div>
       </header>
 
-      <nav className="border-b border-gray-200 bg-white shadow-sm">
+      <nav className="border-b border-gray-200 bg-white shadow-sm dark:border-neutral-800 dark:bg-neutral-900">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex space-x-1 overflow-x-auto">
-            {config.navItems.map((item) => {
+            {config.navItems.map((item: NavItem) => {
               const Icon = item.icon;
               const isActive = pathname === item.path;
 
@@ -196,8 +160,8 @@ export default function Header() {
                   href={item.path}
                   className={`flex items-center space-x-2 border-b-2 px-6 py-4 whitespace-nowrap transition-all ${
                     isActive
-                      ? "border-accent-500 text-brand-900 bg-blue-50"
-                      : "hover:text-brand-900 border-transparent text-gray-600 hover:bg-gray-50"
+                      ? "border-accent-500 text-brand-900 dark:text-accent-400 bg-blue-50 dark:bg-neutral-950/40"
+                      : "hover:text-brand-900 border-transparent text-gray-600 hover:bg-gray-50 dark:text-neutral-400 dark:hover:bg-neutral-800/50 dark:hover:text-white"
                   }`}
                 >
                   <Icon className="h-5 w-5" />
@@ -210,9 +174,32 @@ export default function Header() {
       </nav>
 
       {mobileMenuOpen && (
-        <div className="bg-brand-900 p-4 text-white md:hidden">
+        <div className="bg-brand-900 p-4 text-white md:hidden dark:bg-neutral-950">
+          <div className="border-brand-800 mb-4 flex items-center justify-between border-b pb-4 dark:border-neutral-800">
+            <ButtonCustom
+              onClick={toggleLanguage}
+              className="flex items-center space-x-1 rounded-lg bg-white/10 px-3 py-1.5 text-xs font-bold text-white uppercase hover:bg-white/20"
+            >
+              <span>
+                {locale === "vi" ? "Language: English" : "Ngôn ngữ: Tiếng Việt"}
+              </span>
+            </ButtonCustom>
+            <ButtonCustom
+              onClick={toggleTheme}
+              className="flex items-center space-x-2 rounded-lg bg-white/10 px-3 py-1.5 text-white"
+            >
+              {isDark ? (
+                <Sun className="h-4 w-4" />
+              ) : (
+                <Moon className="h-4 w-4" />
+              )}
+              <span className="text-xs">
+                {isDark ? "Light Theme" : "Dark Theme"}
+              </span>
+            </ButtonCustom>
+          </div>
           <div className="space-y-2">
-            {config.navItems.map((item) => {
+            {config.navItems.map((item: NavItem) => {
               const Icon = item.icon;
 
               return (
@@ -233,7 +220,7 @@ export default function Header() {
               className="flex w-full items-center space-x-3 rounded-lg px-4 py-3 hover:bg-white/10"
             >
               <LogOut className="h-5 w-5" />
-              <span>Đăng xuất</span>
+              <span>{t("logout")}</span>
             </ButtonCustom>
           </div>
         </div>

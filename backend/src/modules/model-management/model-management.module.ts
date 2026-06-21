@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 
-import { ModelManagementController } from './model-management.controller';
-import { ModelManagementService } from './model-management.service';
+import { ModelManagementController } from './controllers/model-management.controller';
+import { ModelManagementService } from './services/model-management.service';
 
 @Module({
   controllers: [ModelManagementController],

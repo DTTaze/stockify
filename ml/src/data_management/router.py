@@ -28,7 +28,7 @@ def get_service() -> DataManagementService:
     summary="Get data management summary",
     description="Retrieve dashboard summary information for stock data management",
 )
-async def get_data_management_summary(
+def get_data_management_summary(
     service: DataManagementService = Depends(get_service),
 ) -> DataManagementSummaryResponse:
     return DataManagementSummaryResponse(**service.get_summary())
@@ -40,7 +40,7 @@ async def get_data_management_summary(
     summary="Get managed stock data list",
     description="Retrieve a list of stock symbols with processed data status",
 )
-async def get_data_management_stocks(
+def get_data_management_stocks(
     service: DataManagementService = Depends(get_service),
 ) -> DataManagementStocksResponse:
     return DataManagementStocksResponse(
@@ -62,7 +62,7 @@ async def get_data_management_stocks(
     summary="Update data for a single symbol",
     description="Fetch raw data and refresh processed data for a specific stock symbol",
 )
-async def update_stock_data(
+def update_stock_data(
     symbol: str = Path(..., description="Stock symbol to update"),
     background_tasks: BackgroundTasks = None,
     service: DataManagementService = Depends(get_service),
@@ -77,7 +77,7 @@ async def update_stock_data(
     summary="Update data for all supported symbols",
     description="Refresh processed data for all supported stock symbols",
 )
-async def update_all_stock_data(
+def update_all_stock_data(
     background_tasks: BackgroundTasks = None,
     service: DataManagementService = Depends(get_service),
 ) -> DataUpdateAllResponse:

@@ -1,5 +1,4 @@
-import { LRUCache } from 'lru-cache';
-import { AuditService, ErrorLog } from 'mvc-common-toolkit';
+import { AuditService, CacheService, ErrorLog, SET_EXPIRE_POLICY } from 'mvc-common-toolkit';
 import {
   Observable,
   TimeoutError,
@@ -45,10 +44,8 @@ export class CallQueueInterceptor implements NestInterceptor {
     @Inject(INJECTION_TOKEN.AUDIT_SERVICE)
     protected auditService: AuditService,
 
-    @Optional()
-    protected cacheEngine = new LRUCache({
-      max: 1000000,
-    }),
+    @Inject(INJECTION_TOKEN.REDIS_SERVICE)
+    protected cacheService: CacheService,
   ) {}
 
   public async intercept(
@@ -70,18 +67,25 @@ export class CallQueueInterceptor implements NestInterceptor {
     const reqUrl = httpReq.url;
     const userId = user.id;
 
-    const cacheKey = `${userId}:${method}:${reqUrl}`;
-
-    const existingValue =
-      (this.cacheEngine.get(cacheKey) as number | undefined) || 0;
+    const cacheKey = `call_queue:${userId}:${method}:${reqUrl}`;
 
     const maxConcurrencyCall =
       this.reflector.get(METADATA_KEY.MAX_CONCURRENCY_CALL, ctx.getHandler()) ||
       DEFAULT_MAX_CONCURRENT_CALL;
 
-    const newValue = existingValue + 1;
+    // Atomic increment using Redis
+    const newValue = await this.cacheService.incrBy(cacheKey, 1);
+    
+    // Set 3 minute TTL (180s) only if not already set, to prevent orphaned locks on crash
+    await this.cacheService.expire(cacheKey, {
+      policy: SET_EXPIRE_POLICY.IF_NOT_EXISTS,
+      value: 180,
+    });
 
     if (newValue > maxConcurrencyCall) {
+      // Revert the increment
+      await this.cacheService.decrBy(cacheKey, 1);
+
       this.logger.warn(
         `user ${user.id} exceeded concurrency limit for cache key ${cacheKey}`,
       );
@@ -98,8 +102,6 @@ export class CallQueueInterceptor implements NestInterceptor {
         () => new ForbiddenException('Max concurrency call reached!'),
       );
     }
-
-    this.cacheEngine.set(cacheKey, newValue);
 
     return next.handle().pipe(
       timeout(60 * 3 * 1000),
@@ -121,20 +123,20 @@ export class CallQueueInterceptor implements NestInterceptor {
             }),
           );
         }
-        // Perform any additional error handling if necessary
         return throwError(() => err);
       }),
       finalize(() => {
-        const existingValue =
-          (this.cacheEngine.get(cacheKey) as number | undefined) || 0;
-
-        if (existingValue === 0) {
-          return;
-        }
-
-        const newValue = existingValue - 1;
-
-        this.cacheEngine.set(cacheKey, newValue);
+        const decrTask = async () => {
+          try {
+            const val = await this.cacheService.decrBy(cacheKey, 1);
+            if (val <= 0) {
+              await this.cacheService.del(cacheKey);
+            }
+          } catch (e) {
+            this.logger.error(`Failed to decrement concurrency counter for key ${cacheKey}: ${e}`);
+          }
+        };
+        decrTask();
       }),
     );
   }

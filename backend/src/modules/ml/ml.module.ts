@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 
-import { MLController } from './ml.controller';
-import { MLService } from './ml.service';
+import { MLController } from './controllers/ml.controller';
+import { MLService } from './services/ml.service';
 
 @Module({
   controllers: [MLController],

@@ -17,8 +17,6 @@ import { AppModule } from './app.module';
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
-  app.enableCors();
-
   app.useBodyParser('json', { limit: '15mb' });
   app.useBodyParser('urlencoded', { limit: '15mb', extended: true });
 
@@ -40,7 +38,7 @@ async function bootstrap() {
 
   if (process.env.ENABLE_CORS === 'true') {
     app.enableCors({
-      origin: '*',
+      origin: true,
       methods: '*',
       credentials: true,
     });

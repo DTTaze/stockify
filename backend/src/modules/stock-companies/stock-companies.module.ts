@@ -1,9 +1,9 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
-import { StockCompaniesController } from './stock-companies.controller';
-import { StockCompanies } from './stock-companies.model';
-import { StockCompaniesService } from './stock-companies.service';
+import { StockCompaniesController } from './controllers/stock-companies.controller';
+import { StockCompanies } from './entities/stock-companies.model';
+import { StockCompaniesService } from './services/stock-companies.service';
 
 @Module({
   imports: [TypeOrmModule.forFeature([StockCompanies])],

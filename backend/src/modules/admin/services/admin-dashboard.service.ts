@@ -2,8 +2,8 @@ import { OperationResult } from 'mvc-common-toolkit';
 
 import { Injectable, Logger } from '@nestjs/common';
 
-import { DataManagementService } from '@modules/data-management/data-management.service';
-import { ModelManagementService } from '@modules/model-management/model-management.service';
+import { DataManagementService } from '@modules/data-management/services/data-management.service';
+import { ModelManagementService } from '@modules/model-management/services/model-management.service';
 import { UserService } from '@modules/user/services/user.service';
 
 import {

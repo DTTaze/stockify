@@ -9,6 +9,10 @@ export const stockServices = {
   getIndexQuote: (params: MarketQuoteParams): Promise<AxiosResponse> =>
     axiosClient.get(`ml/market/quote`, { params }),
 
+  // Market indices history (vnindex, vn30, hnxindex, upcomindex)
+  getIndexHistorical: (params: MarketQuoteParams): Promise<AxiosResponse> =>
+    axiosClient.get(`ml/market/history`, { params }),
+
   // Individual stock quote from DB
   getStockQuote: (params: MarketQuoteParams): Promise<AxiosResponse> =>
     axiosClient.get(`stocks/${params.symbol}/quote`, {

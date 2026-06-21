@@ -22,7 +22,7 @@ def get_service() -> PredictionService:
     summary="Get supported symbols",
     description="Get list of stock symbols with available trained models",
 )
-async def get_supported_symbols(
+def get_supported_symbols(
     service: PredictionService = Depends(get_service),
 ) -> schemas.SupportedSymbolsResponse:
     return service.get_supported_symbols()
@@ -34,7 +34,7 @@ async def get_supported_symbols(
     summary="Get AI price prediction",
     description="Get AI predicted prices for tomorrow, 3 days, 7 days, and 14 days ahead",
 )
-async def get_prediction(
+def get_prediction(
     symbol: str = Path(..., description="Stock symbol (e.g., VCB, VIC, VNM)"),
     service: PredictionService = Depends(get_service),
 ) -> schemas.PredictionResponse:

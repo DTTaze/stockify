@@ -3,7 +3,7 @@
 export function HeaderSkeleton() {
   return (
     <>
-      <header className="border-brand-700 bg-brand-900 border-b text-white">
+      <header className="border-brand-700 bg-brand-900 border-b text-white dark:border-neutral-800 dark:bg-neutral-950">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex h-20 animate-pulse items-center justify-between">
             <div className="flex items-center space-x-4">
@@ -24,12 +24,12 @@ export function HeaderSkeleton() {
         </div>
       </header>
 
-      <nav className="border-b border-gray-200 bg-white shadow-sm">
+      <nav className="border-b border-gray-200 bg-white shadow-sm dark:border-neutral-800 dark:bg-neutral-900">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex animate-pulse space-x-3 py-3">
-            <div className="h-10 w-32 rounded bg-gray-200" />
-            <div className="h-10 w-32 rounded bg-gray-200" />
-            <div className="h-10 w-32 rounded bg-gray-200" />
+            <div className="h-10 w-32 rounded bg-gray-200 dark:bg-neutral-800" />
+            <div className="h-10 w-32 rounded bg-gray-200 dark:bg-neutral-800" />
+            <div className="h-10 w-32 rounded bg-gray-200 dark:bg-neutral-800" />
           </div>
         </div>
       </nav>

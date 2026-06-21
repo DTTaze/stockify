@@ -1,5 +1,5 @@
 from typing import List
-from fastapi import APIRouter, Depends, Query, Path
+from fastapi import APIRouter, Depends, Query, Path, BackgroundTasks
 
 from .service import StockService, stock_service
 from . import schemas
@@ -24,7 +24,7 @@ def get_service() -> StockService:
     response_model=schemas.MarketQuote,
     summary="Get market quote",
 )
-async def get_market_quote(
+def get_market_quote(
     symbol: str = Query(..., description="Symbol (e.g., VCB, vn-index)"),
     type: schemas.MarketType = Query(..., description="Market type: stock | index"),
     period: schemas.Period = Query("1d", description="Time period"),
@@ -41,7 +41,7 @@ async def get_market_quote(
     response_model=schemas.MarketHistoricalResponse,
     summary="Get historical data",
 )
-async def get_market_historical(
+def get_market_historical(
     symbol: str = Query(..., description="Symbol (VCB, vn-index)"),
     type: schemas.MarketType = Query(..., description="stock | index"),
     period: schemas.Period = Query("1mo", description="Time period"),
@@ -58,7 +58,7 @@ async def get_market_historical(
     response_model=schemas.MarketListResponse,
     summary="Get market list",
 )
-async def get_market_list(
+def get_market_list(
     type: schemas.MarketType = Query(..., description="stock | index"),
     service: StockService = Depends(get_service),
 ) -> schemas.MarketListResponse:
@@ -73,7 +73,7 @@ async def get_market_list(
     response_model=List[schemas.StockByExchange],
     summary="Get stock symbols by exchange",
 )
-async def get_stocks_by_exchange(
+def get_stocks_by_exchange(
     exchange: str = Query("ALL", description="Exchange (HOSE, HNX, UPCOM, or ALL)"),
     service: StockService = Depends(get_service),
 ) -> List[schemas.StockByExchange]:
@@ -85,7 +85,7 @@ async def get_stocks_by_exchange(
     response_model=List[schemas.StockDetailResponse],
     summary="Get detailed stock symbols by exchange",
 )
-async def get_stock_details(
+def get_stock_details(
     exchange: str = Query(
         "ALL", description="Exchange (HOSE, HNX, UPCOM, DELISTED, or ALL)"
     ),
@@ -99,10 +99,11 @@ async def get_stock_details(
     response_model=dict,
     summary="Get symbols grouped by classification",
 )
-async def get_grouped_symbols(
+def get_grouped_symbols(
+    background_tasks: BackgroundTasks,
     service: StockService = Depends(get_service),
 ) -> dict:
-    return service.get_grouped_symbols()
+    return service.get_grouped_symbols(background_tasks)
 
 
 @router.get(
@@ -110,7 +111,7 @@ async def get_grouped_symbols(
     response_model=List[str],
     summary="Get symbols for a specific group",
 )
-async def get_symbols_by_group(
+def get_symbols_by_group(
     group: str = Path(..., description="Group name (e.g. VN30, CW, ETF, FU_INDEX)"),
     service: StockService = Depends(get_service),
 ) -> List[str]:
@@ -122,7 +123,7 @@ async def get_symbols_by_group(
     response_model=List[schemas.IcbIndustryResponse],
     summary="Get all ICB industries",
 )
-async def get_icb_industries(
+def get_icb_industries(
     service: StockService = Depends(get_service),
 ) -> List[schemas.IcbIndustryResponse]:
     return service.get_icb_industries()
@@ -133,7 +134,7 @@ async def get_icb_industries(
     response_model=List[schemas.SymbolIndustryResponse],
     summary="Get symbols mapped to industries",
 )
-async def get_symbols_by_industries(
+def get_symbols_by_industries(
     service: StockService = Depends(get_service),
 ) -> List[schemas.SymbolIndustryResponse]:
     return service.get_symbols_by_industries()
@@ -144,7 +145,7 @@ async def get_symbols_by_industries(
     response_model=List[str],
     summary="Get all futures contracts symbols",
 )
-async def get_futures(
+def get_futures(
     service: StockService = Depends(get_service),
 ) -> List[str]:
     return service.get_futures()
@@ -155,7 +156,7 @@ async def get_futures(
     response_model=List[str],
     summary="Get all government bonds symbols",
 )
-async def get_government_bonds(
+def get_government_bonds(
     service: StockService = Depends(get_service),
 ) -> List[str]:
     return service.get_government_bonds()
@@ -166,7 +167,7 @@ async def get_government_bonds(
     response_model=List[str],
     summary="Get all indices symbols",
 )
-async def get_indices_list(
+def get_indices_list(
     service: StockService = Depends(get_service),
 ) -> List[str]:
     return service.get_all_indices()

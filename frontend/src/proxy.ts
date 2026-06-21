@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
+import createMiddleware from "next-intl/middleware";
 
 import { ACCESS_TOKEN, ROLE, ROLE_NAME } from "./constants/auth";
+import { routing } from "./i18n/routing";
 import { protectedRouteEnum, publicRouteEnum } from "./types/route";
 
 export const AUTH_ROUTES = [
@@ -35,8 +37,29 @@ function isAdminRoute(pathname: string) {
   return ADMIN_ROUTES.some((route) => pathname.startsWith(route));
 }
 
+const intlMiddleware = createMiddleware(routing);
+
 export function proxy(req: NextRequest) {
+  // 1. Run next-intl middleware first to handle locale redirects and headers
+  const response = intlMiddleware(req);
+
+  // If next-intl decided to redirect, honor it
+  if (
+    response.status === 307 ||
+    response.status === 308 ||
+    response.status === 302
+  ) {
+    return response;
+  }
+
   const { pathname } = req.nextUrl;
+
+  // Extract locale prefix
+  const localeMatch = pathname.match(/^\/(vi|en)(\/|$)/);
+  const locale = localeMatch ? localeMatch[1] : "vi";
+
+  // Clean pathname for route mapping (strip the locale prefix)
+  const cleanPathname = pathname.replace(/^\/(vi|en)(\/|$)/, "/") || "/";
 
   const token = req.cookies.get(ACCESS_TOKEN)?.value;
   const roleCookie = req.cookies.get(ROLE)?.value;
@@ -47,32 +70,38 @@ export function proxy(req: NextRequest) {
   const isUser = roles.includes(ROLE_NAME.USER);
 
   // chưa login
-  if (!token && (isUserRoute(pathname) || isAdminRoute(pathname))) {
-    return NextResponse.redirect(new URL("/login", req.url));
+  if (!token && (isUserRoute(cleanPathname) || isAdminRoute(cleanPathname))) {
+    return NextResponse.redirect(new URL(`/${locale}/login`, req.url));
   }
 
   // login rồi mà vào auth page
-  if (token && isPublicRoute(pathname)) {
+  if (token && isPublicRoute(cleanPathname)) {
     if (isAdmin) {
-      return NextResponse.redirect(new URL("/admin/dashboard", req.url));
+      return NextResponse.redirect(
+        new URL(`/${locale}/admin/dashboard`, req.url),
+      );
     }
 
     if (isUser) {
-      return NextResponse.redirect(new URL("/user/dashboard", req.url));
+      return NextResponse.redirect(
+        new URL(`/${locale}/user/dashboard`, req.url),
+      );
     }
   }
 
   // admin không được vào user route
-  if (isAdmin && isUserRoute(pathname)) {
-    return NextResponse.redirect(new URL("/admin/dashboard", req.url));
+  if (isAdmin && isUserRoute(cleanPathname)) {
+    return NextResponse.redirect(
+      new URL(`/${locale}/admin/dashboard`, req.url),
+    );
   }
 
   // user không được vào admin route
-  if (isUser && isAdminRoute(pathname)) {
-    return NextResponse.redirect(new URL("/user/dashboard", req.url));
+  if (isUser && isAdminRoute(cleanPathname)) {
+    return NextResponse.redirect(new URL(`/${locale}/user/dashboard`, req.url));
   }
 
-  return NextResponse.next();
+  return response;
 }
 
 export const config = {

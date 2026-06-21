@@ -1,0 +1,72 @@
+"use client";
+
+import { Skeleton } from "@/components/ui/Skeleton";
+import { useLanguage } from "@/providers/LanguageProvider";
+import { WatchlistQuoteItem } from "@/types/watchlist/watchlist.type";
+import { cn } from "@/utils";
+
+type WatchlistSummaryProps = {
+  watchlist: WatchlistQuoteItem[];
+  totalValue: number;
+  isLoading?: boolean;
+};
+
+export function WatchlistSummary({
+  watchlist,
+  totalValue,
+  isLoading,
+}: WatchlistSummaryProps) {
+  const { t } = useLanguage();
+  const total = watchlist.length;
+  const positiveCount = watchlist.filter((item) => item.change > 0).length;
+  const negativeCount = watchlist.filter((item) => item.change < 0).length;
+
+  const cards = [
+    {
+      label: t("watchlist.totalStocks"),
+      value: total,
+      textClass: "text-brand-900",
+    },
+    {
+      label: t("watchlist.priceUp"),
+      value: positiveCount,
+      textClass: "text-green-600",
+    },
+    {
+      label: t("watchlist.priceDown"),
+      value: negativeCount,
+      textClass: "text-red-600",
+    },
+    {
+      label: t("watchlist.totalValue"),
+      value: totalValue.toLocaleString("vi-VN") + " ₫",
+      textClass: "text-brand-900 font-semibold",
+    },
+  ];
+
+  return (
+    <div className={cn("grid grid-cols-1 gap-4", "md:grid-cols-4")}>
+      {cards.map((card) => (
+        <div
+          key={card.label}
+          className={cn(
+            "rounded-xl border border-gray-200",
+            "bg-white",
+            "p-4",
+            "shadow-sm",
+          )}
+        >
+          <div className={cn("mb-1", "text-sm text-gray-600")}>
+            {card.label}
+          </div>
+
+          {isLoading ? (
+            <Skeleton className="mt-1 h-9 w-20" />
+          ) : (
+            <div className={cn("text-3xl", card.textClass)}>{card.value}</div>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}

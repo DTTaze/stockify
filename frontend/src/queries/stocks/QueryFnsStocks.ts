@@ -4,6 +4,7 @@ import {
   getGovernmentBondsHandlers,
   getIcbIndustriesHandlers,
   getIcbStocksHandlers,
+  getIndexHistoricalHandlers,
   getIndexQuoteHandlers,
   getIndicesHandlers,
   getMarketGroupsHandlers,
@@ -39,6 +40,18 @@ export const getIndexQuoteQueryFn = async (
 
   if (!response.success) {
     throw new Error(response.message || "Failed to fetch index quote");
+  }
+
+  return response.data;
+};
+
+export const getIndexHistoricalQueryFn = async (
+  params: MarketQuoteParams,
+): Promise<StockHistoricalDataType[]> => {
+  const response = await getIndexHistoricalHandlers(params);
+
+  if (!response.success) {
+    throw new Error(response.message || "Failed to fetch index historical");
   }
 
   return response.data;

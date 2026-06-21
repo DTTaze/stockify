@@ -12,6 +12,10 @@ class VnStockConfig(BaseSettings):
 
     cache_enabled: bool = True
     cache_expiration_minutes: int = 5
+    redis_host: str = os.getenv("REDIS_HOST", "localhost")
+    redis_port: int = int(os.getenv("REDIS_PORT", "6379"))
+    redis_password: Optional[str] = os.getenv("REDIS_PASSWORD", None)
+
 
     api_prefix: str = "/api/v1/indices"
     api_tags: list = ["Stock Indices"]

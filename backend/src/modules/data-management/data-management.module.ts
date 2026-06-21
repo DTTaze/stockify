@@ -1,9 +1,9 @@
 import { Module } from '@nestjs/common';
 
-import { StocksModule } from '../stocks/stocks.module';
-import { DataManagementSchedulerService } from './data-management-scheduler.service';
-import { DataManagementController } from './data-management.controller';
-import { DataManagementService } from './data-management.service';
+import { StocksModule } from '@modules/stocks/stocks.module';
+import { DataManagementSchedulerService } from './services/data-management-scheduler.service';
+import { DataManagementController } from './controllers/data-management.controller';
+import { DataManagementService } from './services/data-management.service';
 
 @Module({
   imports: [StocksModule],

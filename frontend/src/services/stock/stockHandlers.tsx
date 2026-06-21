@@ -21,6 +21,14 @@ export const getIndexQuoteHandlers = async (
   return response.data;
 };
 
+export const getIndexHistoricalHandlers = async (
+  params: MarketQuoteParams,
+): Promise<ApiResponse<StockHistoricalDataType[]>> => {
+  const response = await stockServices.getIndexHistorical(params);
+
+  return response.data;
+};
+
 export const getStockQuoteHandlers = async (
   params: MarketQuoteParams,
 ): Promise<ApiResponse<StockDataType>> => {

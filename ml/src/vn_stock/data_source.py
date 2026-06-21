@@ -77,85 +77,120 @@ class VnstockDataSource(StockDataSource):
         if self._Quote is None or self._Listing is None:
             raise ImportError("vnstock library is not installed or available.")
 
+    def _execute_with_retry(self, func, action_name: str, *args, **kwargs):
+        from .config import vn_stock_config
+        retries = vn_stock_config.vnstock_retry_count
+        delay = 1.0  # seconds
+
+        for attempt in range(retries):
+            try:
+                return func(*args, **kwargs)
+            except Exception as e:
+                if attempt == retries - 1:
+                    logger.error(
+                        f"All {retries} attempts failed for {action_name} (source: {self.source}): {e}"
+                    )
+                    raise
+                logger.warning(
+                    f"Attempt {attempt + 1}/{retries} failed for {action_name} (source: {self.source}): {e}. Retrying in {delay}s..."
+                )
+                time.sleep(delay)
+                delay *= 2.0  # exponential backoff
+
     def fetch_history(
         self, symbol: str, start_date: str, end_date: str
     ) -> pd.DataFrame:
         self._ensure_library()
-        quote = self._Quote(symbol=symbol, source=self.source)
-        df = quote.history(start=start_date, end=end_date, interval="1D")
-        return df
+        def _run():
+            quote = self._Quote(symbol=symbol, source=self.source)
+            return quote.history(start=start_date, end=end_date, interval="1D")
+        return self._execute_with_retry(_run, f"fetch_history for {symbol}")
 
     def fetch_symbols_by_exchange(self, exchange: str) -> pd.DataFrame:
         self._ensure_library()
-        listing = self._Listing(source=self.source)
-        return listing.symbols_by_exchange(exchange=exchange, to_df=True)
+        def _run():
+            listing = self._Listing(source=self.source)
+            return listing.symbols_by_exchange(exchange=exchange, to_df=True)
+        return self._execute_with_retry(_run, f"fetch_symbols_by_exchange for {exchange}")
 
     def fetch_all_symbols(self) -> pd.DataFrame:
         self._ensure_library()
-        listing = self._Listing(source=self.source)
-        return listing.all_symbols()
+        def _run():
+            listing = self._Listing(source=self.source)
+            return listing.all_symbols()
+        return self._execute_with_retry(_run, "fetch_all_symbols")
 
     def fetch_symbols_by_group(self, group_name: str) -> List[str]:
         self._ensure_library()
-        listing = self._Listing(source=self.source)
-        res = listing.symbols_by_group(group_name=group_name)
-        if res is not None:
-            if hasattr(res, "tolist"):
-                return res.tolist()
-            return list(res)
-        return []
+        def _run():
+            listing = self._Listing(source=self.source)
+            res = listing.symbols_by_group(group_name=group_name)
+            if res is not None:
+                if hasattr(res, "tolist"):
+                    return res.tolist()
+                return list(res)
+            return []
+        return self._execute_with_retry(_run, f"fetch_symbols_by_group for {group_name}")
 
     def fetch_industries_icb(self) -> pd.DataFrame:
         self._ensure_library()
-        listing = self._Listing(source=self.source)
-        return listing.industries_icb()
+        def _run():
+            listing = self._Listing(source=self.source)
+            return listing.industries_icb()
+        return self._execute_with_retry(_run, "fetch_industries_icb")
 
     def fetch_symbols_by_industries(self) -> pd.DataFrame:
         self._ensure_library()
-        listing = self._Listing(source=self.source)
-        return listing.symbols_by_industries()
+        def _run():
+            listing = self._Listing(source=self.source)
+            return listing.symbols_by_industries()
+        return self._execute_with_retry(_run, "fetch_symbols_by_industries")
 
     def fetch_all_future_indices(self) -> List[str]:
         self._ensure_library()
-        listing = self._Listing(source=self.source)
-        res = listing.all_future_indices()
-        if res is not None:
-            if hasattr(res, "tolist"):
-                return res.tolist()
-            return list(res)
-        return []
+        def _run():
+            listing = self._Listing(source=self.source)
+            res = listing.all_future_indices()
+            if res is not None:
+                if hasattr(res, "tolist"):
+                    return res.tolist()
+                return list(res)
+            return []
+        return self._execute_with_retry(_run, "fetch_all_future_indices")
 
     def fetch_all_government_bonds(self) -> List[str]:
         self._ensure_library()
-        listing = self._Listing(source=self.source)
-
-        # Try both common naming conventions in vnstock library
-        if hasattr(listing, "all_government_bonds"):
-            res = listing.all_government_bonds()
-            if res is not None:
-                if hasattr(res, "tolist"):
-                    return res.tolist()
-                return list(res)
-        if hasattr(listing, "all_bonds"):
-            res = listing.all_bonds()
-            if res is not None:
-                if hasattr(res, "tolist"):
-                    return res.tolist()
-                return list(res)
-        return []
+        def _run():
+            listing = self._Listing(source=self.source)
+            if hasattr(listing, "all_government_bonds"):
+                res = listing.all_government_bonds()
+                if res is not None:
+                    if hasattr(res, "tolist"):
+                        return res.tolist()
+                    return list(res)
+            if hasattr(listing, "all_bonds"):
+                res = listing.all_bonds()
+                if res is not None:
+                    if hasattr(res, "tolist"):
+                        return res.tolist()
+                    return list(res)
+            return []
+        return self._execute_with_retry(_run, "fetch_all_government_bonds")
 
     def fetch_all_indices(self) -> List[str]:
         self._ensure_library()
-        listing = self._Listing(source=self.source)
-        if hasattr(listing, "all_indices"):
-            res = getattr(listing, "all_indices")()
-            if res is not None:
-                if hasattr(res, "tolist"):
-                    return res.tolist()
-                elif hasattr(res, "symbol"):
-                    return res["symbol"].tolist()
-                return list(res)
-        return []
+        def _run():
+            listing = self._Listing(source=self.source)
+            if hasattr(listing, "all_indices"):
+                res = getattr(listing, "all_indices")()
+                if res is not None:
+                    if hasattr(res, "tolist"):
+                        return res.tolist()
+                    elif hasattr(res, "symbol"):
+                        return res["symbol"].tolist()
+                    return list(res)
+            return []
+        return self._execute_with_retry(_run, "fetch_all_indices")
 
 
 class DirectHttpDataSource(StockDataSource):

@@ -4,7 +4,7 @@ import { Observable, from, interval, map, switchMap } from 'rxjs';
 import { Controller, Get, Logger, Post, Sse, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 
-import { StocksService } from '@modules/stocks/stocks.service';
+import { StocksService } from '@modules/stocks/services/stocks.service';
 
 import { AdminAuthGuard } from '@shared/guards/admin.guard';
 import { AdminDashboardRealtimeDto } from '@shared/interfaces';

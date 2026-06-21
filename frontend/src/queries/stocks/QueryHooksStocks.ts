@@ -15,6 +15,7 @@ import {
   getGovernmentBondsQueryFn,
   getIcbIndustriesQueryFn,
   getIcbStocksQueryFn,
+  getIndexHistoricalQueryFn,
   getIndexQuoteQueryFn,
   getIndicesQueryFn,
   getMarketGroupsQueryFn,
@@ -51,6 +52,19 @@ export const useQueryIndexQuote = (params: MarketQuoteParams) =>
     ],
     queryFn: () => getIndexQuoteQueryFn(params),
     placeholderData: initialStockData,
+    refetchOnMount: true,
+  });
+
+export const useQueryIndexHistorical = (params: MarketQuoteParams) =>
+  useQuery<StockHistoricalDataType[]>({
+    queryKey: [
+      QueryKeysStocks.ROOT,
+      "index-historical",
+      params.symbol,
+      params.period,
+    ],
+    queryFn: () => getIndexHistoricalQueryFn(params),
+    placeholderData: [],
     refetchOnMount: true,
   });
 

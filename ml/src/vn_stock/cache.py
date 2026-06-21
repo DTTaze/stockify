@@ -4,6 +4,7 @@ import logging
 import os
 import time
 from typing import Any, Optional
+import redis
 
 logger = logging.getLogger(__name__)
 
@@ -94,3 +95,61 @@ class FileCacheManager(Cache):
                     os.remove(temp_path)
                 except Exception:
                     pass
+
+
+class RedisCacheManager(Cache):
+    """Concrete cache implementation storing data in Redis."""
+
+    def __init__(
+        self,
+        key: str,
+        duration_seconds: int,
+        host: str = "localhost",
+        port: int = 6379,
+        password: Optional[str] = None,
+    ):
+        self.key = key
+        self.duration = duration_seconds
+        self.client = redis.Redis(
+            host=host,
+            port=port,
+            password=password,
+            decode_responses=True,
+        )
+
+    def get(self) -> Optional[Any]:
+        try:
+            val = self.client.get(self.key)
+            if val is not None:
+                cache_data = json.loads(val)
+                if time.time() - cache_data.get("timestamp", 0) < self.duration:
+                    logger.info(f"Redis cache hit (fresh) for key '{self.key}'")
+                    return cache_data.get("data")
+        except Exception as e:
+            logger.warning(f"Failed to read from Redis cache for key '{self.key}': {e}")
+        return None
+
+    def get_stale(self) -> Optional[Any]:
+        try:
+            val = self.client.get(self.key)
+            if val is not None:
+                cache_data = json.loads(val)
+                logger.info(f"Redis cache hit (stale) for key '{self.key}'")
+                return cache_data.get("data")
+        except Exception as e:
+            logger.warning(f"Failed to read stale cache from Redis for key '{self.key}': {e}")
+        return None
+
+    def set(self, data: Any) -> None:
+        try:
+            payload = {
+                "timestamp": time.time(),
+                "data": data,
+            }
+            # Set a safety TTL to avoid orphaned keys growing infinitely (e.g. 7 days or 2x duration)
+            ttl = max(self.duration * 2, 604800)
+            self.client.set(self.key, json.dumps(payload, ensure_ascii=False), ex=ttl)
+            logger.info(f"Redis cache successfully written for key '{self.key}'")
+        except Exception as e:
+            logger.warning(f"Failed to write to Redis cache for key '{self.key}': {e}")
+

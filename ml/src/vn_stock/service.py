@@ -8,7 +8,8 @@ from .constants import FETCH_BUFFER, INDICES, PERIOD_MAPPING, VALID_PERIODS
 from .exceptions import IndexNotFoundException, DataFetchException
 from . import schemas
 from .data_source import StockDataSource, FallbackDataSource
-from .cache import Cache, FileCacheManager
+from .cache import Cache, FileCacheManager, RedisCacheManager
+from .config import vn_stock_config
 
 logger = logging.getLogger(__name__)
 
@@ -26,13 +27,27 @@ class StockService:
     ):
         """Injectable dependencies for data fetching and caching (DIP)."""
         self.data_source = data_source or FallbackDataSource()
-        self.cache = cache or FileCacheManager(CACHE_FILE_PATH, CACHE_DURATION)
+        self.cache = cache or RedisCacheManager(
+            key="stockify:grouped_symbols",
+            duration_seconds=CACHE_DURATION,
+            host=vn_stock_config.redis_host,
+            port=vn_stock_config.redis_port,
+            password=vn_stock_config.redis_password,
+        )
 
     def get_index_quote(self, index_code: str, period: str) -> schemas.MarketQuote:
-        index_key = index_code.lower()
-        if index_key not in INDICES:
+        index_key = index_code.lower().replace("-", "")
+        mapping = {
+            "vnindex": "vn-index",
+            "vn30": "vn30",
+            "hnxindex": "hnx-index",
+            "upcomindex": "upcom",
+            "upcom": "upcom"
+        }
+        mapped_key = mapping.get(index_key, index_key)
+        if mapped_key not in INDICES:
             raise IndexNotFoundException(index_code)
-        return self._get_quote(INDICES[index_key]["code"], period)
+        return self._get_quote(INDICES[mapped_key]["code"], period)
 
     def get_stock_quote(self, symbol: str, period: str) -> schemas.MarketQuote:
         return self._get_quote(symbol.upper(), period)
@@ -110,12 +125,20 @@ class StockService:
     def get_index_historical(
         self, index_code: str, period: str
     ) -> schemas.MarketHistoricalResponse:
-        index_key = index_code.lower()
-        if index_key not in INDICES:
+        index_key = index_code.lower().replace("-", "")
+        mapping = {
+            "vnindex": "vn-index",
+            "vn30": "vn30",
+            "hnxindex": "hnx-index",
+            "upcomindex": "upcom",
+            "upcom": "upcom"
+        }
+        mapped_key = mapping.get(index_key, index_key)
+        if mapped_key not in INDICES:
             raise IndexNotFoundException(index_code)
 
         return self._get_historical(
-            INDICES[index_key]["code"], period, schemas.MarketType.INDEX
+            INDICES[mapped_key]["code"], period, schemas.MarketType.INDEX
         )
 
     def get_stock_historical(
@@ -402,14 +425,25 @@ class StockService:
 
         return result
 
-    def get_grouped_symbols(self) -> dict:
+    def get_grouped_symbols(self, background_tasks = None) -> dict:
         # 1. Try to load from cache
         cached = self.cache.get()
         if cached is not None:
             return cached
 
-        # 2. Cache missed or expired, fetch it
-        logger.info("Cache missed or expired. Fetching fresh grouped symbols.")
+        # 2. Cache expired (or missing), but let's check if we have a stale cache
+        stale = self.cache.get_stale()
+        if stale is not None:
+            logger.info("Cache expired for grouped symbols. Returning stale cache and revalidating in background.")
+            if background_tasks is not None:
+                background_tasks.add_task(self._revalidate_grouped_symbols_cache)
+            else:
+                import threading
+                threading.Thread(target=self._revalidate_grouped_symbols_cache).start()
+            return stale
+
+        # 3. If there is no cache at all (completely fresh install), fetch synchronously
+        logger.info("Cache missed (no stale cache). Fetching fresh grouped symbols synchronously.")
         try:
             result = self._fetch_grouped_symbols_from_api()
             if result and any(result.values()):
@@ -417,11 +451,6 @@ class StockService:
                 return result
         except BaseException as e:
             logger.error(f"Critical error during API fetch of grouped symbols: {e}")
-
-        # 3. Fallback: load stale cache if available
-        stale = self.cache.get_stale()
-        if stale is not None:
-            return stale
 
         return {
             "HOSE": [],
@@ -434,6 +463,16 @@ class StockService:
             "FU_BOND": [],
             "INDEX": [],
         }
+
+    def _revalidate_grouped_symbols_cache(self) -> None:
+        try:
+            logger.info("Background revalidation of grouped symbols started.")
+            result = self._fetch_grouped_symbols_from_api()
+            if result and any(result.values()):
+                self.cache.set(result)
+                logger.info("Background revalidation of grouped symbols completed successfully.")
+        except Exception as e:
+            logger.error(f"Error during background revalidation of grouped symbols: {e}")
 
     def get_icb_industries(self) -> List[dict]:
         try:
