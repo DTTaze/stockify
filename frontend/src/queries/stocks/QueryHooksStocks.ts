@@ -113,10 +113,19 @@ export const useQueryStockCompanies = () =>
     refetchOnMount: true,
   });
 
-export const useQueryPrediction = (symbol: string, enabled?: boolean) =>
+export const useQueryPrediction = (
+  symbol: string,
+  modelType?: string,
+  enabled?: boolean,
+) =>
   useQuery<StockPrediction>({
-    queryKey: [QueryKeysStocks.ROOT, QueryKeysStocks.PREDICTION, symbol],
-    queryFn: () => getPredictionQueryFn(symbol),
+    queryKey: [
+      QueryKeysStocks.ROOT,
+      QueryKeysStocks.PREDICTION,
+      symbol,
+      modelType || "lstm",
+    ],
+    queryFn: () => getPredictionQueryFn(symbol, modelType),
     enabled: enabled !== undefined ? enabled : !!symbol,
     refetchOnMount: true,
   });

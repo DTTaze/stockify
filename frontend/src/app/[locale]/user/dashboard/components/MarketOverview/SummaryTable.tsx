@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/Table";
 import { useLanguage } from "@/providers/LanguageProvider";
 
-import { MarketOverviewDataType } from "./useMarketOverview";
+import { MarketOverviewDataType } from "./hooks/useMarketOverview";
 import { getPriceColor } from "./utils";
 
 interface SummaryTableProps {

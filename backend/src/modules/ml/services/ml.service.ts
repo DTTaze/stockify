@@ -75,10 +75,12 @@ export class MLService extends OutboundPartnerService {
 
   public async getPrediction(
     symbol: string,
+    modelType?: string,
   ): Promise<OperationResult<PredictionDto>> {
     return this.request<PredictionDto>(
       'get',
       `/prediction/${symbol.toUpperCase()}`,
+      modelType ? { model_type: modelType } : undefined,
     ) as any;
   }
 

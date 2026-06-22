@@ -81,11 +81,25 @@ export class PredictionDto {
   symbol: string;
 
   @ApiProperty({
+    description: 'Current price',
+    example: 90000,
+    required: false,
+  })
+  current_price?: number;
+
+  @ApiProperty({
     description: 'Predicted price for tomorrow',
     example: 91200,
     required: false,
   })
   tomorrow?: number;
+
+  @ApiProperty({
+    description: 'Tomorrow confidence',
+    example: 92,
+    required: false,
+  })
+  tomorrow_confidence?: number;
 
   @ApiProperty({
     description: 'Predicted price for 3 days ahead',
@@ -95,6 +109,13 @@ export class PredictionDto {
   day3?: number;
 
   @ApiProperty({
+    description: '3 days confidence',
+    example: 88,
+    required: false,
+  })
+  day3_confidence?: number;
+
+  @ApiProperty({
     description: 'Predicted price for 7 days ahead',
     example: 93000,
     required: false,
@@ -102,12 +123,39 @@ export class PredictionDto {
   day7?: number;
 
   @ApiProperty({
+    description: '7 days confidence',
+    example: 85,
+    required: false,
+  })
+  day7_confidence?: number;
+
+  @ApiProperty({
     description: 'Predicted price for 14 days ahead',
     example: 94500,
     required: false,
   })
   day14?: number;
+
+  @ApiProperty({
+    description: '14 days confidence',
+    example: 78,
+    required: false,
+  })
+  day14_confidence?: number;
+
+  @ApiProperty({
+    description: 'Model evaluation metrics',
+    required: false,
+  })
+  metrics?: any;
+
+  @ApiProperty({
+    description: 'Historical comparison of actual vs predicted prices',
+    required: false,
+  })
+  history_compare?: any[];
 }
+
 
 export class SupportedSymbolsDto {
   @ApiProperty({

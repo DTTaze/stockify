@@ -67,6 +67,18 @@ export interface StockPrediction {
 
   day14: number;
   day14_confidence: number;
+
+  metrics?: {
+    accuracy: number;
+    rmse: number;
+    mae: number;
+    mape: number;
+  } | null;
+  history_compare?: Array<{
+    date: string;
+    actual: number;
+    predicted: number;
+  }> | null;
 }
 
 export interface SupportedSymbolsType {

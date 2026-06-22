@@ -1,50 +1,52 @@
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import React from "react";
 
-import { ButtonCustom } from "@/components/common/form/button";
+import { Button } from "@/components/ui/Button";
 import { useLanguage } from "@/providers/LanguageProvider";
 
 interface BoardPaginationProps {
   currentPage: number;
-  marketTotalPages: number;
-  marketTotal: number;
+  totalPages: number;
+  totalItems: number;
   setCurrentPage: React.Dispatch<React.SetStateAction<number>>;
 }
 
 export function BoardPagination({
   currentPage,
-  marketTotalPages,
-  marketTotal,
+  totalPages,
+  totalItems,
   setCurrentPage,
 }: BoardPaginationProps) {
   const { t } = useLanguage();
 
   return (
-    <div className="border-gray-250 flex items-center justify-between border-t bg-gray-50/40 px-4 py-2 dark:border-slate-800 dark:bg-slate-900/20">
-      <span className="text-gray-550 text-[9px] font-semibold uppercase dark:text-slate-500">
+    <div className="flex items-center justify-between border-t border-gray-200 bg-gray-50/80 px-4 py-2 dark:border-slate-800 dark:bg-slate-900/30">
+      <span className="text-[10px] font-bold tracking-wider text-gray-500 uppercase dark:text-slate-400">
         {t("page")}{" "}
-        <strong className="text-gray-750 dark:text-slate-300">
+        <strong className="text-gray-850 dark:text-slate-200">
           {currentPage}
         </strong>{" "}
-        / {marketTotalPages} ({marketTotal} {t("totalStocks")})
+        / {totalPages} ({totalItems} {t("totalStocks")})
       </span>
-      <div className="flex gap-1">
-        <ButtonCustom
+      <div className="flex gap-1.5">
+        <Button
           onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
           disabled={currentPage === 1}
-          className="border-gray-250 flex h-6 w-6 items-center justify-center rounded border bg-white p-0 transition-colors hover:bg-gray-100 disabled:opacity-30 disabled:hover:bg-white dark:border-slate-800 dark:bg-slate-950 dark:hover:bg-slate-900 dark:disabled:hover:bg-slate-950"
+          variant="outline"
+          size="icon-xs"
+          className="border-gray-300 bg-white hover:bg-gray-100 disabled:opacity-40 dark:border-slate-700 dark:bg-slate-950 dark:hover:bg-slate-900"
         >
-          <ChevronLeft className="text-gray-505 dark:text-slate-450 h-3.5 w-3.5" />
-        </ButtonCustom>
-        <ButtonCustom
-          onClick={() =>
-            setCurrentPage((p) => Math.min(marketTotalPages, p + 1))
-          }
-          disabled={currentPage === marketTotalPages}
-          className="border-gray-250 flex h-6 w-6 items-center justify-center rounded border bg-white p-0 transition-colors hover:bg-gray-100 disabled:opacity-30 disabled:hover:bg-white dark:border-slate-800 dark:bg-slate-950 dark:hover:bg-slate-900 dark:disabled:hover:bg-slate-950"
+          <ChevronLeft className="h-4 w-4 text-gray-600 dark:text-slate-400" />
+        </Button>
+        <Button
+          onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+          disabled={currentPage === totalPages}
+          variant="outline"
+          size="icon-xs"
+          className="border-gray-300 bg-white hover:bg-gray-100 disabled:opacity-40 dark:border-slate-700 dark:bg-slate-950 dark:hover:bg-slate-900"
         >
-          <ChevronRight className="text-gray-505 dark:text-slate-450 h-3.5 w-3.5" />
-        </ButtonCustom>
+          <ChevronRight className="h-4 w-4 text-gray-600 dark:text-slate-400" />
+        </Button>
       </div>
     </div>
   );

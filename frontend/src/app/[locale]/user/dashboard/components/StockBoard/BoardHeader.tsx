@@ -5,13 +5,14 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { useLanguage } from "@/providers/LanguageProvider";
 
-import { BOARD_TABS } from "./useStockBoard";
+import { BOARD_TABS } from "./constants";
 
 interface BoardHeaderProps {
   activeTab: string;
   searchQuery: string;
   setSearchQuery: (query: string) => void;
   handleTabChange: (tabId: string) => void;
+  tabSizes?: Record<string, number>;
 }
 
 export function BoardHeader({
@@ -19,6 +20,7 @@ export function BoardHeader({
   searchQuery,
   setSearchQuery,
   handleTabChange,
+  tabSizes,
 }: BoardHeaderProps) {
   const { t } = useLanguage();
 
@@ -27,25 +29,33 @@ export function BoardHeader({
       <div className="flex flex-wrap gap-1">
         {BOARD_TABS.map((tab) => {
           const isActive = activeTab === tab.id;
+          const count = tabSizes?.[tab.id];
           return (
             <Button
               key={tab.id}
               onClick={() => handleTabChange(tab.id)}
               variant={isActive ? "default" : "ghost"}
               size="xs"
-              className={`cursor-pointer rounded px-2.5 py-1 text-xs font-bold transition-all ${
+              className={`flex cursor-pointer items-center gap-1.5 rounded px-2.5 py-1 text-xs font-bold transition-all ${
                 isActive
                   ? "bg-indigo-600 text-white shadow shadow-indigo-600/30"
                   : "text-gray-500 hover:bg-gray-100 hover:text-gray-800 dark:text-slate-400 dark:hover:bg-slate-900 dark:hover:text-slate-200"
               }`}
             >
-              {tab.id === "AI" ? (
-                <span className="flex items-center gap-1">
-                  <Sparkles className="h-3.5 w-3.5 text-purple-600 dark:text-purple-400" />
-                  {t(tab.translationKey)}
+              {tab.id === "AI" && (
+                <Sparkles className="h-3.5 w-3.5 text-purple-600 dark:text-purple-400" />
+              )}
+              <span>{t(tab.translationKey)}</span>
+              {count !== undefined && (
+                <span
+                  className={`inline-flex items-center justify-center rounded-full px-1.5 py-0.5 text-[10px] leading-none font-semibold transition-colors ${
+                    isActive
+                      ? "bg-white/20 text-white"
+                      : "bg-gray-150 text-gray-600 dark:bg-slate-800 dark:text-slate-400"
+                  }`}
+                >
+                  {count}
                 </span>
-              ) : (
-                t(tab.translationKey)
               )}
             </Button>
           );

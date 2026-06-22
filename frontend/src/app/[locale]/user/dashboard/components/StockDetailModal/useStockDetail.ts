@@ -47,8 +47,10 @@ export function useStockDetail(symbol: string, isOpen: boolean) {
     });
 
   // Fetch AI Predictions
+  const [modelType, setModelType] = useState<string>("lstm");
   const { data: prediction, isLoading: isPredictLoading } = useQueryPrediction(
     symbol,
+    modelType,
     !!symbol && isOpen,
   );
 
@@ -98,37 +100,73 @@ export function useStockDetail(symbol: string, isOpen: boolean) {
     if (!prediction) {
       return [];
     }
-    const points = [
-      { name: "Hiện tại", price: prediction.current_price, confidence: 100 },
-    ];
+
+    const points: Array<{
+      name: string;
+      actual?: number;
+      predicted?: number;
+      confidence?: number;
+    }> = [];
+
+    // 1. Add historical comparison points if available
+    if (prediction.history_compare && prediction.history_compare.length > 0) {
+      prediction.history_compare.forEach((item) => {
+        let formattedDate = item.date;
+        try {
+          const parts = item.date.split("-");
+          if (parts.length === 3) {
+            formattedDate = `${parts[2]}/${parts[1]}`;
+          }
+        } catch {
+          // Fallback to original string
+        }
+
+        points.push({
+          name: formattedDate,
+          actual: item.actual,
+          predicted: item.predicted,
+        });
+      });
+    }
+
+    // 2. Add current bridge point
+    points.push({
+      name: "Hiện tại",
+      actual: prediction.current_price,
+      predicted: prediction.current_price,
+      confidence: 100,
+    });
+
+    // 3. Add future forecast points
     if (prediction.tomorrow) {
       points.push({
         name: "Ngày mai",
-        price: prediction.tomorrow,
+        predicted: prediction.tomorrow,
         confidence: prediction.tomorrow_confidence || 92,
       });
     }
     if (prediction.day3) {
       points.push({
         name: "3 ngày",
-        price: prediction.day3,
+        predicted: prediction.day3,
         confidence: prediction.day3_confidence || 88,
       });
     }
     if (prediction.day7) {
       points.push({
         name: "7 ngày",
-        price: prediction.day7,
+        predicted: prediction.day7,
         confidence: prediction.day7_confidence || 85,
       });
     }
     if (prediction.day14) {
       points.push({
         name: "14 ngày",
-        price: prediction.day14,
+        predicted: prediction.day14,
         confidence: prediction.day14_confidence || 78,
       });
     }
+
     return points;
   }, [prediction]);
 
@@ -236,6 +274,8 @@ export function useStockDetail(symbol: string, isOpen: boolean) {
     setSelectedHorizon,
     quote,
     prediction,
+    modelType,
+    setModelType,
     isQuoteLoading,
     isHistoryLoading,
     isPredictLoading,

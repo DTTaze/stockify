@@ -57,7 +57,10 @@ export class MLController {
     description:
       'Get AI predicted prices for tomorrow, 3 days, 7 days, and 14 days ahead',
   })
-  async getPrediction(@Param('symbol') symbol: string): Promise<HttpResponse> {
-    return this.mlService.getPrediction(symbol);
+  async getPrediction(
+    @Param('symbol') symbol: string,
+    @Query('modelType') modelType?: string,
+  ): Promise<HttpResponse> {
+    return this.mlService.getPrediction(symbol, modelType);
   }
 }

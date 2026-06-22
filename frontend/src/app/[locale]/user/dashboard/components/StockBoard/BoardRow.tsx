@@ -12,7 +12,7 @@ import {
   BoardRowDataType,
   TrainedSymbolsListType,
   WatchlistSymbolsSetType,
-} from "./useStockBoard";
+} from "./hooks/useStockBoard";
 
 interface BoardRowProps {
   row: BoardRowDataType;

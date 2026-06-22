@@ -60,27 +60,64 @@ export function useStockBoard() {
 
   const marketStocks = useMemo(() => marketData?.rows ?? [], [marketData]);
   const marketTotal = marketData?.total ?? 0;
-  const marketTotalPages = Math.ceil(marketTotal / ITEMS_PER_PAGE) || 1;
 
-  // Resolve symbols for the active tab to fetch quotes dynamically
-  const activeSymbols = useMemo(() => {
+  // Filter trained symbols for AI
+  const filteredAiSymbols = useMemo(() => {
+    const q = searchQuery.toLowerCase().trim();
+    if (q) {
+      return trainedSymbols.filter((s) => s.toLowerCase().includes(q));
+    }
+    return trainedSymbols;
+  }, [trainedSymbols, searchQuery]);
+
+  // Filter watchlist symbols
+  const filteredWatchlistSymbols = useMemo(() => {
+    const q = searchQuery.toLowerCase().trim();
+    const list = watchlistQuotes.map((w) => w.symbol);
+    if (q) {
+      return list.filter((s) => s.toLowerCase().includes(q));
+    }
+    return list;
+  }, [watchlistQuotes, searchQuery]);
+
+  // Calculate total items and total pages based on tab
+  const totalItems = useMemo(() => {
     if (activeTab === "AI") {
-      const q = searchQuery.toLowerCase().trim();
-      if (q) {
-        return trainedSymbols.filter((s) => s.toLowerCase().includes(q));
-      }
-      return trainedSymbols;
+      return filteredAiSymbols.length;
     }
     if (activeTab === "WATCHLIST") {
-      const q = searchQuery.toLowerCase().trim();
-      const list = watchlistQuotes.map((w) => w.symbol);
-      if (q) {
-        return list.filter((s) => s.toLowerCase().includes(q));
-      }
-      return list;
+      return filteredWatchlistSymbols.length;
+    }
+    return marketTotal;
+  }, [
+    activeTab,
+    filteredAiSymbols.length,
+    filteredWatchlistSymbols.length,
+    marketTotal,
+  ]);
+
+  const totalPages = useMemo(() => {
+    return Math.ceil(totalItems / ITEMS_PER_PAGE) || 1;
+  }, [totalItems]);
+
+  const offset = (currentPage - 1) * ITEMS_PER_PAGE;
+
+  // Resolve symbols for the active tab to fetch quotes dynamically (paginated)
+  const activeSymbols = useMemo(() => {
+    if (activeTab === "AI") {
+      return filteredAiSymbols.slice(offset, offset + ITEMS_PER_PAGE);
+    }
+    if (activeTab === "WATCHLIST") {
+      return filteredWatchlistSymbols.slice(offset, offset + ITEMS_PER_PAGE);
     }
     return marketStocks.map((s) => s.symbol);
-  }, [activeTab, searchQuery, trainedSymbols, watchlistQuotes, marketStocks]);
+  }, [
+    activeTab,
+    filteredAiSymbols,
+    filteredWatchlistSymbols,
+    marketStocks,
+    offset,
+  ]);
 
   // Fetch Quotes in parallel for the visible symbols
   const quoteQueries = useQueries({
@@ -102,22 +139,20 @@ export function useStockBoard() {
   // Merge stocks with quotes
   const boardRows = useMemo(() => {
     if (activeTab === "WATCHLIST") {
-      return watchlistQuotes
-        .filter((w) => {
-          const q = searchQuery.toLowerCase().trim();
-          return (
-            w.symbol.toLowerCase().includes(q) ||
-            w.name.toLowerCase().includes(q)
-          );
-        })
-        .map((w) => ({
-          symbol: w.symbol,
-          name: w.name,
-          price: w.price,
-          change: w.change,
-          volume: w.volume,
-          exchange: "HOSE",
-        }));
+      const filtered = watchlistQuotes.filter((w) => {
+        const q = searchQuery.toLowerCase().trim();
+        return (
+          w.symbol.toLowerCase().includes(q) || w.name.toLowerCase().includes(q)
+        );
+      });
+      return filtered.slice(offset, offset + ITEMS_PER_PAGE).map((w) => ({
+        symbol: w.symbol,
+        name: w.name,
+        price: w.price,
+        change: w.change,
+        volume: w.volume,
+        exchange: "HOSE",
+      }));
     }
 
     return activeSymbols.map((symbol, index) => {
@@ -145,6 +180,7 @@ export function useStockBoard() {
     trainedSymbols,
     searchQuery,
     marketStocks,
+    offset,
   ]);
 
   const isLoading =
@@ -159,6 +195,11 @@ export function useStockBoard() {
     setCurrentPage(1);
   };
 
+  const handleSearchQueryChange = (query: string) => {
+    setSearchQuery(query);
+    setCurrentPage(1);
+  };
+
   const handleWatchlistToggle = (e: React.MouseEvent, symbol: string) => {
     e.stopPropagation();
     if (watchlistSymbols.has(symbol)) {
@@ -168,16 +209,30 @@ export function useStockBoard() {
     }
   };
 
+  const tabSizes = useMemo(
+    () => ({
+      AI: filteredAiSymbols.length,
+      WATCHLIST: filteredWatchlistSymbols.length,
+      VN30: isMarketTab ? marketTotal : 30,
+    }),
+    [
+      filteredAiSymbols.length,
+      filteredWatchlistSymbols.length,
+      isMarketTab,
+      marketTotal,
+    ],
+  );
+
   return {
     activeTab,
     searchQuery,
-    setSearchQuery,
+    setSearchQuery: handleSearchQueryChange,
     currentPage,
     setCurrentPage,
     watchlistSymbols,
     trainedSymbols,
-    marketTotal,
-    marketTotalPages,
+    totalItems,
+    totalPages,
     isMarketTab,
     boardRows,
     isLoading,
@@ -186,6 +241,7 @@ export function useStockBoard() {
     addToWatchlist,
     removeFromWatchlist,
     t,
+    tabSizes,
   };
 }
 export type BoardRowDataType = ReturnType<

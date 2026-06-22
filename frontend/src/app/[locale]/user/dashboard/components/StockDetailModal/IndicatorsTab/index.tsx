@@ -5,7 +5,7 @@ import React from "react";
 import { useLanguage } from "@/providers/LanguageProvider";
 import { getStatusColor, getStatusDot } from "@/utils/technicalIndicator";
 
-import { IndicatorsType } from "../useStockDetail";
+import { IndicatorsType } from "../hooks/useStockDetail";
 
 interface IndicatorsTabProps {
   indicators: IndicatorsType;
@@ -72,7 +72,7 @@ export function IndicatorsTab({
                     indicator.status,
                   )}`}
                 >
-                  {t(`indicator.status.${indicator.status}`)}
+                  {t(`indicator.status.${indicator.status.toUpperCase()}`)}
                 </span>
               </div>
             </div>

@@ -11,15 +11,15 @@ class PredictionService:
     """Service for AI stock price predictions"""
 
     @staticmethod
-    def get_prediction(symbol: str) -> Optional[PredictionResponse]:
+    def get_prediction(symbol: str, model_type: str = "lstm") -> Optional[PredictionResponse]:
         """Get prediction for a specific symbol"""
         try:
-            prediction_data = predict_future_prices(symbol)
+            prediction_data = predict_future_prices(symbol, model_type=model_type)
             if prediction_data:
                 return PredictionResponse(**prediction_data)
             return None
         except Exception as e:
-            logger.error(f"Error getting prediction for {symbol}: {e}")
+            logger.error(f"Error getting prediction for {symbol} ({model_type}): {e}")
             return None
 
     @staticmethod

@@ -1,8 +1,8 @@
 import React from "react";
 
+import { useMarketIndices } from "./hooks/useMarketIndices";
+import { TickerSkeleton } from "./skeletons/TickerSkeleton";
 import { TickerItem } from "./TickerItem";
-import { TickerSkeleton } from "./TickerSkeleton";
-import { useMarketIndices } from "./useMarketIndices";
 
 export function IndexTicker() {
   const { indices, isLoading } = useMarketIndices();

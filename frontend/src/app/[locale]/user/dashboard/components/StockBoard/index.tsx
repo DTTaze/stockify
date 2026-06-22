@@ -12,8 +12,9 @@ import {
 import { BoardHeader } from "./BoardHeader";
 import { BoardPagination } from "./BoardPagination";
 import { BoardRow } from "./BoardRow";
-import { BoardSkeleton } from "./BoardSkeleton";
-import { ITEMS_PER_PAGE, useStockBoard } from "./useStockBoard";
+import { ITEMS_PER_PAGE } from "./constants";
+import { useStockBoard } from "./hooks/useStockBoard";
+import { BoardSkeleton } from "./skeletons/BoardSkeleton";
 
 interface StockBoardProps {
   selectedStock: string;
@@ -29,9 +30,8 @@ export function StockBoard({ selectedStock, onSelectStock }: StockBoardProps) {
     setCurrentPage,
     watchlistSymbols,
     trainedSymbols,
-    marketTotal,
-    marketTotalPages,
-    isMarketTab,
+    totalItems,
+    totalPages,
     boardRows,
     isLoading,
     handleTabChange,
@@ -39,6 +39,7 @@ export function StockBoard({ selectedStock, onSelectStock }: StockBoardProps) {
     addToWatchlist,
     removeFromWatchlist,
     t,
+    tabSizes,
   } = useStockBoard();
 
   const isMutatingWatchlist =
@@ -52,6 +53,7 @@ export function StockBoard({ selectedStock, onSelectStock }: StockBoardProps) {
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}
         handleTabChange={handleTabChange}
+        tabSizes={tabSizes}
       />
 
       {/* Grid Scroll Area */}
@@ -72,7 +74,7 @@ export function StockBoard({ selectedStock, onSelectStock }: StockBoardProps) {
               rowSpan={2}
               className="min-w-[70px] border-r border-gray-200 p-2 text-left dark:border-slate-800"
             >
-              {t("stocks")}
+              {t("boardStocksHeader")}
             </TableHead>
             <TableHead
               rowSpan={2}
@@ -208,11 +210,11 @@ export function StockBoard({ selectedStock, onSelectStock }: StockBoardProps) {
       </Table>
 
       {/* Pagination Footer */}
-      {isMarketTab && marketTotalPages > 1 && (
+      {totalPages > 1 && (
         <BoardPagination
           currentPage={currentPage}
-          marketTotalPages={marketTotalPages}
-          marketTotal={marketTotal}
+          totalPages={totalPages}
+          totalItems={totalItems}
           setCurrentPage={setCurrentPage}
         />
       )}

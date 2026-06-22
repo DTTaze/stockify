@@ -17,6 +17,17 @@ FEATURE_COLS: List[str] = [
     "MA50",
     "Volatility",
     "Volume_Change",
+    "RSI",
+    "MACD",
+    "MACD_Signal",
+    "BB_Upper",
+    "BB_Lower",
+    "BB_Pct",
+    "ATR",
+    "Close_to_MA10",
+    "Close_to_MA20",
+    "Close_to_MA50",
+    "Volume_to_MA10",
 ]
 
 TARGET_COL: List[str] = ["Close"]
@@ -80,22 +91,62 @@ def feature_engineering(df: pd.DataFrame) -> pd.DataFrame:
 
     df = df.copy()
 
+    # Moving Averages
     df["MA10"] = df["Close"].rolling(10).mean()
     df["MA20"] = df["Close"].rolling(20).mean()
     df["MA50"] = df["Close"].rolling(50).mean()
 
+    # Volatility & Returns
     df["Return"] = df["Close"].pct_change()
     df["Volatility"] = df["Close"].rolling(10).std()
     df["Volume_Change"] = df["Volume"].pct_change()
 
+    # 1. RSI (Relative Strength Index, 14-day window)
+    delta = df["Close"].diff()
+    gain = delta.clip(lower=0)
+    loss = -delta.clip(upper=0)
+    avg_gain = gain.ewm(com=13, adjust=False).mean()
+    avg_loss = loss.ewm(com=13, adjust=False).mean()
+    rs = avg_gain / (avg_loss + 1e-9)
+    df["RSI"] = 100 - (100 / (1 + rs))
+
+    # 2. MACD & Signal Line (12, 26, 9 span)
+    exp1 = df["Close"].ewm(span=12, adjust=False).mean()
+    exp2 = df["Close"].ewm(span=26, adjust=False).mean()
+    df["MACD"] = exp1 - exp2
+    df["MACD_Signal"] = df["MACD"].ewm(span=9, adjust=False).mean()
+
+    # 3. Bollinger Bands (20-day window, 2 standard deviations)
+    bb_std = df["Close"].rolling(20).std()
+    df["BB_Upper"] = df["MA20"] + (2.0 * bb_std)
+    df["BB_Lower"] = df["MA20"] - (2.0 * bb_std)
+    df["BB_Pct"] = (df["Close"] - df["BB_Lower"]) / (df["BB_Upper"] - df["BB_Lower"] + 1e-9)
+
+    # 4. ATR (Average True Range, 14-day window)
+    high_low = df["High"] - df["Low"]
+    high_cp = (df["High"] - df["Close"].shift()).abs()
+    low_cp = (df["Low"] - df["Close"].shift()).abs()
+    tr = pd.concat([high_low, high_cp, low_cp], axis=1).max(axis=1)
+    df["ATR"] = tr.ewm(alpha=1/14, adjust=False).mean()
+
+    # 5. Price to MA ratios
+    df["Close_to_MA10"] = df["Close"] / (df["MA10"] + 1e-9)
+    df["Close_to_MA20"] = df["Close"] / (df["MA20"] + 1e-9)
+    df["Close_to_MA50"] = df["Close"] / (df["MA50"] + 1e-9)
+
+    # 6. Volume to MA ratio
+    volume_ma10 = df["Volume"].rolling(10).mean()
+    df["Volume_to_MA10"] = df["Volume"] / (volume_ma10 + 1e-9)
+
+    df = df.replace([np.inf, -np.inf], np.nan)
     df = df.dropna()
     return df
 
 
 def split_data(
     df: pd.DataFrame,
-    train_ratio: float = 0.7,
-    val_ratio: float = 0.1,
+    train_ratio: float = 0.9,
+    val_ratio: float = 0.05,
 ) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
 
     total_len: int = len(df)

@@ -1,9 +1,9 @@
 import { ChevronDown, ChevronUp, Settings } from "lucide-react";
 import React, { useState } from "react";
 
+import { useMarketOverview } from "./hooks/useMarketOverview";
 import { MiniChartCard } from "./MiniChartCard";
 import { SummaryTable } from "./SummaryTable";
-import { useMarketOverview } from "./useMarketOverview";
 
 export function MarketOverview() {
   const [isOpen, setIsOpen] = useState(true);

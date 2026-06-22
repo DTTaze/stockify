@@ -1,12 +1,12 @@
 "use client";
 
-import { Bell, LogOut, Menu, Moon, Sun, User, X } from "lucide-react";
-import { useTheme } from "next-themes";
+import { LogOut, Menu, User, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
-import { ButtonCustom } from "@/components/common/form/button";
 import { HeaderSkeleton } from "@/components/layout/Header/HeaderSkeleton";
+import { Badge } from "@/components/ui/Badge";
+import { Button } from "@/components/ui/Button";
 import { ROLE_NAME } from "@/constants/auth";
 import { useIsAuthenticated } from "@/hooks/common/useIsAuthenticated";
 import { useLogout } from "@/hooks/common/useLogout";
@@ -17,6 +17,12 @@ import {
   useQueryProfile,
 } from "@/queries/users/QueryHooksUser";
 
+import { LanguageSelector } from "./LanguageSelector";
+import { MobileMenu } from "./MobileMenu";
+import NotificationDropdown, {
+  type NotificationItem,
+} from "./NotificationDropdown";
+import { ThemeToggle } from "./ThemeToggle";
 import { type NavItem, useHeaderConfig } from "./useHeaderConfig";
 
 export default function Header() {
@@ -24,22 +30,59 @@ export default function Header() {
   const { handleLogout } = useLogout();
   const isAuthenticated = useIsAuthenticated();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const { locale, setLocale, t } = useLanguage();
-  const { resolvedTheme, setTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
+  const { locale, t } = useLanguage();
+  const [notifications, setNotifications] = useState<NotificationItem[]>([]);
 
+  // Initialize notifications on mount or when locale changes
   useEffect(() => {
-    setMounted(true);
-  }, []);
+    setNotifications([
+      {
+        id: "1",
+        titleKey: "notifications.fptSuccess",
+        time: locale === "vi" ? "5 phút trước" : "5 mins ago",
+        read: false,
+        type: "success",
+      },
+      {
+        id: "2",
+        titleKey: "notifications.vcbRise",
+        time: locale === "vi" ? "1 giờ trước" : "1 hour ago",
+        read: false,
+        type: "info",
+      },
+      {
+        id: "3",
+        titleKey: "notifications.hoseAlert",
+        time: locale === "vi" ? "2 giờ trước" : "2 hours ago",
+        read: true,
+        type: "warning",
+      },
+      {
+        id: "4",
+        titleKey: "notifications.vn30Update",
+        time: locale === "vi" ? "1 ngày trước" : "1 day ago",
+        read: true,
+        type: "success",
+      },
+    ]);
+  }, [locale]);
 
-  const isDark = mounted ? resolvedTheme === "dark" : false;
-
-  const toggleTheme = () => {
-    setTheme(resolvedTheme === "dark" ? "light" : "dark");
+  const handleMarkRead = (id: string) => {
+    setNotifications((prev) =>
+      prev.map((n) => (n.id === id ? { ...n, read: true } : n)),
+    );
   };
 
-  const toggleLanguage = () => {
-    setLocale(locale === "vi" ? "en" : "vi");
+  const handleDelete = (id: string) => {
+    setNotifications((prev) => prev.filter((n) => n.id !== id));
+  };
+
+  const handleMarkAllRead = () => {
+    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+  };
+
+  const handleClearAll = () => {
+    setNotifications([]);
   };
 
   const {
@@ -74,37 +117,17 @@ export default function Header() {
             </div>
 
             <div className="hidden items-center space-x-6 md:flex">
-              {/* Language Selector */}
-              <ButtonCustom
-                onClick={toggleLanguage}
-                className="flex cursor-pointer items-center space-x-1 rounded-lg bg-white/10 px-3 py-2 font-mono text-xs font-bold text-white uppercase select-none hover:bg-white/20"
-                title={
-                  locale === "vi"
-                    ? "Switch to English"
-                    : "Chuyển sang Tiếng Việt"
-                }
-              >
-                <span>{locale === "vi" ? "EN" : "VI"}</span>
-              </ButtonCustom>
-
-              {/* Theme Toggle */}
-              <ButtonCustom
-                onClick={toggleTheme}
-                className="cursor-pointer rounded-lg bg-white/10 p-2 text-white hover:bg-white/20"
-                title={isDark ? "Light Mode" : "Dark Mode"}
-              >
-                {isDark ? (
-                  <Sun className="h-5 w-5" />
-                ) : (
-                  <Moon className="h-5 w-5" />
-                )}
-              </ButtonCustom>
+              <LanguageSelector />
+              <ThemeToggle />
 
               {config.showNotification && (
-                <ButtonCustom className="relative rounded-lg p-2 hover:bg-white/10">
-                  <Bell className="h-5 w-5" />
-                  <span className="bg-accent-500 absolute top-1 right-1 h-2 w-2 rounded-full" />
-                </ButtonCustom>
+                <NotificationDropdown
+                  notifications={notifications}
+                  onMarkRead={handleMarkRead}
+                  onDelete={handleDelete}
+                  onMarkAllRead={handleMarkAllRead}
+                  onClearAll={handleClearAll}
+                />
               )}
 
               <div className="flex items-center space-x-3 rounded-lg bg-white/10 px-4 py-2">
@@ -118,23 +141,28 @@ export default function Header() {
 
                 <div>
                   <div className="text-sm">{config.username}</div>
-                  <div className="text-xs text-blue-200">
+                  <Badge
+                    variant="outline"
+                    className="border-blue-200/30 px-1 py-0 text-xs text-blue-200 select-none"
+                  >
                     {config.badgeLabel}
-                  </div>
+                  </Badge>
                 </div>
               </div>
 
-              <ButtonCustom
+              <Button
+                variant="outline"
                 onClick={handleLogout}
-                className="flex items-center space-x-2 rounded-lg bg-white/10 px-4 py-2 hover:bg-white/20"
+                className="flex cursor-pointer items-center space-x-2 rounded-lg border-transparent bg-white/10 px-4 py-2 text-white hover:border-transparent hover:bg-white/20 hover:text-white active:translate-y-0"
               >
                 <LogOut className="h-4 w-4" />
                 <span className="text-sm">{t("logout")}</span>
-              </ButtonCustom>
+              </Button>
             </div>
 
-            <ButtonCustom
-              className="rounded-lg p-2 hover:bg-white/10 md:hidden"
+            <Button
+              variant="ghost"
+              className="cursor-pointer rounded-lg p-2 text-white hover:bg-white/10 hover:text-white active:translate-y-0 md:hidden"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             >
               {mobileMenuOpen ? (
@@ -142,7 +170,7 @@ export default function Header() {
               ) : (
                 <Menu className="h-6 w-6" />
               )}
-            </ButtonCustom>
+            </Button>
           </div>
         </div>
       </header>
@@ -174,56 +202,11 @@ export default function Header() {
       </nav>
 
       {mobileMenuOpen && (
-        <div className="bg-brand-900 p-4 text-white md:hidden dark:bg-neutral-950">
-          <div className="border-brand-800 mb-4 flex items-center justify-between border-b pb-4 dark:border-neutral-800">
-            <ButtonCustom
-              onClick={toggleLanguage}
-              className="flex items-center space-x-1 rounded-lg bg-white/10 px-3 py-1.5 text-xs font-bold text-white uppercase hover:bg-white/20"
-            >
-              <span>
-                {locale === "vi" ? "Language: English" : "Ngôn ngữ: Tiếng Việt"}
-              </span>
-            </ButtonCustom>
-            <ButtonCustom
-              onClick={toggleTheme}
-              className="flex items-center space-x-2 rounded-lg bg-white/10 px-3 py-1.5 text-white"
-            >
-              {isDark ? (
-                <Sun className="h-4 w-4" />
-              ) : (
-                <Moon className="h-4 w-4" />
-              )}
-              <span className="text-xs">
-                {isDark ? "Light Theme" : "Dark Theme"}
-              </span>
-            </ButtonCustom>
-          </div>
-          <div className="space-y-2">
-            {config.navItems.map((item: NavItem) => {
-              const Icon = item.icon;
-
-              return (
-                <Link
-                  key={item.path}
-                  href={item.path}
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="flex items-center space-x-3 rounded-lg px-4 py-3 hover:bg-white/10"
-                >
-                  <Icon className="h-5 w-5" />
-                  <span>{item.label}</span>
-                </Link>
-              );
-            })}
-
-            <ButtonCustom
-              onClick={handleLogout}
-              className="flex w-full items-center space-x-3 rounded-lg px-4 py-3 hover:bg-white/10"
-            >
-              <LogOut className="h-5 w-5" />
-              <span>{t("logout")}</span>
-            </ButtonCustom>
-          </div>
-        </div>
+        <MobileMenu
+          navItems={config.navItems}
+          onLogout={handleLogout}
+          onClose={() => setMobileMenuOpen(false)}
+        />
       )}
     </>
   );

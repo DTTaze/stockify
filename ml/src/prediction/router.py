@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Path
+from fastapi import APIRouter, Depends, Path, Query
 from .service import PredictionService, prediction_service
 from . import schemas
 
@@ -36,9 +36,10 @@ def get_supported_symbols(
 )
 def get_prediction(
     symbol: str = Path(..., description="Stock symbol (e.g., VCB, VIC, VNM)"),
+    model_type: str = Query("lstm", description="Model type (lstm, gru, linear)"),
     service: PredictionService = Depends(get_service),
 ) -> schemas.PredictionResponse:
-    prediction = service.get_prediction(symbol.upper())
+    prediction = service.get_prediction(symbol.upper(), model_type.lower())
 
     if not prediction:
         return schemas.PredictionResponse(symbol=symbol.upper())

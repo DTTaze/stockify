@@ -1,7 +1,8 @@
 {
   "dashboard": "Bảng điều khiển",
-  "watchlist": "Theo dõi",
-  "stocks": "Danh mục",
+  "navWatchlist": "Theo dõi",
+  "navStocks": "Danh mục",
+  "boardStocksHeader": "Danh mục",
   "userManagement": "Quản lý User",
   "dataManagement": "Quản lý Dữ liệu",
   "modelManagement": "Quản lý Model",
@@ -175,7 +176,12 @@
     "days7": "7 ngày tới",
     "days14": "14 ngày tới",
     "expectedLabel": "Dự kiến {label}:",
-    "trendLine": "Đường xu hướng AI dự kiến"
+    "trendLine": "Đường xu hướng AI dự kiến",
+    "forecastHorizon": "Khoảng dự báo",
+    "modelArchitecture": "Mô hình dự báo",
+    "actualPrice": "Giá thực tế",
+    "predictedPrice": "Giá dự báo",
+    "performanceMetrics": "Hiệu suất mô hình (Validation)"
   },
   "indicator": {
     "summary": "Tín hiệu kỹ thuật tổng hợp:",
@@ -295,5 +301,15 @@
     "govBonds": "Trái phiếu chính phủ Việt Nam phát hành",
     "cwTab": "Chứng quyền (CW)",
     "etfTab": "Quỹ ETF"
+  },
+  "notifications": {
+    "title": "Thông báo",
+    "markAllRead": "Đọc tất cả",
+    "clearAll": "Xóa tất cả",
+    "empty": "Không có thông báo nào mới",
+    "fptSuccess": "Mô hình AI LSTM cho mã FPT đã huấn luyện thành công",
+    "vcbRise": "Cổ phiếu VCB trong Watchlist của bạn tăng 2.3%",
+    "hoseAlert": "Hệ thống phát hiện biến động giá bất thường tại sàn HOSE",
+    "vn30Update": "Dữ liệu lịch sử của rổ VN30 đã được cập nhật đầy đủ"
   }
 }

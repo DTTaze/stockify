@@ -1,7 +1,8 @@
 {
   "dashboard": "Dashboard",
-  "watchlist": "Watchlist",
-  "stocks": "Stocks Directory",
+  "navWatchlist": "Watchlist",
+  "navStocks": "Stocks",
+  "boardStocksHeader": "Stocks Directory",
   "userManagement": "User Management",
   "dataManagement": "Data Management",
   "modelManagement": "Model Management",
@@ -175,7 +176,12 @@
     "days7": "7 Days",
     "days14": "14 Days",
     "expectedLabel": "Expected {label}:",
-    "trendLine": "Expected AI Trend Line"
+    "trendLine": "Expected AI Trend Line",
+    "forecastHorizon": "Forecast Horizon",
+    "modelArchitecture": "Prediction Model",
+    "actualPrice": "Actual Price",
+    "predictedPrice": "Predicted Price",
+    "performanceMetrics": "Model Performance (Validation)"
   },
   "indicator": {
     "summary": "Aggregate technical signal:",
@@ -295,5 +301,15 @@
     "govBonds": "Vietnam Government Bonds issued",
     "cwTab": "Warrant (CW)",
     "etfTab": "ETF Fund"
+  },
+  "notifications": {
+    "title": "Notifications",
+    "markAllRead": "Mark all read",
+    "clearAll": "Clear all",
+    "empty": "No new notifications",
+    "fptSuccess": "AI LSTM model for FPT has been trained successfully",
+    "vcbRise": "Stock VCB in your watchlist has increased by 2.3%",
+    "hoseAlert": "System detected unusual price fluctuations on HOSE exchange",
+    "vn30Update": "Historical data of VN30 basket has been fully updated"
   }
 }

@@ -107,8 +107,9 @@ export const getStockCompaniesQueryFn = async (): Promise<
 
 export const getPredictionQueryFn = async (
   symbol: string,
+  modelType?: string,
 ): Promise<StockPrediction> => {
-  const response = await getPredictionHandlers(symbol);
+  const response = await getPredictionHandlers(symbol, modelType);
 
   if (!response.success) {
     throw new Error(response.message || "Failed to fetch prediction");

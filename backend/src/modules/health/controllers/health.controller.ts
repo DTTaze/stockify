@@ -156,7 +156,7 @@ export class HealthController {
         ),
         level: 'info',
         message:
-          'Loaded cached AI prediction models: FPT, VCB, CTG, HPG, BID, SSI, TCB, VHM, VIC, VNM',
+          'Loaded cached AI prediction models for all VN30 symbols',
       },
     ];
 

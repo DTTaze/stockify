@@ -2,11 +2,11 @@ import { BrainCircuit, Layers, LineChart as LineIcon } from "lucide-react";
 import React, { useEffect } from "react";
 
 import { HeaderSection } from "./HeaderSection";
+import { SubTab, useStockDetail } from "./hooks/useStockDetail";
 import { IndicatorsTab } from "./IndicatorsTab";
 import { PredictionTab } from "./PredictionTab";
 import { QuickQuoteRibbon } from "./QuickQuoteRibbon";
 import { TradingTab } from "./TradingTab";
-import { SubTab, useStockDetail } from "./useStockDetail";
 
 interface StockDetailModalProps {
   symbol: string;
@@ -27,6 +27,8 @@ export function StockDetailModal({
     selectedHorizon,
     setSelectedHorizon,
     prediction,
+    modelType,
+    setModelType,
     isHistoryLoading,
     isPredictLoading,
     isModelTrained,
@@ -144,6 +146,8 @@ export function StockDetailModal({
               isModelTrained={isModelTrained}
               isPredictLoading={isPredictLoading}
               prediction={prediction}
+              modelType={modelType}
+              setModelType={setModelType}
               selectedHorizon={selectedHorizon}
               setSelectedHorizon={setSelectedHorizon}
               activePrediction={activePrediction}

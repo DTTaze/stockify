@@ -13,6 +13,9 @@ class PredictionResponse(BaseModel):
     day7_confidence: Optional[int] = None
     day14: Optional[float] = None
     day14_confidence: Optional[int] = None
+    metrics: Optional[dict] = None
+    history_compare: Optional[list[dict]] = None
+
 
 
 class SupportedSymbolsResponse(BaseModel):

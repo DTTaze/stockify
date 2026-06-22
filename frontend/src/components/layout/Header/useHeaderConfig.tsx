@@ -94,12 +94,12 @@ export function useHeaderConfig(
         },
         {
           path: "/user/watchlist",
-          label: t("watchlist"),
+          label: t("navWatchlist"),
           icon: Star,
         },
         {
           path: "/user/stocks",
-          label: t("stocks"),
+          label: t("navStocks"),
           icon: Database,
         },
       ],

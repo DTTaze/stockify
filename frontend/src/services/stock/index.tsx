@@ -47,8 +47,8 @@ export const stockServices = {
   getClassificationSummary: (): Promise<AxiosResponse> =>
     axiosClient.get(`stocks/classification-summary`),
 
-  getPrediction: (symbol: string): Promise<AxiosResponse> =>
-    axiosClient.get(`ml/prediction/${symbol}`),
+  getPrediction: (symbol: string, modelType?: string): Promise<AxiosResponse> =>
+    axiosClient.get(`ml/prediction/${symbol}`, { params: { modelType } }),
 
   getSupportedSymbols: (): Promise<AxiosResponse> =>
     axiosClient.get(`ml/prediction/symbols`),

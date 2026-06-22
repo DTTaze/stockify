@@ -13,7 +13,7 @@ import {
 import { Card } from "@/components/ui/Card";
 import { useLanguage } from "@/providers/LanguageProvider";
 
-import { MarketOverviewDataType } from "./useMarketOverview";
+import { MarketOverviewDataType } from "./hooks/useMarketOverview";
 import { getPriceColor } from "./utils";
 
 interface MiniChartCardProps {

@@ -63,8 +63,9 @@ export const getStockCompaniesHandlers = async (): Promise<
 
 export const getPredictionHandlers = async (
   symbol: string,
+  modelType?: string,
 ): Promise<ApiResponse<StockPrediction>> => {
-  const response = await stockServices.getPrediction(symbol);
+  const response = await stockServices.getPrediction(symbol, modelType);
 
   return response.data;
 };
