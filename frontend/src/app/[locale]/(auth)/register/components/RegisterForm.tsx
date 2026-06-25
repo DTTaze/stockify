@@ -24,11 +24,15 @@ export default function RegisterForm() {
   const isDisabled = loading || !isValid;
 
   return (
-    <div className="flex flex-1 items-center justify-center bg-white p-8">
+    <div className="flex flex-1 items-center justify-center bg-white p-8 dark:bg-neutral-950">
       <div className="w-full max-w-md">
         <div className="mb-12">
-          <h2 className="text-brand-900 mb-3 text-4xl">{t("auth.register")}</h2>
-          <p className="text-gray-600">{t("auth.startNowDesc")}</p>
+          <h2 className="text-brand-900 mb-3 text-4xl dark:text-white">
+            {t("auth.register")}
+          </h2>
+          <p className="text-gray-600 dark:text-neutral-400">
+            {t("auth.startNowDesc")}
+          </p>
         </div>
 
         <Form {...form}>
@@ -45,7 +49,7 @@ export default function RegisterForm() {
             <FormInputText
               control={control}
               label={t("auth.email")}
-              labelClassName="text-brand-900"
+              labelClassName="text-brand-900 dark:text-neutral-300"
               name="email"
               inputProps={{
                 prefixIcon: <Mail className="mr-1 h-6 w-6 text-gray-400" />,
@@ -76,18 +80,20 @@ export default function RegisterForm() {
               loading={loading}
               className={cn(
                 "w-full rounded-lg py-4 text-white",
-                isDisabled ? "bg-gray-300" : "bg-brand-900 hover:bg-brand-800",
+                isDisabled
+                  ? "bg-gray-300 dark:bg-neutral-800 dark:text-neutral-500"
+                  : "bg-brand-900 hover:bg-brand-800 dark:bg-accent-500 dark:hover:bg-accent-600 font-semibold dark:text-neutral-950",
               )}
             >
               {loading ? t("auth.registering") : t("auth.register")}
             </ButtonCustom>
           </form>
 
-          <p className="mt-8 text-center text-gray-600">
+          <p className="mt-8 text-center text-gray-600 dark:text-neutral-400">
             {t("auth.alreadyHaveAccount")}{" "}
             <Link
               href="/login"
-              className="text-brand-900 hover:text-accent-500 transition-colors"
+              className="text-brand-900 dark:text-accent-400 hover:text-accent-500 transition-colors"
             >
               {t("auth.loginNow")}
             </Link>

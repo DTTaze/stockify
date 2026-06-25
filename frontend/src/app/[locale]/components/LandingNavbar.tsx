@@ -9,7 +9,7 @@ export function LandingNavbar() {
   const { t } = useLanguage();
 
   return (
-    <nav className="border-border fixed top-0 z-50 w-full border-b bg-white/80 backdrop-blur-md">
+    <nav className="border-border bg-background/80 fixed top-0 z-50 w-full border-b backdrop-blur-md">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-20 items-center justify-between">
           <div className="flex items-center space-x-3">
@@ -21,7 +21,7 @@ export function LandingNavbar() {
           <div className="flex items-center space-x-4">
             <Link
               href="/login"
-              className="text-primary hover:text-accent-500 px-6 py-2.5 transition-colors"
+              className="text-foreground/80 hover:text-primary px-6 py-2.5 transition-colors"
             >
               {t("landingNavbar.login")}
             </Link>

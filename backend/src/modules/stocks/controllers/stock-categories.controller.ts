@@ -3,8 +3,8 @@ import { HttpResponse } from 'mvc-common-toolkit';
 import { Controller, Get, Param, Post, Query } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
-import { StockCategoriesService } from '../services/stock-categories.service';
 import { QueryIcbDTO, QueryIcbStocksDTO } from '../dto/stocks.dto';
+import { StockCategoriesService } from '../services/stock-categories.service';
 import { StocksService } from '../services/stocks.service';
 
 @ApiTags('Stock Categories')

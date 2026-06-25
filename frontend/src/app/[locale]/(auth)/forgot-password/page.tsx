@@ -31,17 +31,17 @@ export default function ForgotPasswordPage() {
         />
       }
     >
-      <div className="flex flex-1 flex-col items-center justify-center bg-white p-8">
+      <div className="flex flex-1 flex-col items-center justify-center bg-white p-8 dark:bg-neutral-950">
         <div className="w-full max-w-md">
           <Link
             href="/login"
-            className="hover:text-brand-900 mb-8 inline-flex items-center space-x-2 text-gray-600 transition-colors"
+            className="hover:text-brand-900 dark:hover:text-accent-400 mb-8 inline-flex items-center space-x-2 text-gray-600 transition-colors dark:text-neutral-400"
           >
             <ArrowLeft className="h-4 w-4" />
             <span>{t("auth.backToLogin")}</span>
           </Link>
 
-          <div className="flex justify-center bg-white">
+          <div className="flex justify-center bg-white dark:bg-neutral-950">
             <div className="w-full max-w-md">
               {!submitted ? (
                 <ForgotForm

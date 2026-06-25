@@ -5,7 +5,7 @@ import { useState } from "react";
 
 import { InputCustom, InputCustomProps } from ".";
 
-const styleIconEye = "h-6 w-6 text-black";
+const styleIconEye = "h-6 w-6 text-neutral-500 dark:text-neutral-400";
 
 interface Props extends InputCustomProps {
   classNameIcon?: string;

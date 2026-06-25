@@ -54,4 +54,28 @@ export class UserController {
       status: dto.status,
     });
   }
+
+  @Patch(':id/reset-password')
+  @ApiOperation({
+    summary: 'Reset user password',
+    description: 'Admin reset user password manually',
+  })
+  async resetPassword(
+    @Param('id') id: string,
+    @Body() dto: { password?: string },
+  ): Promise<any> {
+    const user = await this.userService.findByID(id);
+
+    if (!user) {
+      return generateNotFoundResult('User not found');
+    }
+
+    const newPassword = dto.password || '12345678a';
+    await this.userService.updatePassword(id, newPassword);
+
+    return {
+      success: true,
+      message: 'Password reset successfully',
+    };
+  }
 }

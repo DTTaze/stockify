@@ -35,7 +35,10 @@ export const logout = () => {
 
     clearZustand();
 
-    window.location.reload();
+    const pathname = window.location.pathname;
+    const localeMatch = pathname.match(/^\/(vi|en)(\/|$)/);
+    const locale = localeMatch ? localeMatch[1] : "vi";
+    window.location.href = `/${locale}/login`;
   } catch (error) {
     console.error(error);
     toast.error("Logout failed");

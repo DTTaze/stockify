@@ -26,6 +26,4 @@ export class StocksSchedulerService {
       this.logger.error('Critical error during automated stock sync:', error);
     }
   }
-
-
 }

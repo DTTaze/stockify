@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 
-import { IndexTicker } from "./components/IndexTicker";
 import { MarketOverview } from "./components/MarketOverview";
 import { StockBoard } from "./components/StockBoard";
 import { StockDetailModal } from "./components/StockDetailModal";
@@ -18,9 +17,6 @@ export default function DashBoardPage() {
 
   return (
     <div className="flex min-h-screen flex-col bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100">
-      {/* Top index ticker bar */}
-      <IndexTicker />
-
       {/* Main Board Workspace */}
       <div className="mx-auto grid w-full max-w-[1800px] flex-1 grid-cols-1 gap-4 p-4 md:p-6 lg:grid-cols-12">
         {/* Market Overview Index Section */}

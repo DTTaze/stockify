@@ -5,6 +5,7 @@ import {
   Get,
   Param,
   Post,
+  Put,
   UseGuards,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
@@ -78,6 +79,26 @@ export class AdminUserRolesController {
       return {
         success: false,
         message: error,
+      };
+    }
+  }
+
+  @ApiOperation({ summary: 'Sync roles for user' })
+  @Put('user/:userId')
+  async syncUserRoles(
+    @Param('userId') userId: string,
+    @Body() dto: { roleIds: string[] },
+  ) {
+    try {
+      await this.adminUserRolesService.syncRoles(userId, dto.roleIds);
+      return {
+        success: true,
+        message: 'Roles synced successfully',
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message: error.message || error,
       };
     }
   }

@@ -8,13 +8,15 @@ import {
   stringUtils,
 } from 'mvc-common-toolkit';
 
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 
 import { APP_ACTION } from '@shared/constants';
 import { getLogId } from '@shared/decorators/logging.decorator';
 
 @Injectable()
 export abstract class OutboundPartnerService {
+  private readonly partnerLogger = new Logger(OutboundPartnerService.name);
+
   constructor(
     protected readonly httpService: HttpService,
     protected readonly auditService: AuditService,
@@ -78,19 +80,34 @@ export abstract class OutboundPartnerService {
       return;
     }
 
-    this.auditService.emitLog(
-      new ErrorLog({
-        logId: getLogId(options),
-        message: error?.message,
-        action: APP_ACTION.SEND_TO_PARTNER,
-        payload: JSON.stringify(payload, stringUtils.maskFn),
-        metadata: {
-          url,
-          method,
-          response: JSON.stringify(error, stringUtils.maskFn),
-        },
-      }),
-    );
+    try {
+      let errorResponseStr = '';
+      try {
+        errorResponseStr = JSON.stringify(error, stringUtils.maskFn);
+      } catch {
+        errorResponseStr = JSON.stringify({
+          message: error?.message || String(error),
+          code: error?.code,
+          stack: error?.stack,
+        });
+      }
+
+      this.auditService.emitLog(
+        new ErrorLog({
+          logId: getLogId(options),
+          message: error?.message || 'Partner request error',
+          action: APP_ACTION.SEND_TO_PARTNER,
+          payload: JSON.stringify(payload, stringUtils.maskFn),
+          metadata: {
+            url,
+            method,
+            response: errorResponseStr,
+          },
+        }),
+      );
+    } catch (auditError) {
+      this.partnerLogger.error('Failed to emit partner audit log:', auditError);
+    }
   }
 
   private fail(res?: HttpResponse): HttpResponse {

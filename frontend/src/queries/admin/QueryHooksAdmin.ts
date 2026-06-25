@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
+import { QueryKeysDataManagement } from "../data-management/QueryKeysDataManagement";
 import {
   getAdminDashboardActivitiesQueryFn,
   getAdminDashboardPerformanceQueryFn,
@@ -46,6 +47,9 @@ export const useSyncAdminStockPrices = () => {
       });
       queryClient.invalidateQueries({
         queryKey: [QueryKeysAdmin.ROOT, QueryKeysAdmin.ACTIVITIES],
+      });
+      queryClient.invalidateQueries({
+        queryKey: [QueryKeysDataManagement.ROOT],
       });
     },
   });

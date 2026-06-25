@@ -50,7 +50,7 @@ export const FormInput = <T extends FieldValues>(props: PropsFormInput<T>) => {
           {label && (
             <FormLabel
               className={cn(
-                "text-brand-900 mb-1 text-sm font-medium lg:text-base",
+                "text-brand-900 mb-1 text-sm font-medium lg:text-base dark:text-neutral-200",
                 labelClassName,
               )}
             >

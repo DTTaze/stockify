@@ -15,6 +15,7 @@ export const AUTH_ROUTES = [
 export const USER_ROUTES = [
   protectedRouteEnum.DASHBOARD,
   protectedRouteEnum.WATCHLIST,
+  protectedRouteEnum.STOCKS,
 ];
 
 export const ADMIN_ROUTES = [

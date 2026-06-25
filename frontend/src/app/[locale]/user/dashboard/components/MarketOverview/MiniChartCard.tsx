@@ -1,4 +1,4 @@
-import { ChevronDown } from "lucide-react";
+import { Check, ChevronDown, Search, X } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import {
   Area,
@@ -18,10 +18,18 @@ import { getPriceColor } from "./utils";
 
 interface MiniChartCardProps {
   item: MarketOverviewDataType;
+  allIndices: MarketOverviewDataType[];
+  onSelect: (newLabel: string) => void;
 }
 
-export function MiniChartCard({ item }: MiniChartCardProps) {
+export function MiniChartCard({
+  item,
+  allIndices,
+  onSelect,
+}: MiniChartCardProps) {
   const [isMounted, setIsMounted] = useState(false);
+  const [showModal, setShowModal] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
   const { t } = useLanguage();
 
   useEffect(() => {
@@ -38,18 +46,12 @@ export function MiniChartCard({ item }: MiniChartCardProps) {
   const paddedMin = minVal - padding;
   const paddedMax = maxVal + padding;
 
-  let offset = 0.5;
-  if (paddedMax !== paddedMin) {
-    offset = (paddedMax - refPrice) / (paddedMax - paddedMin);
-  }
-  offset = Math.max(0, Math.min(1, offset));
-
   const maxVol = Math.max(...item.chartData.map((d) => d.volume || 0)) || 1;
 
   return (
-    <Card className="border-gray-150 bg-gray-55/50 flex flex-col justify-between gap-0 rounded-lg border p-2.5 py-2.5 shadow-inner dark:border-slate-900 dark:bg-slate-900/10">
+    <Card className="border-gray-250 flex flex-col justify-between gap-0 rounded-lg border bg-white p-2 shadow-inner dark:border-slate-800 dark:bg-[#08090d]">
       {/* Inline Recharts Mini Price Line chart */}
-      <div className="relative h-[65px] w-full overflow-hidden rounded border border-gray-200 bg-white dark:border-[#1e293b] dark:bg-[#0d0e12]">
+      <div className="border-gray-150 dark:border-slate-850 relative h-[65px] w-full overflow-hidden rounded border bg-gray-50 dark:bg-[#020204]">
         {isMounted ? (
           <ResponsiveContainer width="100%" height="100%" minWidth={0}>
             <AreaChart
@@ -58,44 +60,50 @@ export function MiniChartCard({ item }: MiniChartCardProps) {
             >
               <defs>
                 <linearGradient
-                  id={`stroke-${item.label}`}
+                  id={`gradient-${item.label}`}
                   x1="0"
                   y1="0"
                   x2="0"
                   y2="1"
                 >
-                  <stop offset="0%" stopColor="#26a69a" />
-                  <stop offset={`${offset * 100}%`} stopColor="#26a69a" />
-                  <stop offset={`${offset * 100}%`} stopColor="#ef4444" />
-                  <stop offset="100%" stopColor="#ef4444" />
+                  <stop
+                    offset="0%"
+                    stopColor={isUp ? "#22c55e" : "#ef4444"}
+                    stopOpacity={0.25}
+                  />
+                  <stop
+                    offset="100%"
+                    stopColor={isUp ? "#22c55e" : "#ef4444"}
+                    stopOpacity={0.0}
+                  />
                 </linearGradient>
               </defs>
               <CartesianGrid
                 stroke="var(--border)"
-                strokeOpacity={0.5}
+                strokeOpacity={0.4}
                 strokeDasharray="1 1"
               />
               <XAxis dataKey="time" hide />
               <YAxis yAxisId="price" domain={[paddedMin, paddedMax]} hide />
               <YAxis yAxisId="volume" domain={[0, maxVol * 3.5]} hide />
 
-              {/* Volume Area (rendered behind price line) */}
+              {/* Volume Area */}
               <Area
                 yAxisId="volume"
                 type="monotone"
                 dataKey="volume"
-                stroke="#38bdf8"
-                strokeWidth={1}
-                fill="#38bdf8"
-                fillOpacity={0.12}
+                stroke="#0284c7"
+                strokeWidth={0.8}
+                fill="#0284c7"
+                fillOpacity={0.08}
               />
 
               {/* Reference Line corresponding to Ref Price */}
               <ReferenceLine
                 yAxisId="price"
                 y={refPrice}
-                stroke="var(--border)"
-                strokeDasharray="3 3"
+                className="stroke-gray-300 dark:stroke-slate-700"
+                strokeDasharray="2 2"
                 label={({ viewBox }) => {
                   const { x, y, width } = viewBox;
                   return (
@@ -105,13 +113,13 @@ export function MiniChartCard({ item }: MiniChartCardProps) {
                         y={y - 6}
                         width={50}
                         height={12}
-                        fill="var(--background)"
+                        className="fill-gray-200 dark:fill-[#0d0e12]"
                         rx={2}
                       />
                       <text
                         x={x + width / 2}
                         y={y + 3}
-                        fill="#94a3b8"
+                        className="fill-slate-600 dark:fill-[#94a3b8]"
                         fontSize={8.5}
                         fontWeight="bold"
                         textAnchor="middle"
@@ -131,9 +139,9 @@ export function MiniChartCard({ item }: MiniChartCardProps) {
                 yAxisId="price"
                 type="monotone"
                 dataKey="value"
-                stroke={`url(#stroke-${item.label})`}
-                strokeWidth={1.6}
-                fill="none"
+                stroke={isUp ? "#22c55e" : "#ef4444"}
+                strokeWidth={1.5}
+                fill={`url(#gradient-${item.label})`}
               />
             </AreaChart>
           </ResponsiveContainer>
@@ -141,7 +149,7 @@ export function MiniChartCard({ item }: MiniChartCardProps) {
           <div className="h-full w-full animate-pulse bg-slate-900/40" />
         )}
         {/* Hour timeline indicators overlay on bottom of chart */}
-        <div className="text-gray-550 dark:text-slate-650 absolute right-0 bottom-0 left-0 flex justify-between px-1 font-mono text-[7px] select-none">
+        <div className="absolute right-0 bottom-0 left-0 flex justify-between px-1 font-mono text-[7.5px] text-slate-500 select-none dark:text-slate-400">
           <span>09h</span>
           <span>11h</span>
           <span>13h</span>
@@ -150,69 +158,135 @@ export function MiniChartCard({ item }: MiniChartCardProps) {
       </div>
 
       {/* Summary values below chart */}
-      <div className="mt-2.5 space-y-1 font-mono select-none">
-        <div className="flex items-center justify-between text-xs font-bold text-gray-800 dark:text-slate-200">
-          <span className="dark:text-slate-355 flex items-center gap-0.5 font-sans text-[11px] text-gray-700">
+      <div className="mt-2 space-y-1.5 font-sans text-[10px] font-semibold select-none">
+        {/* Row 1 */}
+        <div className="flex items-center justify-between">
+          {/* Left: Label */}
+          <button
+            onClick={() => setShowModal(true)}
+            className="flex cursor-pointer items-center gap-0.5 text-[11px] font-bold text-slate-800 transition-colors hover:text-blue-600 dark:text-white dark:hover:text-blue-400"
+          >
             {item.label}{" "}
-            <ChevronDown className="h-3 w-3 text-gray-400 dark:text-slate-500" />
-          </span>
-          <span className={getPriceColor(item.change)}>
+            <ChevronDown className="h-3 w-3 text-slate-500 dark:text-slate-400" />
+          </button>
+
+          {/* Right: Points + Change */}
+          <span
+            className={`font-mono text-[10.5px] font-bold ${getPriceColor(item.change)}`}
+          >
+            {isUp ? "↑" : "↓"}
             {item.price.toLocaleString("vi-VN", {
               minimumFractionDigits: 2,
               maximumFractionDigits: 2,
-            })}
+            })}{" "}
+            ({item.diff > 0 ? "+" : ""}
+            {item.diff.toFixed(2)} {item.change.toFixed(2)}%)
           </span>
         </div>
 
-        <div className="flex items-center justify-between text-[10px] font-bold">
-          <span className="dark:text-slate-505 font-sans text-gray-500">
+        {/* Row 2 */}
+        <div className="flex items-center justify-between text-[9.5px] text-slate-500 dark:text-slate-400">
+          {/* Left: Volume */}
+          <span className="font-mono">
             {item.volume.toLocaleString("vi-VN")} CP
           </span>
-          <span className={`flex items-center ${getPriceColor(item.change)}`}>
-            {isUp ? "↑" : "↓"} {Math.abs(item.diff).toFixed(2)} (
-            {isUp ? "+" : ""}
-            {item.change.toFixed(2)}%)
+
+          {/* Right: Value in Billion */}
+          <span className="font-mono">
+            {item.stats.valueBillion.toLocaleString("vi-VN", {
+              maximumFractionDigits: 3,
+            })}{" "}
+            {t("billion") || "Tỷ"}
           </span>
         </div>
 
-        <div className="flex items-center justify-between border-b border-gray-200 pb-1.5 text-[10px] font-bold dark:border-slate-900/60">
-          <span className="text-gray-650 font-sans font-normal dark:text-slate-400">
-            GTGD:{" "}
-            <strong className="text-gray-800 dark:text-slate-300">
-              {item.stats.valueBillion.toLocaleString("vi-VN", {
-                maximumFractionDigits: 1,
-              })}{" "}
-              {t("billion")}
-            </strong>
-          </span>
-          <span className="dark:text-slate-505 font-sans text-[9px] font-semibold text-gray-500">
-            {t("closed")}
-          </span>
-        </div>
+        {/* Row 3 */}
+        <div className="flex items-center justify-between text-[9px]">
+          {/* Left: Up, Flat, Down counts */}
+          <div className="flex items-center gap-2 font-mono font-bold">
+            <span className="text-[#22c55e]">↑ {item.stats.up}</span>
+            <span className="text-[#eab308]">▬ {item.stats.flat}</span>
+            <span className="text-[#ef4444]">↓ {item.stats.down}</span>
+          </div>
 
-        {/* Stock Split Ribbon */}
-        <div className="flex items-center justify-between pt-1.5 font-sans text-[9px] font-bold">
-          <span className="flex items-center gap-0.5 text-green-600 dark:text-green-400">
-            ↑ {item.stats.up}{" "}
-            {item.stats.ceil > 0 && (
-              <span className="text-fuchsia-600 dark:text-fuchsia-400">
-                ({item.stats.ceil})
-              </span>
-            )}
-          </span>
-          <span className="text-amber-600 dark:text-yellow-400">
-            ▬ {item.stats.flat}
-          </span>
-          <span className="flex items-center gap-0.5 text-red-600 dark:text-red-500">
-            ↓ {item.stats.down}{" "}
-            {item.stats.floor > 0 && (
-              <span className="text-cyan-600 dark:text-cyan-400">
-                ({item.stats.floor})
-              </span>
-            )}
+          {/* Right: Closed status */}
+          <span className="text-[8.5px] font-medium text-slate-500 dark:text-slate-400">
+            {t("closed") || "Đóng cửa"}
           </span>
         </div>
       </div>
+
+      {showModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-xs">
+          <div className="w-full max-w-[360px] rounded-xl border border-gray-200 bg-white p-5 text-slate-800 shadow-2xl dark:border-slate-800 dark:bg-[#13141b] dark:text-white">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between pb-3">
+              <span className="text-base font-bold">
+                {t("selectIndex") || "Chọn chỉ số"}
+              </span>
+              <button
+                onClick={() => {
+                  setShowModal(false);
+                  setSearchQuery("");
+                }}
+                className="cursor-pointer rounded-full p-1 text-slate-500 transition-colors hover:bg-gray-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            {/* Search Input */}
+            <div className="relative mt-2">
+              <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-slate-500 dark:text-slate-400" />
+              <input
+                type="text"
+                placeholder={t("searchPlaceholder") || "Tìm kiếm"}
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full rounded-lg border border-gray-200 bg-gray-100 py-2.5 pr-4 pl-10 text-sm text-slate-800 placeholder-slate-500 focus:ring-1 focus:ring-blue-500 focus:outline-none dark:border-none dark:bg-[#20222e] dark:text-white dark:placeholder-slate-400"
+              />
+            </div>
+
+            {/* List */}
+            <div className="scrollbar-thin scrollbar-thumb-slate-800 scrollbar-track-transparent mt-4 max-h-[320px] space-y-1 overflow-y-auto pr-1">
+              {allIndices
+                .filter((ind) =>
+                  ind.label.toLowerCase().includes(searchQuery.toLowerCase()),
+                )
+                .map((ind) => {
+                  const isSelected = ind.label === item.label;
+                  return (
+                    <button
+                      key={ind.label}
+                      onClick={() => {
+                        onSelect(ind.label);
+                        setShowModal(false);
+                        setSearchQuery("");
+                      }}
+                      className={`flex w-full cursor-pointer items-center justify-between rounded-lg px-3 py-3 text-left text-sm font-semibold transition-all ${
+                        isSelected
+                          ? "bg-indigo-50 text-indigo-700 dark:bg-[#2b2d3d] dark:text-white"
+                          : "text-slate-650 hover:bg-gray-50 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-900/60 dark:hover:text-white"
+                      }`}
+                    >
+                      <span>{ind.label}</span>
+                      {isSelected && (
+                        <Check className="h-4 w-4 text-indigo-600 dark:text-white" />
+                      )}
+                    </button>
+                  );
+                })}
+              {allIndices.filter((ind) =>
+                ind.label.toLowerCase().includes(searchQuery.toLowerCase()),
+              ).length === 0 && (
+                <div className="py-8 text-center text-sm text-slate-500">
+                  {t("noIndexResults") || "Không tìm thấy kết quả"}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </Card>
   );
 }

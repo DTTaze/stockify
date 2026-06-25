@@ -1,4 +1,9 @@
-import { AuditService, CacheService, ErrorLog, SET_EXPIRE_POLICY } from 'mvc-common-toolkit';
+import {
+  AuditService,
+  CacheService,
+  ErrorLog,
+  SET_EXPIRE_POLICY,
+} from 'mvc-common-toolkit';
 import {
   Observable,
   TimeoutError,
@@ -16,7 +21,6 @@ import {
   Injectable,
   Logger,
   NestInterceptor,
-  Optional,
   SetMetadata,
   UseInterceptors,
   applyDecorators,
@@ -75,7 +79,7 @@ export class CallQueueInterceptor implements NestInterceptor {
 
     // Atomic increment using Redis
     const newValue = await this.cacheService.incrBy(cacheKey, 1);
-    
+
     // Set 3 minute TTL (180s) only if not already set, to prevent orphaned locks on crash
     await this.cacheService.expire(cacheKey, {
       policy: SET_EXPIRE_POLICY.IF_NOT_EXISTS,
@@ -133,7 +137,9 @@ export class CallQueueInterceptor implements NestInterceptor {
               await this.cacheService.del(cacheKey);
             }
           } catch (e) {
-            this.logger.error(`Failed to decrement concurrency counter for key ${cacheKey}: ${e}`);
+            this.logger.error(
+              `Failed to decrement concurrency counter for key ${cacheKey}: ${e}`,
+            );
           }
         };
         decrTask();

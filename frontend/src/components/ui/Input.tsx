@@ -11,7 +11,7 @@ function Input({ className, type, ...props }: ComponentProps<"input">) {
         "focus-visible:outline-none",
         "h-12 w-full",
         "disabled:bg-neutral-50",
-        "text-base font-medium text-neutral-900",
+        "text-base font-medium text-neutral-900 dark:text-neutral-100",
         className,
       )}
       {...props}

@@ -30,9 +30,11 @@ function ActivityItem(props: ActivityItemProps) {
       </div>
 
       <div className="flex-1">
-        <p className="text-brand-900 text-sm">{activity.message}</p>
+        <p className="text-foreground text-sm dark:text-neutral-200">
+          {activity.message}
+        </p>
 
-        <p className="mt-1 text-xs text-gray-500">
+        <p className="text-muted-foreground mt-1 text-xs">
           {formatRelativeTime(activity.timestamp)}
         </p>
       </div>
@@ -42,11 +44,11 @@ function ActivityItem(props: ActivityItemProps) {
 
 function ActivitySkeleton() {
   return (
-    <div className="flex animate-pulse items-start space-x-3 rounded-xl border-2 border-gray-100 bg-white p-4">
-      <div className="h-7 w-7 shrink-0 rounded-lg bg-gray-200" />
+    <div className="border-border bg-card flex animate-pulse items-start space-x-3 rounded-xl border-2 p-4">
+      <div className="bg-muted h-7 w-7 shrink-0 rounded-lg" />
       <div className="flex-1 space-y-2 py-0.5">
-        <div className="h-4 w-5/6 rounded bg-gray-200" />
-        <div className="h-3 w-1/4 rounded bg-gray-200/70" />
+        <div className="bg-muted h-4 w-5/6 rounded" />
+        <div className="bg-muted/70 h-3 w-1/4 rounded" />
       </div>
     </div>
   );
@@ -54,7 +56,7 @@ function ActivitySkeleton() {
 
 function EmptyState() {
   return (
-    <div className="rounded-xl border border-dashed border-gray-200 bg-gray-50 p-6 text-center text-sm text-gray-500">
+    <div className="border-border bg-muted/20 text-muted-foreground rounded-xl border border-dashed p-6 text-center text-sm">
       Chưa có hoạt động gần đây.
     </div>
   );
@@ -85,18 +87,22 @@ export function RecentActivities({
   };
 
   return (
-    <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+    <div className="border-border bg-card text-card-foreground rounded-xl border p-6 shadow-sm">
       <div className="mb-6 flex items-center justify-between">
         <div>
-          <h2 className="text-brand-900 text-2xl">Hoạt động gần đây</h2>
+          <h2 className="text-brand-900 text-2xl font-semibold dark:text-neutral-50">
+            Hoạt động gần đây
+          </h2>
 
-          <p className="mt-1 text-sm text-gray-600">Cập nhật từ hệ thống</p>
+          <p className="text-muted-foreground mt-1 text-sm">
+            Cập nhật từ hệ thống
+          </p>
         </div>
 
         {realtimeError ? (
-          <span className="text-xs text-red-500">Realtime tạm dừng</span>
+          <span className="text-danger-500 text-xs">Realtime tạm dừng</span>
         ) : (
-          <span className="text-xs text-green-600">
+          <span className="text-success-500 text-xs">
             Realtime đang hoạt động
           </span>
         )}

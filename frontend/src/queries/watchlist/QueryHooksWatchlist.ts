@@ -12,10 +12,11 @@ import {
 import { getMarketListQueryFn, getWatchlistQueryFn } from "./QueryFnsWatchlist";
 import { QueryKeysWatchlist } from "./QueryKeysWatchlist";
 
-export const useQueryWatchlist = () =>
+export const useQueryWatchlist = (enabled = true) =>
   useQuery<WatchlistItemRaw[]>({
     queryKey: [QueryKeysWatchlist.ROOT],
     queryFn: getWatchlistQueryFn,
+    enabled,
   });
 
 export const useQueryMarketList = (type: string, enabled: boolean) =>

@@ -27,6 +27,8 @@ export default function ModelManagement() {
 
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [typeFilter, setTypeFilter] = useState<string>("all");
+  const [envFilter, setEnvFilter] = useState<string>("all");
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [newSymbol, setNewSymbol] = useState("");
 
@@ -104,12 +106,15 @@ export default function ModelManagement() {
   };
 
   const filteredModels = models.filter((model) => {
-    const matchesSearch = model.name
-      .toLowerCase()
-      .includes(searchTerm.toLowerCase());
+    const matchesSearch =
+      model.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (model.type &&
+        model.type.toLowerCase().includes(searchTerm.toLowerCase()));
     const matchesStatus =
       statusFilter === "all" || model.status === statusFilter;
-    return matchesSearch && matchesStatus;
+    const matchesType = typeFilter === "all" || model.type === typeFilter;
+    const matchesEnv = envFilter === "all" || model.environment === envFilter;
+    return matchesSearch && matchesStatus && matchesType && matchesEnv;
   });
 
   return (
@@ -127,13 +132,23 @@ export default function ModelManagement() {
         </button>
       </div>
 
-      <ModelStats models={models} isSummaryLoading={isModelsLoading} />
+      <ModelStats
+        models={models}
+        isSummaryLoading={isModelsLoading}
+        activeFilter={statusFilter}
+        onFilterChange={setStatusFilter}
+      />
 
       <ModelFilters
         searchTerm={searchTerm}
         setSearchTerm={setSearchTerm}
         statusFilter={statusFilter}
         setStatusFilter={setStatusFilter}
+        typeFilter={typeFilter}
+        setTypeFilter={setTypeFilter}
+        envFilter={envFilter}
+        setEnvFilter={setEnvFilter}
+        models={models}
       />
 
       <ModelTable

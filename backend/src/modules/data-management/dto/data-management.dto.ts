@@ -19,10 +19,23 @@ export class DataManagementStockDto {
   lastUpdated?: string;
 
   @ApiProperty({
+    description: 'Last updated timestamp (alternative)',
+    example: '2026-04-25T14:00:00',
+    required: false,
+  })
+  last_updated?: string;
+
+  @ApiProperty({
     description: 'Total processed records',
     example: 1250,
   })
   totalRecords: number;
+
+  @ApiProperty({
+    description: 'Total processed records (alternative)',
+    example: 1250,
+  })
+  total_records: number;
 
   @ApiProperty({
     description: 'Data update status',

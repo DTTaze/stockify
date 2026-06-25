@@ -2,13 +2,14 @@ import { ConfigService } from '@nestjs/config';
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 
+import { MLService } from '@modules/ml/services/ml.service';
+
 import { INJECTION_TOKEN } from '@shared/constants';
 
-import { MLService } from '@modules/ml/services/ml.service';
 import { StockPrice } from '../entities/stock-price.model';
+import { Stock } from '../entities/stocks.model';
 import { StocksClassificationSyncService } from './stocks-classification-sync.service';
 import { StocksPriceSyncService } from './stocks-price-sync.service';
-import { Stock } from '../entities/stocks.model';
 import { StocksService } from './stocks.service';
 
 describe('StocksService', () => {
@@ -148,8 +149,18 @@ describe('StocksService', () => {
   describe('getStockQuote', () => {
     it('should retrieve quotes directly from local database', async () => {
       const mockPrices = [
-        { symbol: 'VCB', close: 100000, volume: 50000, date: new Date('2026-06-20') },
-        { symbol: 'VCB', close: 95000, volume: 40000, date: new Date('2026-06-19') },
+        {
+          symbol: 'VCB',
+          close: 100000,
+          volume: 50000,
+          date: new Date('2026-06-20'),
+        },
+        {
+          symbol: 'VCB',
+          close: 95000,
+          volume: 40000,
+          date: new Date('2026-06-19'),
+        },
       ] as StockPrice[];
       mockPriceRepository.find.mockResolvedValue(mockPrices);
 

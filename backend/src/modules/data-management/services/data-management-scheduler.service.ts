@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 
 import { StocksService } from '@modules/stocks/services/stocks.service';
+
 import { DataManagementService } from './data-management.service';
 
 @Injectable()

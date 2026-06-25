@@ -11,7 +11,9 @@ export function CTASection() {
   return (
     <section className="px-4 py-20 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-4xl text-center">
-        <h2 className="text-primary mb-6 text-4xl">{t("cta.title")}</h2>
+        <h2 className="text-primary mb-6 text-4xl font-bold">
+          {t("cta.title")}
+        </h2>
         <p className="text-muted-foreground mb-8 text-xl">{t("cta.desc")}</p>
         <Link
           href="/register"

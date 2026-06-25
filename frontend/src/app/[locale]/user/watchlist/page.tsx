@@ -1,122 +1,77 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-
-import { useRemoveFromWatchlist } from "@/queries/watchlist/QueryHooksWatchlist";
-import { useWatchlistWithQuotes } from "@/queries/watchlist/useWatchlistWithQuotes";
-import { PurchaseTransaction } from "@/types/watchlist/watchlist.type";
-
 import { WatchlistEmptyState } from "./components/WatchlistEmptyState";
 import { WatchlistHeader } from "./components/WatchlistHeader";
 import { WatchlistSummary } from "./components/WatchlistSummary";
 import { WatchlistTable } from "./components/WatchlistTable";
+import { useWatchlistPage } from "./hooks/useWatchlistPage";
+
+export type WatchlistFilter = "all" | "up" | "down" | "held";
+export type WatchlistSort =
+  | "symbol"
+  | "price-desc"
+  | "change-desc"
+  | "volume-desc"
+  | "position-desc";
 
 export default function WatchListPage() {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [removingSymbol, setRemovingSymbol] = useState<string | null>(null);
-  const [purchases, setPurchases] = useState<
-    Record<string, PurchaseTransaction[]>
-  >({});
-
-  const { watchlist, isLoading } = useWatchlistWithQuotes();
-  const removeMutation = useRemoveFromWatchlist();
-
-  // Load transactions from localStorage
-  useEffect(() => {
-    const saved = localStorage.getItem("stockify_watchlist_purchases");
-    if (saved) {
-      try {
-        setPurchases(JSON.parse(saved));
-      } catch (e) {
-        console.error("Failed to parse purchases", e);
-      }
-    }
-  }, []);
-
-  // Helper to save transactions to state and localStorage
-  const savePurchases = (
-    newPurchases: Record<string, PurchaseTransaction[]>,
-  ) => {
-    setPurchases(newPurchases);
-    localStorage.setItem(
-      "stockify_watchlist_purchases",
-      JSON.stringify(newPurchases),
-    );
-  };
-
-  const handleAddTransaction = (
-    symbol: string,
-    date: string,
-    quantity: number,
-    price: number,
-  ) => {
-    const stockPurchases = purchases[symbol] || [];
-    const newTx: PurchaseTransaction = {
-      id: crypto.randomUUID
-        ? crypto.randomUUID()
-        : Math.random().toString(36).substring(2, 9),
-      symbol,
-      purchaseDate: date,
-      quantity,
-      price,
-    };
-    const updated = {
-      ...purchases,
-      [symbol]: [...stockPurchases, newTx],
-    };
-    savePurchases(updated);
-  };
-
-  const handleDeleteTransaction = (symbol: string, transactionId: string) => {
-    const stockPurchases = purchases[symbol] || [];
-    const updated = {
-      ...purchases,
-      [symbol]: stockPurchases.filter((tx) => tx.id !== transactionId),
-    };
-    savePurchases(updated);
-  };
-
-  const filteredWatchlist = watchlist.filter(
-    (item) =>
-      item.symbol.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.name.toLowerCase().includes(searchTerm.toLowerCase()),
-  );
-
-  const handleRemove = async (symbol: string) => {
-    setRemovingSymbol(symbol);
-    try {
-      await removeMutation.mutateAsync(symbol);
-      // Clean up local transactions for that symbol if removed from watchlist
-      const updated = { ...purchases };
-      delete updated[symbol];
-      savePurchases(updated);
-    } finally {
-      setRemovingSymbol(null);
-    }
-  };
-
-  // Compute total portfolio value based on current prices
-  const totalPortfolioValue = useMemo(() => {
-    let sum = 0;
-    watchlist.forEach((item) => {
-      const stockPurchases = purchases[item.symbol] || [];
-      stockPurchases.forEach((p) => {
-        sum += p.quantity * item.price;
-      });
-    });
-    return sum;
-  }, [watchlist, purchases]);
+  const {
+    searchTerm,
+    setSearchTerm,
+    activeFilter,
+    setActiveFilter,
+    activeSort,
+    setActiveSort,
+    removingSymbol,
+    purchases,
+    watchlistCategories,
+    selectedCategory,
+    watchlist,
+    isLoading,
+    filteredWatchlist,
+    portfolioProfitLoss,
+    portfolioProfitLossPercent,
+    portfolioStats,
+    handleSelectCategory,
+    handleCreateCategory,
+    handleRenameCategory,
+    handleDeleteCategory,
+    handleAddStockToCategory,
+    handleAddStockToMultipleCategories,
+    handleAddTransaction,
+    handleDeleteTransaction,
+    handleRemove,
+    thresholds,
+    handleSetThreshold,
+  } = useWatchlistPage();
 
   return (
-    <div className="space-y-6 p-6">
+    <div className="bg-background text-foreground space-y-6 p-6">
       <WatchlistHeader
         searchTerm={searchTerm}
         onSearchTermChange={setSearchTerm}
+        activeFilter={activeFilter}
+        onFilterChange={setActiveFilter}
+        activeSort={activeSort}
+        onSortChange={setActiveSort}
+        visibleCount={filteredWatchlist.length}
+        totalCount={watchlist.length}
+        watchlistCategories={watchlistCategories}
+        selectedCategory={selectedCategory}
+        onSelectCategory={handleSelectCategory}
+        onCreateCategory={handleCreateCategory}
+        onRenameCategory={handleRenameCategory}
+        onDeleteCategory={handleDeleteCategory}
+        onAddStockToCategory={handleAddStockToCategory}
+        onAddStockToCategories={handleAddStockToMultipleCategories}
       />
 
       <WatchlistSummary
         watchlist={watchlist}
-        totalValue={totalPortfolioValue}
+        totalInvested={portfolioStats.totalInvested}
+        totalValue={portfolioStats.totalValue}
+        profitLoss={portfolioProfitLoss}
+        profitLossPercent={portfolioProfitLossPercent}
         isLoading={isLoading}
       />
 
@@ -128,6 +83,8 @@ export default function WatchListPage() {
         removingSymbol={removingSymbol}
         onRemove={handleRemove}
         isLoading={isLoading}
+        thresholds={thresholds}
+        onSetThreshold={handleSetThreshold}
       />
 
       {!isLoading && filteredWatchlist.length === 0 && (

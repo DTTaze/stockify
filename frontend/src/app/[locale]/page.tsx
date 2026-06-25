@@ -7,7 +7,7 @@ import { StatsSection } from "./components/StatsSection";
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-linear-to-br from-white via-blue-50/30 to-white">
+    <div className="from-background via-brand-100/10 to-background dark:via-brand-950/20 text-foreground min-h-screen bg-linear-to-br">
       <LandingNavbar />
       <HeroSection />
       <FeaturesSection />

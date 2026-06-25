@@ -22,18 +22,18 @@ export const getPriceColor = (
     return "text-cyan-600 dark:text-cyan-400 font-semibold";
   }
   if (Math.abs(val - tc) < 0.015) {
-    return "text-amber-505 dark:text-yellow-400";
+    return "text-amber-500 dark:text-yellow-400";
   }
   return val > tc
     ? "text-green-600 dark:text-green-400"
-    : "text-red-600 dark:text-red-405";
+    : "text-red-600 dark:text-red-400";
 };
 
 export const getQuoteColor = (change: number) => {
   if (change === 0) {
-    return "text-amber-505 dark:text-yellow-400 font-bold";
+    return "text-amber-500 dark:text-yellow-400 font-bold";
   }
   return change > 0
     ? "text-emerald-600 dark:text-green-400 font-bold"
-    : "text-red-650 dark:text-red-500 font-bold";
+    : "text-red-600 dark:text-red-500 font-bold";
 };

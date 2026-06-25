@@ -10,17 +10,18 @@ import { Inject, Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 
+import { MarketType, TimePeriod } from '@modules/ml/dto/ml.dto';
+import { MLService } from '@modules/ml/services/ml.service';
+
 import { ENV_KEY, INJECTION_TOKEN } from '@shared/constants';
 import { getErrorMessage } from '@shared/helpers/common';
 import { BaseCRUDService } from '@shared/services/base-crud.service';
 
-import { MarketType, TimePeriod } from '@modules/ml/dto/ml.dto';
-import { MLService } from '@modules/ml/services/ml.service';
+import { ExchangeFilter, QueryStocksDTO } from '../dto/stocks.dto';
 import { StockPrice } from '../entities/stock-price.model';
+import { Stock } from '../entities/stocks.model';
 import { StocksClassificationSyncService } from './stocks-classification-sync.service';
 import { StocksPriceSyncService } from './stocks-price-sync.service';
-import { ExchangeFilter, QueryStocksDTO } from '../dto/stocks.dto';
-import { Stock } from '../entities/stocks.model';
 
 @Injectable()
 export class StocksService extends BaseCRUDService<Stock> {
@@ -99,20 +100,42 @@ export class StocksService extends BaseCRUDService<Stock> {
         };
       }
 
-      // Fetch dynamic VN30 list from ML and define index list
-      const vn30Response = await this.mlService.getGroupedSymbols();
-      const vn30Symbols = vn30Response.success && vn30Response.data?.VN30
-        ? (vn30Response.data.VN30 as string[])
-        : ['BID', 'CTG', 'FPT', 'HPG', 'SSI', 'TCB', 'VCB', 'VHM', 'VIC', 'VNM'];
-      const indices = ['VNINDEX', 'VN30', 'HNXINDEX', 'UPCOMINDEX', 'HNX30', 'VNXALL'];
-      const allowedSymbols = new Set([...vn30Symbols, ...indices].map((s) => s.toUpperCase()));
+      // Fetch dynamic grouped symbols list from ML and define index list
+      const groupedSymbolsResponse = await this.mlService.getGroupedSymbols();
+      const groupedSymbols =
+        groupedSymbolsResponse.success && groupedSymbolsResponse.data
+          ? groupedSymbolsResponse.data
+          : {};
+
+      const allowedSymbols = new Set<string>();
+      Object.keys(groupedSymbols).forEach((key) => {
+        const symbols = groupedSymbols[key] || [];
+        symbols.forEach((s: string) => allowedSymbols.add(s.toUpperCase()));
+      });
+
+      // Add default indices we want to keep
+      const defaultIndices = [
+        'VNINDEX',
+        'VN30',
+        'HNXINDEX',
+        'UPCOMINDEX',
+        'HNX30',
+        'VNXALL',
+        'VN100',
+        'VNMID',
+        'VNSML',
+        'VNSI',
+        'VNX50',
+        'VNALL',
+      ];
+      defaultIndices.forEach((s) => allowedSymbols.add(s.toUpperCase()));
 
       const crawledItems = response.data.filter((item) =>
         allowedSymbols.has(item.symbol.toUpperCase()),
       );
 
       this.logger.log(
-        `Fetched ${crawledItems.length} stocks matching allowed VN30/Index symbols. Upserting into DB...`,
+        `Fetched ${crawledItems.length} stocks matching allowed symbols. Upserting into DB...`,
       );
 
       const insertedCount =
@@ -161,6 +184,12 @@ export class StocksService extends BaseCRUDService<Stock> {
     return this.priceSyncService.syncIndexPrices();
   }
 
+  public async syncGroupStockPrices(
+    groupCode: string,
+  ): Promise<OperationResult> {
+    return this.priceSyncService.syncGroupStockPrices(groupCode);
+  }
+
   public async getStockQuote(symbol: string): Promise<
     OperationResult<{
       symbol: string;
@@ -172,14 +201,66 @@ export class StocksService extends BaseCRUDService<Stock> {
     try {
       const upperSymbol = symbol.toUpperCase();
 
-      // Retrieve directly from database (avoiding live external fetch during user API calls)
+      // Retrieve up to 10 records from database to filter unique calendar days (timezone duplicate fallback)
       const prices = await this.priceRepo.find({
         where: { symbol: upperSymbol },
         order: { date: 'DESC' },
-        take: 2,
+        take: 10,
       });
 
-      if (!prices.length) {
+      // Filter to find the last 2 unique calendar dates in Vietnam timezone (UTC+7)
+      const uniquePrices: StockPrice[] = [];
+      const seenDates = new Set<string>();
+      for (const p of prices) {
+        if (!p.date) {
+          continue;
+        }
+
+        // Add 7 hours to get Vietnam local date (UTC+7 has no DST offsets)
+        const localDate = new Date(p.date.getTime() + 7 * 60 * 60 * 1000);
+        const dateStr = localDate.toISOString().substring(0, 10);
+        if (!seenDates.has(dateStr)) {
+          seenDates.add(dateStr);
+          uniquePrices.push(p);
+        }
+        if (uniquePrices.length >= 2) {
+          break;
+        }
+      }
+
+      this.logger.log(
+        `[getStockQuote DEBUG] symbol: ${upperSymbol}, prices found: ${prices.length}, uniquePrices: ${uniquePrices.length}`,
+      );
+      if (uniquePrices.length >= 2) {
+        this.logger.log(
+          `[getStockQuote DEBUG] latest: ${uniquePrices[0].date.toISOString()} close ${uniquePrices[0].close}, previous: ${uniquePrices[1].date.toISOString()} close ${uniquePrices[1].close}`,
+        );
+      }
+
+      if (!uniquePrices.length) {
+        try {
+          const mlQuoteResult = await this.mlService.getMarketQuote({
+            symbol: upperSymbol,
+            type: MarketType.STOCK,
+            period: TimePeriod.ONE_DAY,
+          });
+          if (mlQuoteResult.success && mlQuoteResult.data) {
+            return {
+              success: true,
+              data: {
+                symbol: upperSymbol,
+                price: mlQuoteResult.data.price ?? 0,
+                change_percent: mlQuoteResult.data.change_percent ?? 0,
+                volume: mlQuoteResult.data.volume ?? 0,
+              },
+            };
+          }
+        } catch (e) {
+          this.logger.warn(
+            `Failed to fetch fallback quote from ML for ${upperSymbol}: ${e.message}`,
+          );
+        }
+
         return {
           success: true,
           data: {
@@ -191,13 +272,33 @@ export class StocksService extends BaseCRUDService<Stock> {
         };
       }
 
-      const latest = prices[0];
-      const previous = prices[1];
+      const latest = uniquePrices[0];
+      const previous = uniquePrices[1];
       const close = latest.close ?? 0;
-      const previousClose = previous?.close ?? close;
-      const changePercent = previousClose
-        ? Number((((close - previousClose) / previousClose) * 100).toFixed(2))
-        : 0;
+
+      let changePercent = 0;
+      if (uniquePrices.length >= 2 && previous) {
+        const previousClose = previous.close ?? close;
+        changePercent = previousClose
+          ? Number((((close - previousClose) / previousClose) * 100).toFixed(2))
+          : 0;
+      } else {
+        // If only 1 unique price record exists, fallback to ML quote to get correct change percentage
+        try {
+          const mlQuoteResult = await this.mlService.getMarketQuote({
+            symbol: upperSymbol,
+            type: MarketType.STOCK,
+            period: TimePeriod.ONE_DAY,
+          });
+          if (mlQuoteResult.success && mlQuoteResult.data) {
+            changePercent = mlQuoteResult.data.change_percent ?? 0;
+          }
+        } catch (e) {
+          this.logger.warn(
+            `Failed to fetch fallback quote change from ML for ${upperSymbol}: ${e.message}`,
+          );
+        }
+      }
 
       return {
         success: true,
@@ -374,9 +475,44 @@ export class StocksService extends BaseCRUDService<Stock> {
       );
       const list = await queryBuilder.getMany();
 
+      if (list.length === 0) {
+        this.logger.log(
+          `No historical prices in DB for ${upperSymbol}. Fetching from ML...`,
+        );
+        const mlPrices = await this.fetchAndSaveHistoricalPricesFromMl(
+          upperSymbol,
+          period,
+        );
+        if (mlPrices.length > 0) {
+          return {
+            success: true,
+            data: mlPrices.map((item: any) => ({
+              date: new Date(item.date).toISOString(),
+              close: Number(item.close),
+              volume: Number(item.volume),
+            })),
+          };
+        }
+      }
+
+      // Deduplicate by calendar date in Vietnam timezone (UTC+7) to handle legacy duplicate data
+      const uniqueList: typeof list = [];
+      const seenDates = new Set<string>();
+      for (const item of list) {
+        if (!item.date) {
+          continue;
+        }
+        const localDate = new Date(item.date.getTime() + 7 * 60 * 60 * 1000);
+        const dateStr = localDate.toISOString().substring(0, 10);
+        if (!seenDates.has(dateStr)) {
+          seenDates.add(dateStr);
+          uniqueList.push(item);
+        }
+      }
+
       return {
         success: true,
-        data: list.map((item) => ({
+        data: uniqueList.map((item) => ({
           date: item.date.toISOString(),
           close: item.close,
           volume: item.volume,
@@ -421,5 +557,59 @@ export class StocksService extends BaseCRUDService<Stock> {
         message: `Failed to get historical prices: ${error.message}`,
       };
     }
+  }
+
+  public async getStockStats(
+    symbols: string[],
+  ): Promise<
+    Record<string, { totalRecords: number; lastUpdated: Date | null }>
+  > {
+    if (!symbols || !symbols.length) {
+      return {};
+    }
+    const stats = await this.priceRepo
+      .createQueryBuilder('sp')
+      .select('sp.symbol', 'symbol')
+      .addSelect('COUNT(*)', 'totalRecords')
+      .addSelect('MAX(sp.date)', 'lastUpdated')
+      .where('sp.symbol IN (:...symbols)', { symbols })
+      .groupBy('sp.symbol')
+      .getRawMany();
+
+    const result: Record<
+      string,
+      { totalRecords: number; lastUpdated: Date | null }
+    > = {};
+    for (const item of stats) {
+      result[item.symbol] = {
+        totalRecords: parseInt(item.totalRecords, 10) || 0,
+        lastUpdated: item.lastUpdated ? new Date(item.lastUpdated) : null,
+      };
+    }
+    return result;
+  }
+
+  public async getDataSummary(): Promise<{
+    totalStocks: number;
+    updated: number;
+    needsUpdate: number;
+    totalRecords: number;
+  }> {
+    const totalStocks = await this.repo.count();
+    const totalRecords = await this.priceRepo.count();
+
+    const distinctSymbolsResult = await this.priceRepo
+      .createQueryBuilder('sp')
+      .select('DISTINCT sp.symbol', 'symbol')
+      .getRawMany();
+    const updated = distinctSymbolsResult.length;
+    const needsUpdate = Math.max(0, totalStocks - updated);
+
+    return {
+      totalStocks,
+      updated,
+      needsUpdate,
+      totalRecords,
+    };
   }
 }

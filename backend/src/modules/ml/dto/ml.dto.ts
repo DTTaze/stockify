@@ -156,7 +156,6 @@ export class PredictionDto {
   history_compare?: any[];
 }
 
-
 export class SupportedSymbolsDto {
   @ApiProperty({
     description: 'List of supported stock symbols for prediction',

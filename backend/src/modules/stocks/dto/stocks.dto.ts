@@ -1,7 +1,7 @@
 import { Type } from 'class-transformer';
 import { IsEnum, IsInt, IsOptional, IsString, Max, Min } from 'class-validator';
 
-import { ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 import { PaginationDTO } from '@shared/common/pagination.dto';
 
@@ -71,4 +71,12 @@ export class QueryIcbStocksDTO extends PaginationDTO {
   @IsString()
   @IsOptional()
   keyword?: string;
+}
+
+export class SyncGroupPricesDTO {
+  @ApiProperty({
+    description: 'Code of the stock group to sync (e.g., VN100, VN30)',
+  })
+  @IsString()
+  groupCode: string;
 }

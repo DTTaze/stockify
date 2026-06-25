@@ -20,12 +20,15 @@ export interface AdminUserItem {
   status: UserStatus;
   createdAt: string;
   updatedAt: string;
+  roles?: string[];
+  roleIds?: string[];
 }
 
 export interface UserQueryType {
   limit: number;
   offset: number;
   keyword?: string;
+  status?: UserStatus;
 }
 
 export interface UserStatsType {
@@ -40,4 +43,10 @@ export interface UserPaginatedResponseType {
   limit: number;
   offset: number;
   stats: UserStatsType;
+}
+
+export interface RoleItem {
+  id: string;
+  name: string;
+  description?: string;
 }

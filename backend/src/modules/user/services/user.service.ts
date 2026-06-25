@@ -133,20 +133,24 @@ export class UserService {
     const offset = query.offset || 0;
     const sort = query.sort || '-createdAt';
     const keyword = query.keyword;
+    const status = query.status;
 
-    const baseStatuses = [
-      ENTITY_STATUS.ACTIVE,
-      ENTITY_STATUS.SUSPENDED,
-      ENTITY_STATUS.INACTIVE,
-    ];
+    const baseStatuses =
+      status && Object.values(ENTITY_STATUS).includes(status)
+        ? [status]
+        : [
+            ENTITY_STATUS.ACTIVE,
+            ENTITY_STATUS.SUSPENDED,
+            ENTITY_STATUS.INACTIVE,
+          ];
 
-    let where: any = baseStatuses.map((status) => ({ status }));
+    let where: any = baseStatuses.map((statusVal) => ({ status: statusVal }));
 
     if (keyword) {
       where = [];
-      for (const status of baseStatuses) {
-        where.push({ status, username: ILike(`%${keyword}%`) });
-        where.push({ status, email: ILike(`%${keyword}%`) });
+      for (const statusVal of baseStatuses) {
+        where.push({ status: statusVal, username: ILike(`%${keyword}%`) });
+        where.push({ status: statusVal, email: ILike(`%${keyword}%`) });
       }
     }
 
@@ -154,11 +158,26 @@ export class UserService {
 
     const [rows, total] = await this.repo.findAndCount({
       where,
-      select: ['id', 'email', 'username', 'status', 'createdAt', 'updatedAt'],
+      relations: ['userRoles', 'userRoles.role'],
       order: parsedSort as any,
       take: limit,
       skip: offset,
     });
+
+    const mappedRows = rows.map((user) => ({
+      id: user.id,
+      email: user.email,
+      username: user.username,
+      status: user.status,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
+      roles: user.userRoles
+        ? user.userRoles.map((ur) => ur.role?.name).filter(Boolean)
+        : [],
+      roleIds: user.userRoles
+        ? user.userRoles.map((ur) => ur.role?.id).filter(Boolean)
+        : [],
+    }));
 
     const [activeCount, suspendedCount, inactiveCount] = await Promise.all([
       this.repo.count({ where: { status: ENTITY_STATUS.ACTIVE } }),
@@ -167,7 +186,7 @@ export class UserService {
     ]);
 
     return {
-      rows,
+      rows: mappedRows,
       total,
       limit,
       offset,

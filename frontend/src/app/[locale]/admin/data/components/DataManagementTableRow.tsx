@@ -9,8 +9,10 @@ import { formatDateTime } from "@/utils/string";
 
 type Stock = {
   symbol: string;
-  last_updated: string;
-  total_records: number;
+  last_updated?: string;
+  lastUpdated?: string;
+  total_records?: number;
+  totalRecords?: number;
   status: StockStatus;
 };
 
@@ -40,11 +42,13 @@ export function DataManagementTableRow({
           )}
         >
           <Calendar className="h-4 w-4" />
-          {formatDateTime(stock.last_updated)}
+          {formatDateTime(stock.last_updated || stock.lastUpdated || "")}
         </div>
       </TableCell>
 
-      <TableCell>{stock.total_records.toLocaleString()}</TableCell>
+      <TableCell>
+        {(stock.total_records ?? stock.totalRecords ?? 0).toLocaleString()}
+      </TableCell>
 
       <TableCell>
         {stock.status === StockStatus.UPDATED ? (

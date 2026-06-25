@@ -33,6 +33,7 @@ export const TRANSLATIONS = {
 
     // Stock Selector
     searchPlaceholder: "Tìm mã hoặc tên công ty...",
+    searchSimplePlaceholder: "Tìm kiếm {title}",
     aiRecommended: "Cổ phiếu phân tích bởi AI (Khuyên dùng)",
     normalStocks: "Mã cổ phiếu khác (Chỉ xem giá)",
     trainedStocksCount: "Cổ phiếu đã train",
@@ -46,6 +47,11 @@ export const TRANSLATIONS = {
     boardTabVn30: "Chỉ số VN30",
     boardTabHnx: "Sàn HNX",
     boardTabUpcom: "Sàn UPCOM",
+    boardTabCpNganh: "CP Ngành",
+    boardTabThoaThuan: "Thỏa thuận",
+    boardTabCw: "Chứng quyền",
+    boardTabEtf: "ETF",
+    boardTabLoLe: "Lô lẻ",
     noStocksFound: "Không tìm thấy mã chứng khoán nào phù hợp.",
     ceil: "Trần",
     floor: "Sàn",
@@ -129,6 +135,7 @@ export const TRANSLATIONS = {
 
     // Stock Selector
     searchPlaceholder: "Search code or company...",
+    searchSimplePlaceholder: "Search {title}",
     aiRecommended: "AI Analyzed Stocks (Recommended)",
     normalStocks: "Other Stock Codes (Quotes Only)",
     trainedStocksCount: "Trained Stocks",
@@ -142,6 +149,11 @@ export const TRANSLATIONS = {
     boardTabVn30: "VN30 Index",
     boardTabHnx: "HNX Board",
     boardTabUpcom: "UPCOM Board",
+    boardTabCpNganh: "Sector Stocks",
+    boardTabThoaThuan: "Negotiated",
+    boardTabCw: "Warrants",
+    boardTabEtf: "ETF",
+    boardTabLoLe: "Odd-lot",
     noStocksFound: "No matching stock codes found.",
     ceil: "Ceil",
     floor: "Floor",

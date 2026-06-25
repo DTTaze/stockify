@@ -384,6 +384,14 @@ class StockService:
             "FU_INDEX": [],
             "FU_BOND": [],
             "INDEX": [],
+            "VN100": [],
+            "VNMID": [],
+            "VNSML": [],
+            "VNSI": [],
+            "VNX50": [],
+            "VNXALL": [],
+            "VNALL": [],
+            "HNX30": [],
         }
 
         try:
@@ -412,11 +420,20 @@ class StockService:
         except Exception as e:
             logger.warning(f"Failed to extract exchanges from all symbols: {e}")
 
-        # Fetch index group list (VN30)
-        try:
-            result["VN30"] = self.data_source.fetch_symbols_by_group("VN30")
-        except Exception as e:
-            logger.warning(f"Failed to fetch VN30: {e}")
+        # Fetch index group lists
+        index_groups = ["VN30", "VN100", "VNMID", "VNSML", "VNSI", "VNX50", "VNXALL", "VNALL", "HNX30"]
+        for idx in index_groups:
+            try:
+                mapped_idx = idx
+                if idx == "VNMID":
+                    mapped_idx = "VNMidCap"
+                elif idx == "VNSML":
+                    mapped_idx = "VNSmallCap"
+                
+                res = self.data_source.fetch_symbols_by_group(mapped_idx)
+                result[idx] = res if res else []
+            except Exception as e:
+                logger.warning(f"Failed to fetch {idx}: {e}")
 
         # Fetch derivatives, government bonds, indices
         result["FU_INDEX"] = self.get_futures()
@@ -462,6 +479,14 @@ class StockService:
             "FU_INDEX": [],
             "FU_BOND": [],
             "INDEX": [],
+            "VN100": [],
+            "VNMID": [],
+            "VNSML": [],
+            "VNSI": [],
+            "VNX50": [],
+            "VNXALL": [],
+            "VNALL": [],
+            "HNX30": [],
         }
 
     def _revalidate_grouped_symbols_cache(self) -> None:

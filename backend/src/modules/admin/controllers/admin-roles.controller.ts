@@ -114,4 +114,21 @@ export class AdminRolesController {
       };
     }
   }
+
+  @ApiOperation({ summary: 'Get all roles' })
+  @Get()
+  async getRoles() {
+    try {
+      const data = await this.adminRolesService.getRoles();
+      return {
+        success: true,
+        data,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message: error.message || error,
+      };
+    }
+  }
 }

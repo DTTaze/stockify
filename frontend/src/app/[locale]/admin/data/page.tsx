@@ -6,6 +6,7 @@ import { toast } from "sonner";
 
 import { ButtonCustom } from "@/components/common/form/button";
 import { useSyncAdminStockPrices } from "@/queries/admin/QueryHooksAdmin";
+import { useUpdateDataManagementAll } from "@/queries/data-management/QueryHooksDataManagement";
 import {
   useSyncAllCategories,
   useSyncIcbIndustries,
@@ -28,13 +29,15 @@ export default function DataManagement() {
   const syncIcbIndustriesMutation = useSyncIcbIndustries();
   const syncAllCategoriesMutation = useSyncAllCategories();
   const syncStockPricesMutation = useSyncAdminStockPrices();
+  const updateAllMLMutation = useUpdateDataManagementAll();
 
   const isBusy =
     isTrainingBusy ||
     syncMarketGroupsMutation.isPending ||
     syncIcbIndustriesMutation.isPending ||
     syncAllCategoriesMutation.isPending ||
-    syncStockPricesMutation.isPending;
+    syncStockPricesMutation.isPending ||
+    updateAllMLMutation.isPending;
 
   const handleSyncMarketGroups = async () => {
     try {
@@ -78,6 +81,18 @@ export default function DataManagement() {
     }
   };
 
+  const handleUpdateAllML = async () => {
+    try {
+      const result = await updateAllMLMutation.mutateAsync();
+      toast.success(
+        `Đã lên lịch huấn luyện lại ML thành công cho ${result.updated_count} mã cổ phiếu.`,
+      );
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      toast.error(`Huấn luyện lại thất bại: ${message}`);
+    }
+  };
+
   return (
     <div className={cn("p-6", "space-y-6")}>
       {/* Header */}
@@ -85,9 +100,9 @@ export default function DataManagement() {
         <DataManagementHeader />
 
         {activeTab === "training" ? (
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3">
             <span className="text-xs text-gray-400">
-              {isTrainingBusy
+              {isTrainingBusy || updateAllMLMutation.isPending
                 ? "Đang cập nhật dữ liệu huấn luyện..."
                 : "Sẵn sàng"}
             </span>
@@ -114,6 +129,30 @@ export default function DataManagement() {
               />
               <span>Cập nhật dữ liệu giá cổ phiếu</span>
             </ButtonCustom>
+
+            <ButtonCustom
+              onClick={handleUpdateAllML}
+              disabled={isBusy}
+              className={cn(
+                "flex items-center space-x-2",
+                "rounded-lg",
+                "px-4 py-2",
+                "bg-indigo-600 text-white",
+                "shadow-md",
+                "transition-all",
+                "hover:bg-indigo-700",
+                "disabled:opacity-50",
+                "cursor-pointer",
+              )}
+            >
+              <RefreshCw
+                className={cn(
+                  "h-4 w-4",
+                  updateAllMLMutation.isPending && "animate-spin",
+                )}
+              />
+              <span>Huấn luyện lại tất cả (ML)</span>
+            </ButtonCustom>
           </div>
         ) : (
           <div className="flex flex-wrap items-center gap-3">
@@ -138,7 +177,7 @@ export default function DataManagement() {
                   syncMarketGroupsMutation.isPending && "animate-spin",
                 )}
               />
-              <span>Sync Market Groups</span>
+              <span>Đồng bộ Nhóm thị trường</span>
             </ButtonCustom>
 
             <ButtonCustom
@@ -162,7 +201,7 @@ export default function DataManagement() {
                   syncIcbIndustriesMutation.isPending && "animate-spin",
                 )}
               />
-              <span>Sync ICB Industries</span>
+              <span>Đồng bộ Ngành ICB</span>
             </ButtonCustom>
 
             <ButtonCustom
@@ -186,7 +225,7 @@ export default function DataManagement() {
                   syncAllCategoriesMutation.isPending && "animate-spin",
                 )}
               />
-              <span>Sync All Categories</span>
+              <span>Đồng bộ Tất cả Phân loại</span>
             </ButtonCustom>
           </div>
         )}

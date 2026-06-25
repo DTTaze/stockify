@@ -55,4 +55,8 @@ export class AdminRolesService {
     await this.rolesService.delete(id);
     return true;
   }
+
+  async getRoles() {
+    return this.rolesService.findAll();
+  }
 }

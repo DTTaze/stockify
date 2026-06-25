@@ -1,7 +1,7 @@
 "use client";
 
 import { LogOut, Menu, User, X } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
 
 import { HeaderSkeleton } from "@/components/layout/Header/HeaderSkeleton";
@@ -19,11 +19,10 @@ import {
 
 import { LanguageSelector } from "./LanguageSelector";
 import { MobileMenu } from "./MobileMenu";
-import NotificationDropdown, {
-  type NotificationItem,
-} from "./NotificationDropdown";
+import NotificationDropdown from "./NotificationDropdown";
 import { ThemeToggle } from "./ThemeToggle";
 import { type NavItem, useHeaderConfig } from "./useHeaderConfig";
+import { useHeaderNotifications } from "./useHeaderNotifications";
 
 export default function Header() {
   const pathname = usePathname();
@@ -31,65 +30,16 @@ export default function Header() {
   const isAuthenticated = useIsAuthenticated();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { locale, t } = useLanguage();
-  const [notifications, setNotifications] = useState<NotificationItem[]>([]);
-
-  // Initialize notifications on mount or when locale changes
-  useEffect(() => {
-    setNotifications([
-      {
-        id: "1",
-        titleKey: "notifications.fptSuccess",
-        time: locale === "vi" ? "5 phút trước" : "5 mins ago",
-        read: false,
-        type: "success",
-      },
-      {
-        id: "2",
-        titleKey: "notifications.vcbRise",
-        time: locale === "vi" ? "1 giờ trước" : "1 hour ago",
-        read: false,
-        type: "info",
-      },
-      {
-        id: "3",
-        titleKey: "notifications.hoseAlert",
-        time: locale === "vi" ? "2 giờ trước" : "2 hours ago",
-        read: true,
-        type: "warning",
-      },
-      {
-        id: "4",
-        titleKey: "notifications.vn30Update",
-        time: locale === "vi" ? "1 ngày trước" : "1 day ago",
-        read: true,
-        type: "success",
-      },
-    ]);
-  }, [locale]);
-
-  const handleMarkRead = (id: string) => {
-    setNotifications((prev) =>
-      prev.map((n) => (n.id === id ? { ...n, read: true } : n)),
-    );
-  };
-
-  const handleDelete = (id: string) => {
-    setNotifications((prev) => prev.filter((n) => n.id !== id));
-  };
-
-  const handleMarkAllRead = () => {
-    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
-  };
-
-  const handleClearAll = () => {
-    setNotifications([]);
-  };
 
   const {
     data: profile = initialDataProfile,
     isError,
     isFetching,
   } = useQueryProfile(isAuthenticated);
+  const shouldFetchNotifications =
+    isAuthenticated === true && !profile.roles.includes(ROLE_NAME.ADMIN);
+  const { notifications, markRead, deleteNotification, markAllRead, clearAll } =
+    useHeaderNotifications(shouldFetchNotifications, locale);
 
   if (isError) {
     handleLogout();
@@ -123,10 +73,10 @@ export default function Header() {
               {config.showNotification && (
                 <NotificationDropdown
                   notifications={notifications}
-                  onMarkRead={handleMarkRead}
-                  onDelete={handleDelete}
-                  onMarkAllRead={handleMarkAllRead}
-                  onClearAll={handleClearAll}
+                  onMarkRead={markRead}
+                  onDelete={deleteNotification}
+                  onMarkAllRead={markAllRead}
+                  onClearAll={clearAll}
                 />
               )}
 

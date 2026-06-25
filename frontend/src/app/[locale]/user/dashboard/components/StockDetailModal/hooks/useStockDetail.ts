@@ -46,6 +46,13 @@ export function useStockDetail(symbol: string, isOpen: boolean) {
       period,
     });
 
+  // Fetch 3-month historical price data for technical indicators calculation
+  const { data: indicatorsHistoricalData = [] } = useQueryStockHistorical({
+    symbol,
+    type: MarketType.STOCK,
+    period: TimePeriod.THREE_MONTH,
+  });
+
   // Fetch AI Predictions
   const [modelType, setModelType] = useState<string>("best");
   const { data: prediction, isLoading: isPredictLoading } = useQueryPrediction(
@@ -214,8 +221,8 @@ export function useStockDetail(symbol: string, isOpen: boolean) {
 
   // Technical Indicators calculations
   const indicators = useMemo(() => {
-    return computeTechnicalIndicators(historicalData);
-  }, [historicalData]);
+    return computeTechnicalIndicators(indicatorsHistoricalData);
+  }, [indicatorsHistoricalData]);
 
   const bullishCount = indicators.filter(
     (item) => item.status === IndicatorStatus.BULLISH,

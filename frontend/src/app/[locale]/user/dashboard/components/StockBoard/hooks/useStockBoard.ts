@@ -1,10 +1,15 @@
+/* eslint-disable max-lines */
 import { useQueries } from "@tanstack/react-query";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { useLanguage } from "@/providers/LanguageProvider";
 import { useGetModels } from "@/queries/model-management/QueryHooksModelManagement";
 import { getStockQuoteQueryFn } from "@/queries/stocks/QueryFnsStocks";
-import { useQueryStocks } from "@/queries/stocks/QueryHooksStocks";
+import {
+  useQueryIcbIndustries,
+  useQueryIcbStocks,
+  useQueryStocks,
+} from "@/queries/stocks/QueryHooksStocks";
 import {
   useAddToWatchlist,
   useQueryWatchlist,
@@ -20,6 +25,95 @@ export function useStockBoard() {
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const { t } = useLanguage();
+
+  // Watchlist categories states
+  const [watchlistCategories, setWatchlistCategories] = useState<string[]>([
+    "Danh mục của tôi",
+  ]);
+  const [selectedCategory, setSelectedCategory] =
+    useState<string>("Danh mục của tôi");
+  const [categoryMappings, setCategoryMappings] = useState<
+    Record<string, string[]>
+  >({
+    "Danh mục của tôi": [],
+  });
+
+  // VN30 sub-indices states
+  const [selectedVn30SubIndex, setSelectedVn30SubIndex] =
+    useState<string>("VN30");
+
+  // ICB industries states
+  const [selectedIcbCode, setSelectedIcbCode] = useState<string>("");
+  const { data: icbIndustriesData = [] } = useQueryIcbIndustries();
+
+  const selectedIcbIndustryName = useMemo(() => {
+    const found = icbIndustriesData.find((ind) => ind.code === selectedIcbCode);
+    return found ? found.name : undefined;
+  }, [icbIndustriesData, selectedIcbCode]);
+
+  useEffect(() => {
+    if (icbIndustriesData.length > 0 && !selectedIcbCode) {
+      const defaultInd =
+        icbIndustriesData.find((ind) => ind.stockCount > 0) ||
+        icbIndustriesData[0];
+      if (defaultInd) {
+        setSelectedIcbCode(defaultInd.code);
+      }
+    }
+  }, [icbIndustriesData, selectedIcbCode]);
+
+  useEffect(() => {
+    const savedCategories = localStorage.getItem(
+      "stockify_watchlist_categories",
+    );
+    const savedSelected = localStorage.getItem(
+      "stockify_selected_watchlist_category",
+    );
+    const savedMappings = localStorage.getItem("stockify_category_symbols");
+
+    if (savedCategories) {
+      setWatchlistCategories(JSON.parse(savedCategories));
+    }
+    if (savedSelected) {
+      setSelectedCategory(savedSelected);
+    }
+    if (savedMappings) {
+      setCategoryMappings(JSON.parse(savedMappings));
+    }
+  }, []);
+
+  const handleSelectCategory = (categoryName: string) => {
+    setSelectedCategory(categoryName);
+    localStorage.setItem("stockify_selected_watchlist_category", categoryName);
+  };
+
+  const handleCreateCategory = (categoryName: string) => {
+    const name = categoryName.trim();
+    if (!name) {
+      return;
+    }
+    if (!watchlistCategories.includes(name)) {
+      const updatedCats = [...watchlistCategories, name];
+      setWatchlistCategories(updatedCats);
+      localStorage.setItem(
+        "stockify_watchlist_categories",
+        JSON.stringify(updatedCats),
+      );
+
+      const updatedMappings = { ...categoryMappings, [name]: [] };
+      setCategoryMappings(updatedMappings);
+      localStorage.setItem(
+        "stockify_category_symbols",
+        JSON.stringify(updatedMappings),
+      );
+    }
+    handleSelectCategory(name);
+  };
+
+  const handleSelectVn30SubIndex = (subIndex: string) => {
+    setSelectedVn30SubIndex(subIndex);
+    handleTabChange("VN30");
+  };
 
   // Watchlist hooks
   const { data: watchlistItems = [] } = useQueryWatchlist();
@@ -39,12 +133,23 @@ export function useStockBoard() {
 
   // Market classification query
   const marketOffset = (currentPage - 1) * ITEMS_PER_PAGE;
-  const isMarketTab = activeTab === "VN30";
+  const isMarketTab = ["VN30", "HNX30", "HOSE", "HNX"].includes(activeTab);
+  const isCpNganhTab = activeTab === "CP_NGANH";
+
+  const queryGroup = useMemo(() => {
+    if (activeTab === "HNX30") {
+      return "HNX30";
+    }
+    if (activeTab === "VN30") {
+      return selectedVn30SubIndex;
+    }
+    return activeTab;
+  }, [activeTab, selectedVn30SubIndex]);
 
   const { data: marketData, isLoading: isMarketLoading } = useQueryStocks(
     isMarketTab
       ? {
-          group: activeTab,
+          group: queryGroup,
           keyword: searchQuery.trim() || undefined,
           limit: ITEMS_PER_PAGE,
           offset: marketOffset,
@@ -52,8 +157,31 @@ export function useStockBoard() {
       : undefined,
   );
 
-  const marketStocks = useMemo(() => marketData?.rows ?? [], [marketData]);
-  const marketTotal = marketData?.total ?? 0;
+  const { data: icbStocksData, isLoading: isIcbStocksLoading } =
+    useQueryIcbStocks(
+      isCpNganhTab ? selectedIcbCode : "",
+      isCpNganhTab
+        ? {
+            keyword: searchQuery.trim() || undefined,
+            limit: ITEMS_PER_PAGE,
+            offset: marketOffset,
+          }
+        : undefined,
+    );
+
+  const marketStocks = useMemo(() => {
+    if (activeTab === "CP_NGANH") {
+      return icbStocksData?.rows ?? [];
+    }
+    return marketData?.rows ?? [];
+  }, [activeTab, marketData, icbStocksData]);
+
+  const marketTotal = useMemo(() => {
+    if (activeTab === "CP_NGANH") {
+      return icbStocksData?.total ?? 0;
+    }
+    return marketData?.total ?? 0;
+  }, [activeTab, marketData, icbStocksData]);
 
   // Filter trained symbols for AI
   const filteredAiSymbols = useMemo(() => {
@@ -133,11 +261,22 @@ export function useStockBoard() {
   // Merge stocks with quotes
   const boardRows = useMemo(() => {
     if (activeTab === "WATCHLIST") {
+      const activeCatSymbols = categoryMappings[selectedCategory] || [];
+      let symbolsToRender = activeCatSymbols;
+      if (
+        selectedCategory === "Danh mục của tôi" &&
+        activeCatSymbols.length === 0 &&
+        watchlistQuotes.length > 0
+      ) {
+        symbolsToRender = watchlistQuotes.map((q) => q.symbol);
+      }
+
       const filtered = watchlistQuotes.filter((w) => {
         const q = searchQuery.toLowerCase().trim();
-        return (
-          w.symbol.toLowerCase().includes(q) || w.name.toLowerCase().includes(q)
-        );
+        const matchesQuery =
+          w.symbol.toLowerCase().includes(q) ||
+          w.name.toLowerCase().includes(q);
+        return matchesQuery && symbolsToRender.includes(w.symbol);
       });
       return filtered.slice(offset, offset + ITEMS_PER_PAGE).map((w) => ({
         symbol: w.symbol,
@@ -175,6 +314,8 @@ export function useStockBoard() {
     searchQuery,
     marketStocks,
     offset,
+    categoryMappings,
+    selectedCategory,
   ]);
 
   const isLoading =
@@ -182,7 +323,9 @@ export function useStockBoard() {
       ? isModelsLoading || isQuotesLoading
       : activeTab === "WATCHLIST"
         ? isWatchlistLoading
-        : isMarketLoading || isQuotesLoading;
+        : activeTab === "CP_NGANH"
+          ? isIcbStocksLoading || isQuotesLoading
+          : isMarketLoading || isQuotesLoading;
 
   const handleTabChange = (tabId: string) => {
     setActiveTab(tabId);
@@ -198,8 +341,31 @@ export function useStockBoard() {
     e.stopPropagation();
     if (watchlistSymbols.has(symbol)) {
       removeFromWatchlist.mutate(symbol);
+      const updatedMappings = { ...categoryMappings };
+      for (const cat in updatedMappings) {
+        updatedMappings[cat] = (updatedMappings[cat] || []).filter(
+          (s) => s !== symbol,
+        );
+      }
+      setCategoryMappings(updatedMappings);
+      localStorage.setItem(
+        "stockify_category_symbols",
+        JSON.stringify(updatedMappings),
+      );
     } else {
       addToWatchlist.mutate(symbol);
+      const updatedMappings = { ...categoryMappings };
+      if (!updatedMappings[selectedCategory]) {
+        updatedMappings[selectedCategory] = [];
+      }
+      if (!updatedMappings[selectedCategory].includes(symbol)) {
+        updatedMappings[selectedCategory].push(symbol);
+      }
+      setCategoryMappings(updatedMappings);
+      localStorage.setItem(
+        "stockify_category_symbols",
+        JSON.stringify(updatedMappings),
+      );
     }
   };
 
@@ -207,12 +373,16 @@ export function useStockBoard() {
     () => ({
       AI: filteredAiSymbols.length,
       WATCHLIST: filteredWatchlistSymbols.length,
-      VN30: isMarketTab ? marketTotal : 30,
+      VN30: activeTab === "VN30" ? marketTotal : 30,
+      HNX30: activeTab === "HNX30" ? marketTotal : 30,
+      HOSE: activeTab === "HOSE" ? marketTotal : 150,
+      HNX: activeTab === "HNX" ? marketTotal : 100,
+      CP_NGANH: activeTab === "CP_NGANH" ? marketTotal : 100,
     }),
     [
       filteredAiSymbols.length,
       filteredWatchlistSymbols.length,
-      isMarketTab,
+      activeTab,
       marketTotal,
     ],
   );
@@ -236,6 +406,16 @@ export function useStockBoard() {
     removeFromWatchlist,
     t,
     tabSizes,
+    watchlistCategories,
+    selectedCategory,
+    handleSelectCategory,
+    handleCreateCategory,
+    selectedVn30SubIndex,
+    setSelectedVn30SubIndex: handleSelectVn30SubIndex,
+    selectedIcbCode,
+    setSelectedIcbCode,
+    selectedIcbIndustryName,
+    icbIndustries: icbIndustriesData,
   };
 }
 export type BoardRowDataType = ReturnType<

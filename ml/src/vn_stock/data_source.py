@@ -97,34 +97,62 @@ class VnstockDataSource(StockDataSource):
                 time.sleep(delay)
                 delay *= 2.0  # exponential backoff
 
+    def _create_listing(self):
+        listing = self._Listing(source=self.source)
+        if hasattr(listing, "provider") and hasattr(listing.provider, "base_url"):
+            if listing.provider.base_url and listing.provider.base_url.endswith("/"):
+                listing.provider.base_url = listing.provider.base_url.rstrip("/")
+        return listing
+
+    def _create_quote(self, symbol: str):
+        # Keep trailing slash for Quote endpoints as VCI constructs quote endpoints without a leading slash
+        return self._Quote(symbol=symbol, source=self.source)
+
     def fetch_history(
         self, symbol: str, start_date: str, end_date: str
     ) -> pd.DataFrame:
         self._ensure_library()
         def _run():
-            quote = self._Quote(symbol=symbol, source=self.source)
+            quote = self._create_quote(symbol)
             return quote.history(start=start_date, end=end_date, interval="1D")
         return self._execute_with_retry(_run, f"fetch_history for {symbol}")
 
     def fetch_symbols_by_exchange(self, exchange: str) -> pd.DataFrame:
         self._ensure_library()
         def _run():
-            listing = self._Listing(source=self.source)
+            listing = self._create_listing()
             return listing.symbols_by_exchange(exchange=exchange, to_df=True)
         return self._execute_with_retry(_run, f"fetch_symbols_by_exchange for {exchange}")
 
     def fetch_all_symbols(self) -> pd.DataFrame:
         self._ensure_library()
         def _run():
-            listing = self._Listing(source=self.source)
-            return listing.all_symbols()
+            listing = self._create_listing()
+            return listing.symbols_by_exchange()
         return self._execute_with_retry(_run, "fetch_all_symbols")
 
     def fetch_symbols_by_group(self, group_name: str) -> List[str]:
         self._ensure_library()
+        
+        # Explicit list of supported groups to fail fast and avoid slow retries on unsupported groups
+        supported_groups = {
+            "VCI": {'HOSE', 'VN30', 'VNMidCap', 'VNSmallCap', 'VNAllShare', 'VN100', 'ETF', 'HNX', 'HNX30', 'HNXCon', 'HNXFin', 'HNXLCap', 'HNXMSCap', 'HNXMan', 'UPCOM', 'FU_INDEX', 'FU_BOND', 'BOND', 'CW'},
+            "KBS": {'HOSE', 'HNX', 'UPCOM', 'VN30', 'VN100', 'VNMidCap', 'VNSmallCap', 'VNSI', 'VNX50', 'VNXALL', 'VNALL', 'HNX30', 'ETF', 'CW', 'BOND', 'FU_INDEX'}
+        }
+        
+        source_upper = self.source.upper()
+        if source_upper in supported_groups:
+            mapped_idx = group_name
+            if group_name == "VNMID":
+                mapped_idx = "VNMidCap"
+            elif group_name == "VNSML":
+                mapped_idx = "VNSmallCap"
+            if mapped_idx not in supported_groups[source_upper]:
+                raise ValueError(f"Group {group_name} not supported by source {self.source}")
+
+        listing = self._create_listing()
         def _run():
-            listing = self._Listing(source=self.source)
-            res = listing.symbols_by_group(group_name=group_name)
+            res = listing.symbols_by_group(group=group_name)
             if res is not None:
                 if hasattr(res, "tolist"):
                     return res.tolist()
@@ -135,21 +163,21 @@ class VnstockDataSource(StockDataSource):
     def fetch_industries_icb(self) -> pd.DataFrame:
         self._ensure_library()
         def _run():
-            listing = self._Listing(source=self.source)
+            listing = self._create_listing()
             return listing.industries_icb()
         return self._execute_with_retry(_run, "fetch_industries_icb")
 
     def fetch_symbols_by_industries(self) -> pd.DataFrame:
         self._ensure_library()
         def _run():
-            listing = self._Listing(source=self.source)
+            listing = self._create_listing()
             return listing.symbols_by_industries()
         return self._execute_with_retry(_run, "fetch_symbols_by_industries")
 
     def fetch_all_future_indices(self) -> List[str]:
         self._ensure_library()
         def _run():
-            listing = self._Listing(source=self.source)
+            listing = self._create_listing()
             res = listing.all_future_indices()
             if res is not None:
                 if hasattr(res, "tolist"):
@@ -161,7 +189,7 @@ class VnstockDataSource(StockDataSource):
     def fetch_all_government_bonds(self) -> List[str]:
         self._ensure_library()
         def _run():
-            listing = self._Listing(source=self.source)
+            listing = self._create_listing()
             if hasattr(listing, "all_government_bonds"):
                 res = listing.all_government_bonds()
                 if res is not None:
@@ -180,7 +208,7 @@ class VnstockDataSource(StockDataSource):
     def fetch_all_indices(self) -> List[str]:
         self._ensure_library()
         def _run():
-            listing = self._Listing(source=self.source)
+            listing = self._create_listing()
             if hasattr(listing, "all_indices"):
                 res = getattr(listing, "all_indices")()
                 if res is not None:
@@ -261,6 +289,9 @@ class DirectHttpDataSource(StockDataSource):
         return []
 
 
+_history_cache = {}
+
+
 class FallbackDataSource(StockDataSource):
     """Orchestrates VCI and KBS Vnstock data sources and direct HTTP call fallback, complying with OCP."""
 
@@ -272,19 +303,39 @@ class FallbackDataSource(StockDataSource):
     def fetch_history(
         self, symbol: str, start_date: str, end_date: str
     ) -> pd.DataFrame:
+        cache_key = f"{symbol}:{start_date}:{end_date}"
+        now = time.time()
+        
+        # Check cache duration (default 5 minutes)
         try:
-            return self.primary.fetch_history(symbol, start_date, end_date)
+            from .config import vn_stock_config
+            cache_duration = vn_stock_config.cache_expiration_minutes * 60
+        except Exception:
+            cache_duration = 300
+
+        if cache_key in _history_cache:
+            ts, df = _history_cache[cache_key]
+            if now - ts < cache_duration:
+                logger.info(f"Memory cache hit for fetch_history: {cache_key}")
+                return df
+
+        try:
+            df = self.primary.fetch_history(symbol, start_date, end_date)
         except Exception as e:
             logger.warning(
                 f"Primary fetch_history failed for {symbol}: {e}. Trying secondary source."
             )
             try:
-                return self.secondary.fetch_history(symbol, start_date, end_date)
+                df = self.secondary.fetch_history(symbol, start_date, end_date)
             except Exception as e2:
                 logger.error(
                     f"Both primary and secondary fetch_history failed for {symbol}: {e2}"
                 )
                 raise
+
+        if df is not None and not df.empty:
+            _history_cache[cache_key] = (now, df)
+        return df
 
     def fetch_symbols_by_exchange(self, exchange: str) -> pd.DataFrame:
         try:

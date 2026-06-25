@@ -87,10 +87,24 @@ export function ModelTable(props: ModelTableProps) {
                 </div>
 
                 <div>
-                  <h3 className={cn("text-xl font-semibold", "text-brand-900")}>
-                    {model.name}
-                  </h3>
-                  <p className={cn("text-sm", "text-gray-500")}>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h3
+                      className={cn("text-xl font-semibold", "text-brand-900")}
+                    >
+                      {model.name}
+                    </h3>
+                    {model.type && (
+                      <span className="rounded-md border border-blue-200 bg-blue-50 px-2 py-0.5 text-xs font-semibold text-blue-700 uppercase">
+                        {model.type}
+                      </span>
+                    )}
+                    {model.environment && (
+                      <span className="rounded-md border border-gray-200 bg-gray-50 px-2 py-0.5 text-xs font-medium text-gray-600 capitalize">
+                        {model.environment}
+                      </span>
+                    )}
+                  </div>
+                  <p className={cn("text-sm", "text-gray-500", "mt-0.5")}>
                     Version {model.version}
                   </p>
                 </div>

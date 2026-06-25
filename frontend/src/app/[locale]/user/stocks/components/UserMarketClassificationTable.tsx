@@ -1,9 +1,8 @@
 "use client";
 
-import { ChevronLeft, ChevronRight, Search, Star } from "lucide-react";
+import { Search, Star } from "lucide-react";
 import React, { useMemo } from "react";
 
-import { ButtonCustom } from "@/components/common/form/button";
 import { Badge } from "@/components/ui/Badge";
 import { Card, CardContent } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
@@ -25,10 +24,13 @@ import {
 import { ClassificationStock } from "@/types/stock/stock.type";
 import { cn } from "@/utils";
 
+import { StocksPagination } from "./StocksPagination";
+
 type Props = {
   activeMarketTab: string;
   marketSearch: string;
   marketPage: number;
+  marketPageSize: number;
   marketStocks: ClassificationStock[];
   marketTotal: number;
   marketTotalPages: number;
@@ -36,12 +38,14 @@ type Props = {
   onMarketTabChange: (tabId: string) => void;
   onMarketSearch: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onMarketPageChange: React.Dispatch<React.SetStateAction<number>>;
+  onMarketPageSizeChange: (pageSize: number) => void;
 };
 
 export function UserMarketClassificationTable({
   activeMarketTab,
   marketSearch,
   marketPage,
+  marketPageSize,
   marketStocks,
   marketTotal,
   marketTotalPages,
@@ -49,6 +53,7 @@ export function UserMarketClassificationTable({
   onMarketTabChange,
   onMarketSearch,
   onMarketPageChange,
+  onMarketPageSizeChange,
 }: Props) {
   const { t } = useLanguage();
   const { data: watchlistItems = [] } = useQueryWatchlist();
@@ -63,11 +68,8 @@ export function UserMarketClassificationTable({
   const marketTabs = useMemo(
     () => [
       { id: "HOSE", label: t("boardTabHose") },
-      { id: "VN30", label: t("boardTabVn30") },
       { id: "HNX", label: t("boardTabHnx") },
       { id: "UPCOM", label: t("boardTabUpcom") },
-      { id: "CW", label: t("stocks.cwTab") },
-      { id: "ETF", label: t("stocks.etfTab") },
     ],
     [t],
   );
@@ -75,7 +77,7 @@ export function UserMarketClassificationTable({
   return (
     <>
       {/* Market Tabs */}
-      <div className="flex flex-wrap gap-1 rounded-xl border-b border-gray-200 bg-white p-2 shadow-xs">
+      <div className="border-border bg-card flex flex-wrap gap-1 rounded-xl border p-2 shadow-xs">
         {marketTabs.map((tab) => (
           <button
             key={tab.id}
@@ -83,8 +85,8 @@ export function UserMarketClassificationTable({
             className={cn(
               "cursor-pointer rounded-lg px-4 py-2 text-sm font-medium transition-all duration-200",
               activeMarketTab === tab.id
-                ? "bg-brand-900 text-white shadow-md"
-                : "text-gray-600 hover:bg-gray-100 hover:text-gray-900",
+                ? "bg-brand-900 dark:bg-brand-700 text-white shadow-md"
+                : "text-muted-foreground hover:bg-muted hover:text-foreground",
             )}
           >
             {tab.label}
@@ -93,20 +95,20 @@ export function UserMarketClassificationTable({
       </div>
 
       {/* Search and Table */}
-      <Card className="overflow-hidden rounded-xl border bg-white shadow-sm">
+      <Card className="border-border bg-card overflow-hidden rounded-xl border shadow-sm">
         <CardContent className="p-0">
-          <div className="bg-gray-55/50 flex items-center justify-between border-b border-gray-100 p-4">
+          <div className="border-border bg-muted/30 flex items-center justify-between gap-4 border-b p-4">
             <div className="relative w-full max-w-md">
-              <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-gray-400" />
+              <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
               <Input
                 type="text"
                 placeholder={t("stocks.searchPlaceholder")}
                 value={marketSearch}
                 onChange={onMarketSearch}
-                className="focus-visible:ring-brand-900 border-gray-200 bg-white pl-9"
+                className="border-input bg-background focus-visible:ring-brand-700 dark:focus-visible:ring-brand-400 pl-9"
               />
             </div>
-            <div className="text-xs font-medium text-gray-500">
+            <div className="text-muted-foreground shrink-0 text-xs font-medium">
               {t("stocks.foundCount", { count: marketTotal })}
             </div>
           </div>
@@ -163,7 +165,7 @@ export function UserMarketClassificationTable({
                   <TableRow>
                     <TableCell
                       colSpan={6}
-                      className="h-32 text-center text-gray-400"
+                      className="text-muted-foreground h-32 text-center"
                     >
                       {t("stocks.noStocksFound")}
                     </TableCell>
@@ -172,36 +174,36 @@ export function UserMarketClassificationTable({
                   marketStocks.map((stock: ClassificationStock) => (
                     <TableRow
                       key={stock.symbol}
-                      className="hover:bg-gray-50/50"
+                      className="border-border hover:bg-muted/50"
                     >
-                      <TableCell className="text-brand-900 p-4 font-bold">
+                      <TableCell className="text-brand-800 dark:text-brand-300 p-4 font-bold">
                         {stock.symbol}
                       </TableCell>
-                      <TableCell className="font-medium text-gray-700">
+                      <TableCell className="text-foreground font-medium">
                         {stock.name || stock.organName || "N/A"}
                       </TableCell>
                       <TableCell>
                         <Badge
                           variant="outline"
-                          className="border-blue-200 bg-blue-50/50 text-blue-700"
+                          className="border-blue-200 bg-blue-50/50 text-blue-700 dark:border-blue-500/30 dark:bg-blue-500/10 dark:text-blue-300"
                         >
                           {stock.exchange}
                         </Badge>
                       </TableCell>
-                      <TableCell className="font-medium text-gray-600">
+                      <TableCell className="text-muted-foreground font-medium">
                         {stock.indexGroup ? (
                           <Badge
                             variant="secondary"
-                            className="bg-purple-100 text-purple-700"
+                            className="bg-purple-100 text-purple-700 dark:bg-purple-500/10 dark:text-purple-300"
                           >
                             {stock.indexGroup}
                           </Badge>
                         ) : (
-                          <span className="text-gray-400">-</span>
+                          <span className="text-muted-foreground/70">-</span>
                         )}
                       </TableCell>
                       <TableCell>
-                        <span className="text-gray-550 text-sm capitalize">
+                        <span className="text-muted-foreground text-sm capitalize">
                           {stock.type || "stock"}
                         </span>
                       </TableCell>
@@ -218,7 +220,7 @@ export function UserMarketClassificationTable({
                             addToWatchlist.isPending ||
                             removeFromWatchlist.isPending
                           }
-                          className="cursor-pointer rounded-lg p-1.5 transition-colors hover:bg-gray-100 disabled:opacity-50"
+                          className="hover:bg-muted cursor-pointer rounded-lg p-1.5 transition-colors disabled:opacity-50"
                           title={
                             watchlistSymbols.has(stock.symbol)
                               ? t("stocks.tooltipUnfollow")
@@ -230,7 +232,7 @@ export function UserMarketClassificationTable({
                               "h-5 w-5 transition-transform active:scale-95",
                               watchlistSymbols.has(stock.symbol)
                                 ? "fill-accent-500 text-accent-500"
-                                : "hover:text-accent-500 text-gray-450",
+                                : "text-muted-foreground hover:text-accent-500",
                             )}
                           />
                         </button>
@@ -242,35 +244,13 @@ export function UserMarketClassificationTable({
             </Table>
           </div>
 
-          {/* Pagination */}
-          {marketTotalPages > 1 && (
-            <div className="flex items-center justify-between border-t border-gray-100 bg-gray-50/30 p-4">
-              <div className="text-gray-505 text-sm">
-                {t("stocks.pageIndicator", {
-                  current: marketPage,
-                  total: marketTotalPages,
-                })}
-              </div>
-              <div className="flex gap-2">
-                <ButtonCustom
-                  onClick={() => onMarketPageChange((p) => Math.max(1, p - 1))}
-                  disabled={marketPage === 1}
-                  className="flex cursor-pointer items-center justify-center rounded-lg border bg-white p-2 shadow-xs hover:bg-gray-50 disabled:opacity-50"
-                >
-                  <ChevronLeft className="h-4 w-4 text-gray-600" />
-                </ButtonCustom>
-                <ButtonCustom
-                  onClick={() =>
-                    onMarketPageChange((p) => Math.min(marketTotalPages, p + 1))
-                  }
-                  disabled={marketPage === marketTotalPages}
-                  className="flex cursor-pointer items-center justify-center rounded-lg border bg-white p-2 shadow-xs hover:bg-gray-50 disabled:opacity-50"
-                >
-                  <ChevronRight className="h-4 w-4 text-gray-600" />
-                </ButtonCustom>
-              </div>
-            </div>
-          )}
+          <StocksPagination
+            currentPage={marketPage}
+            totalPages={marketTotalPages}
+            pageSize={marketPageSize}
+            onPageChange={onMarketPageChange}
+            onPageSizeChange={onMarketPageSizeChange}
+          />
         </CardContent>
       </Card>
     </>

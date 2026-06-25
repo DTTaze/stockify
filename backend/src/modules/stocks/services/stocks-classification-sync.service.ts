@@ -4,9 +4,10 @@ import { Repository } from 'typeorm';
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 
+import { MLService } from '@modules/ml/services/ml.service';
+
 import { getErrorMessage } from '@shared/helpers/common';
 
-import { MLService } from '@modules/ml/services/ml.service';
 import { StockGroupMapping } from '../entities/stock-group-mapping.model';
 import { StockGroup } from '../entities/stock-group.model';
 import { Stock } from '../entities/stocks.model';
@@ -30,7 +31,7 @@ export class StocksClassificationSyncService {
 
   public async upsertStocksInChunks(
     crawledItems: any[],
-    chunkSize = 200,
+    chunkSize = 80,
   ): Promise<number> {
     let insertedCount = 0;
 
@@ -85,6 +86,14 @@ export class StocksClassificationSyncService {
         { code: 'FU_INDEX', name: 'Hợp đồng tương lai' },
         { code: 'FU_BOND', name: 'Trái phiếu chính phủ' },
         { code: 'INDEX', name: 'Bộ chỉ số' },
+        { code: 'VN100', name: 'Chỉ số VN100' },
+        { code: 'VNMID', name: 'Chỉ số VNMidCap' },
+        { code: 'VNSML', name: 'Chỉ số VNSmallCap' },
+        { code: 'VNSI', name: 'Chỉ số VNSI' },
+        { code: 'VNX50', name: 'Chỉ số VNX50' },
+        { code: 'VNXALL', name: 'Chỉ số VNXALL' },
+        { code: 'VNALL', name: 'Chỉ số VNALL' },
+        { code: 'HNX30', name: 'Chỉ số HNX30' },
       ];
 
       for (const g of groupsToCreate) {
@@ -99,12 +108,29 @@ export class StocksClassificationSyncService {
       const groupMap = new Map<string, number>();
       dbGroups.forEach((g) => groupMap.set(g.code.toUpperCase(), g.id));
 
-      // Ensure special symbols (futures, bonds, indices) exist in the stocks table first
-      const vn30Symbols = (groupedSymbols.VN30 || []).map((s: string) => s.toUpperCase());
-      const fallbackVn30 = ['BID', 'CTG', 'FPT', 'HPG', 'SSI', 'TCB', 'VCB', 'VHM', 'VIC', 'VNM'];
-      const finalVn30 = vn30Symbols.length > 0 ? vn30Symbols : fallbackVn30;
-      const indices = ['VNINDEX', 'VN30', 'HNXINDEX', 'UPCOMINDEX', 'HNX30', 'VNXALL'];
-      const allowedSymbols = new Set([...finalVn30, ...indices]);
+      // Build allowedSymbols dynamically from all groups
+      const allowedSymbols = new Set<string>();
+      Object.keys(groupedSymbols).forEach((key) => {
+        const symbols = groupedSymbols[key] || [];
+        symbols.forEach((s: string) => allowedSymbols.add(s.toUpperCase()));
+      });
+
+      // Add default index names we want to keep
+      const indexCodes = [
+        'VNINDEX',
+        'VN30',
+        'HNXINDEX',
+        'UPCOMINDEX',
+        'HNX30',
+        'VNXALL',
+        'VN100',
+        'VNMID',
+        'VNSML',
+        'VNSI',
+        'VNX50',
+        'VNALL',
+      ];
+      indexCodes.forEach((code) => allowedSymbols.add(code.toUpperCase()));
 
       const indicesList = groupedSymbols.INDEX || [];
       const specialSymbolsToUpsert: any[] = [];
@@ -128,12 +154,21 @@ export class StocksClassificationSyncService {
 
       // 2. Fetch all stocks (including newly inserted ones) and clean up unrelated ones
       const allStocks = await this.repo.find();
-      const stocksToKeep = allStocks.filter(stock => allowedSymbols.has(stock.symbol.toUpperCase()));
-      const stocksToDelete = allStocks.filter(stock => !allowedSymbols.has(stock.symbol.toUpperCase()));
+      const stocksToKeep = allStocks.filter((stock) =>
+        allowedSymbols.has(stock.symbol.toUpperCase()),
+      );
+      const stocksToDelete = allStocks.filter(
+        (stock) => !allowedSymbols.has(stock.symbol.toUpperCase()),
+      );
 
       if (stocksToDelete.length > 0) {
-        this.logger.log(`Deleting ${stocksToDelete.length} unrelated stocks from database...`);
-        await this.repo.remove(stocksToDelete);
+        this.logger.log(
+          `Deleting ${stocksToDelete.length} unrelated stocks from database...`,
+        );
+        const deleteChunkSize = 80;
+        for (let i = 0; i < stocksToDelete.length; i += deleteChunkSize) {
+          await this.repo.remove(stocksToDelete.slice(i, i + deleteChunkSize));
+        }
       }
 
       await this.mappingRepo.clear();
@@ -147,24 +182,23 @@ export class StocksClassificationSyncService {
       const upcomSet = new Set(
         (groupedSymbols.UPCOM || []).map((s: string) => s.toUpperCase()),
       );
-      const vn30Set = new Set(
-        (groupedSymbols.VN30 || []).map((s: string) => s.toUpperCase()),
-      );
-      const cwSet = new Set(
-        (groupedSymbols.CW || []).map((s: string) => s.toUpperCase()),
-      );
-      const etfSet = new Set(
-        (groupedSymbols.ETF || []).map((s: string) => s.toUpperCase()),
-      );
-      const fuIndexSet = new Set(
-        (groupedSymbols.FU_INDEX || []).map((s: string) => s.toUpperCase()),
-      );
-      const fuBondSet = new Set(
-        (groupedSymbols.FU_BOND || []).map((s: string) => s.toUpperCase()),
-      );
-      const indexSet = new Set(
-        (groupedSymbols.INDEX || []).map((s: string) => s.toUpperCase()),
-      );
+
+      const groupKeys = [
+        'VN30',
+        'VN100',
+        'VNMID',
+        'VNSML',
+        'VNSI',
+        'VNX50',
+        'VNXALL',
+        'VNALL',
+        'HNX30',
+        'CW',
+        'ETF',
+        'FU_INDEX',
+        'FU_BOND',
+        'INDEX',
+      ];
 
       const newMappings: StockGroupMapping[] = [];
 
@@ -193,79 +227,29 @@ export class StocksClassificationSyncService {
           mappedGroupIds.add(groupId);
         }
 
-        // Map index groups
+        // Map index groups dynamically
         let indexGroupCode: string | null = null;
-        if (vn30Set.has(sym) && groupMap.has('VN30')) {
-          const groupId = groupMap.get('VN30')!;
-          if (!mappedGroupIds.has(groupId)) {
-            const mapping = new StockGroupMapping();
-            mapping.stockSymbol = stock.symbol;
-            mapping.groupId = groupId;
-            newMappings.push(mapping);
-            mappedGroupIds.add(groupId);
+        for (const key of groupKeys) {
+          const keySet = new Set(
+            (groupedSymbols[key] || []).map((s: string) => s.toUpperCase()),
+          );
+          if (keySet.has(sym) && groupMap.has(key)) {
+            const groupId = groupMap.get(key)!;
+            if (!mappedGroupIds.has(groupId)) {
+              const mapping = new StockGroupMapping();
+              mapping.stockSymbol = stock.symbol;
+              mapping.groupId = groupId;
+              newMappings.push(mapping);
+              mappedGroupIds.add(groupId);
+            }
+            indexGroupCode = key;
           }
-          indexGroupCode = 'VN30';
-        }
-        if (cwSet.has(sym) && groupMap.has('CW')) {
-          const groupId = groupMap.get('CW')!;
-          if (!mappedGroupIds.has(groupId)) {
-            const mapping = new StockGroupMapping();
-            mapping.stockSymbol = stock.symbol;
-            mapping.groupId = groupId;
-            newMappings.push(mapping);
-            mappedGroupIds.add(groupId);
-          }
-          indexGroupCode = 'CW';
-        }
-        if (etfSet.has(sym) && groupMap.has('ETF')) {
-          const groupId = groupMap.get('ETF')!;
-          if (!mappedGroupIds.has(groupId)) {
-            const mapping = new StockGroupMapping();
-            mapping.stockSymbol = stock.symbol;
-            mapping.groupId = groupId;
-            newMappings.push(mapping);
-            mappedGroupIds.add(groupId);
-          }
-          indexGroupCode = 'ETF';
-        }
-        if (fuIndexSet.has(sym) && groupMap.has('FU_INDEX')) {
-          const groupId = groupMap.get('FU_INDEX')!;
-          if (!mappedGroupIds.has(groupId)) {
-            const mapping = new StockGroupMapping();
-            mapping.stockSymbol = stock.symbol;
-            mapping.groupId = groupId;
-            newMappings.push(mapping);
-            mappedGroupIds.add(groupId);
-          }
-          indexGroupCode = 'FU_INDEX';
-        }
-        if (fuBondSet.has(sym) && groupMap.has('FU_BOND')) {
-          const groupId = groupMap.get('FU_BOND')!;
-          if (!mappedGroupIds.has(groupId)) {
-            const mapping = new StockGroupMapping();
-            mapping.stockSymbol = stock.symbol;
-            mapping.groupId = groupId;
-            newMappings.push(mapping);
-            mappedGroupIds.add(groupId);
-          }
-          indexGroupCode = 'FU_BOND';
-        }
-        if (indexSet.has(sym) && groupMap.has('INDEX')) {
-          const groupId = groupMap.get('INDEX')!;
-          if (!mappedGroupIds.has(groupId)) {
-            const mapping = new StockGroupMapping();
-            mapping.stockSymbol = stock.symbol;
-            mapping.groupId = groupId;
-            newMappings.push(mapping);
-            mappedGroupIds.add(groupId);
-          }
-          indexGroupCode = 'INDEX';
         }
         stock.indexGroup = indexGroupCode;
       }
 
       // 3. Save stocks (for backward compatibility column) and mappings in chunks
-      const chunkSize = 200;
+      const chunkSize = 80;
       for (let i = 0; i < stocksToKeep.length; i += chunkSize) {
         await this.repo.save(stocksToKeep.slice(i, i + chunkSize));
       }

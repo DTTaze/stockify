@@ -25,7 +25,7 @@ export function StatsCards({ stats, isLoading }: StatsCardsProps) {
         return (
           <div
             key={stat.label}
-            className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm transition-shadow hover:shadow-md"
+            className="border-border bg-card text-card-foreground rounded-xl border p-6 shadow-sm transition-shadow hover:shadow-md"
           >
             <div className="mb-4 flex items-center justify-between">
               <div
@@ -48,10 +48,12 @@ export function StatsCards({ stats, isLoading }: StatsCardsProps) {
             {isLoading ? (
               <Skeleton className="mb-1.5 h-9 w-24" />
             ) : (
-              <div className="text-brand-900 mb-1 text-3xl">{stat.value}</div>
+              <div className="text-brand-900 mb-1 text-3xl font-semibold dark:text-neutral-50">
+                {stat.value}
+              </div>
             )}
 
-            <div className="text-sm text-gray-600">{stat.label}</div>
+            <div className="text-muted-foreground text-sm">{stat.label}</div>
           </div>
         );
       })}

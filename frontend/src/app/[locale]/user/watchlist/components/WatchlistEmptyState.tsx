@@ -17,19 +17,21 @@ export function WatchlistEmptyState(props: WatchlistEmptyStateProps) {
   return (
     <div
       className={cn(
-        "rounded-xl border border-gray-200 bg-white p-12",
+        "border-border bg-card text-card-foreground rounded-xl border p-12",
         "text-center shadow-sm",
       )}
     >
-      <Star className={cn("mx-auto mb-4 h-16 w-16", "text-gray-300")} />
+      <Star
+        className={cn("mx-auto mb-4 h-16 w-16", "text-muted-foreground/50")}
+      />
 
-      <h3 className={cn("mb-2 text-xl", "text-gray-600")}>
+      <h3 className={cn("mb-2 text-xl", "text-foreground")}>
         {searchTerm
           ? t("watchlist.noStocksFound")
           : t("watchlist.emptyWatchlist")}
       </h3>
 
-      <p className={cn("text-gray-505", !searchTerm && "mb-6")}>
+      <p className={cn("text-muted-foreground", !searchTerm && "mb-6")}>
         {searchTerm
           ? t("watchlist.trySearchKeyword")
           : t("watchlist.emptyDesc")}

@@ -16,8 +16,10 @@ import { DataManagementTableRow } from "./DataManagementTableRow";
 
 type Stock = {
   symbol: string;
-  last_updated: string;
-  total_records: number;
+  last_updated?: string;
+  lastUpdated?: string;
+  total_records?: number;
+  totalRecords?: number;
   status: StockStatus;
 };
 

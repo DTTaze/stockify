@@ -7,10 +7,11 @@ import {
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
+import { StocksService } from '@modules/stocks/services/stocks.service';
+
 import { ENV_KEY, INJECTION_TOKEN } from '@shared/constants';
 import { OutboundPartnerService } from '@shared/services/outbound-partner.service';
 
-import { StocksService } from '@modules/stocks/services/stocks.service';
 import {
   DataManagementStockDto,
   DataManagementSummaryDto,
@@ -40,24 +41,61 @@ export class DataManagementService extends OutboundPartnerService {
   public async getDataManagementSummary(): Promise<
     OperationResult<DataManagementSummaryDto>
   > {
-    // Use StocksService to compute summary from the database
-    const classificationResult =
-      await this.stocksService.getClassificationSummary();
-    if (!classificationResult.success) {
-      return { success: false, message: classificationResult.message } as any;
+    try {
+      const summary = await this.stocksService.getDataSummary();
+      return {
+        success: true,
+        data: summary,
+      };
+    } catch (error) {
+      this.logger.error('Failed to fetch data management summary', error);
+      return {
+        success: false,
+        message: `Failed to fetch summary: ${error instanceof Error ? error.message : String(error)}`,
+      } as any;
     }
-    // For now, we set needsUpdate to false and totalRecords to 0 (placeholder)
-    return {
-      success: true,
-      data: {
-        totalStocks: classificationResult.data.total,
-        // timestamp as number (ms since epoch) to match DTO
-        updated: Date.now(),
-        // 0 = no update needed, 1 = needs update
-        needsUpdate: 0,
-        totalRecords: 0,
-      },
-    };
+  }
+
+  private getStatus(lastUpdated: Date | null): string {
+    if (!lastUpdated) {
+      return 'needs_update';
+    }
+
+    const now = new Date();
+    // Normalize now and lastUpdated to local midnight to perform calendar day comparisons
+    const todayLocal = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate(),
+    );
+    const lastUpdatedMidnight = new Date(
+      lastUpdated.getFullYear(),
+      lastUpdated.getMonth(),
+      lastUpdated.getDate(),
+    );
+
+    const diffTime = todayLocal.getTime() - lastUpdatedMidnight.getTime();
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+    const dayOfWeek = now.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+
+    let maxAllowedDays = 1; // Standard: 1 day old (yesterday) is fine
+
+    if (dayOfWeek === 0) {
+      // Sunday: Friday data (2 days ago) is fine
+      maxAllowedDays = 2;
+    } else if (dayOfWeek === 6) {
+      // Saturday: Friday data (1 day ago) is fine
+      maxAllowedDays = 1;
+    } else if (dayOfWeek === 1) {
+      // Monday: Friday data (3 days ago) is fine before today's close
+      maxAllowedDays = 3;
+    } else {
+      // Tue-Fri: yesterday's data is fine (1 day old)
+      maxAllowedDays = 1;
+    }
+
+    return diffDays <= maxAllowedDays ? 'updated' : 'needs_update';
   }
 
   public async getDataManagementStocks(
@@ -75,14 +113,31 @@ export class DataManagementService extends OutboundPartnerService {
     if (!serviceResult.success) {
       return { success: false, message: serviceResult.message } as any;
     }
-    const { stocks, total, limit, offset } = serviceResult.data;
-    // Map Stock entities to DataManagementStockDto shape
-    const dmStocks: DataManagementStockDto[] = stocks.map((s) => ({
-      symbol: s.symbol,
-      lastUpdated: (s as any).lastUpdated || null,
-      totalRecords: (s as any).totalRecords || 0,
-      status: (s as any).status || 'unknown',
-    }));
+    const { rows: stocks = [], total, limit, offset } = serviceResult.data;
+
+    // Fetch stats for these specific symbols
+    const symbols = stocks.map((s) => s.symbol);
+    const statsMap = await this.stocksService.getStockStats(symbols);
+
+    // Map Stock entities to DataManagementStockDto shape with stats
+    const dmStocks: DataManagementStockDto[] = stocks.map((s) => {
+      const stats = statsMap[s.symbol] || {
+        totalRecords: 0,
+        lastUpdated: null,
+      };
+      const isoDate = stats.lastUpdated
+        ? stats.lastUpdated.toISOString()
+        : null;
+      return {
+        symbol: s.symbol,
+        lastUpdated: isoDate,
+        last_updated: isoDate,
+        totalRecords: stats.totalRecords,
+        total_records: stats.totalRecords,
+        status: this.getStatus(stats.lastUpdated),
+      };
+    });
+
     return {
       success: true,
       data: {

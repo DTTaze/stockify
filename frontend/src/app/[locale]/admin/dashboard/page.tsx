@@ -81,38 +81,58 @@ export default function AdminDashboard() {
       {
         label: "Tổng User",
         value: summary?.total_users?.toLocaleString() ?? "--",
-        change: "+12%",
+        change: summary
+          ? `${summary.active_users?.toLocaleString() ?? 0} hoạt động`
+          : "--",
         icon: Users,
         color: "from-blue-500 to-blue-600",
-        bgColor: "bg-blue-50",
-        textColor: "text-blue-600",
+        bgColor: "bg-blue-50 dark:bg-blue-950/30",
+        textColor: "text-blue-600 dark:text-blue-400",
       },
       {
         label: "Cổ phiếu đã xử lý",
         value: summary?.updated_stocks?.toLocaleString() ?? "--",
-        change: "+5%",
+        change: summary
+          ? `Tổng: ${summary.total_stocks?.toLocaleString() ?? 0}`
+          : "--",
         icon: Database,
         color: "from-green-500 to-green-600",
-        bgColor: "bg-green-50",
-        textColor: "text-green-600",
+        bgColor: "bg-green-50 dark:bg-green-950/30",
+        textColor: "text-green-600 dark:text-green-400",
       },
       {
         label: "Models đang chạy",
         value: summary?.active_models?.toLocaleString() ?? "--",
-        change: "0",
+        change: summary
+          ? `Lỗi: ${summary.failed_models?.toLocaleString() ?? 0}`
+          : "--",
         icon: Cpu,
         color: "from-purple-500 to-purple-600",
-        bgColor: "bg-purple-50",
-        textColor: "text-purple-600",
+        bgColor:
+          summary?.failed_models && summary.failed_models > 0
+            ? "bg-red-50 dark:bg-red-950/30"
+            : "bg-purple-50 dark:bg-purple-950/30",
+        textColor:
+          summary?.failed_models && summary.failed_models > 0
+            ? "text-red-600 dark:text-red-400"
+            : "text-purple-600 dark:text-purple-400",
       },
       {
         label: "Tổng bản ghi",
         value: summary?.total_records?.toLocaleString() ?? "--",
-        change: "+23%",
+        change: summary
+          ? `Chưa đồng bộ: ${summary.needs_update_stocks?.toLocaleString() ?? 0}`
+          : "--",
         icon: TrendingUp,
         color: "from-orange-500 to-orange-600",
-        bgColor: "bg-orange-50",
-        textColor: "text-orange-600",
+        bgColor:
+          summary?.needs_update_stocks && summary.needs_update_stocks > 0
+            ? "bg-yellow-50 dark:bg-yellow-950/30"
+            : "bg-orange-50 dark:bg-orange-950/30",
+        textColor:
+          summary?.needs_update_stocks && summary.needs_update_stocks > 0
+            ? "text-yellow-700 dark:text-yellow-400"
+            : "text-orange-600 dark:text-orange-400",
       },
     ],
     [summary],

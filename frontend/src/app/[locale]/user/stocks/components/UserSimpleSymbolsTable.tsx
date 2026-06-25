@@ -1,16 +1,8 @@
 "use client";
 
-import {
-  Activity,
-  ChevronLeft,
-  ChevronRight,
-  FileText,
-  Layers,
-  Search,
-} from "lucide-react";
+import { Layers, Search } from "lucide-react";
 import React, { useMemo, useState } from "react";
 
-import { ButtonCustom } from "@/components/common/form/button";
 import { Card, CardContent } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
 import { Skeleton } from "@/components/ui/Skeleton";
@@ -24,48 +16,29 @@ import {
 } from "@/components/ui/Table";
 import { useLanguage } from "@/providers/LanguageProvider";
 
+import { StocksPagination } from "./StocksPagination";
+
 type Props = {
   symbols: string[];
-  type: "futures" | "bonds" | "indices";
   isLoading: boolean;
 };
 
-const ITEMS_PER_PAGE = 15;
+const DEFAULT_PAGE_SIZE = 15;
 
-export function UserSimpleSymbolsTable({ symbols, type, isLoading }: Props) {
+export function UserSimpleSymbolsTable({ symbols, isLoading }: Props) {
   const { t } = useLanguage();
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
 
-  const assetInfo = useMemo(() => {
-    const mapping: Record<
-      string,
-      { title: string; category: string; icon: React.ElementType }
-    > = {
-      futures: {
-        title: t("stocks.futuresTab"),
-        category: t("stocks.derivative"),
-        icon: Activity,
-      },
-      bonds: {
-        title: t("stocks.bondsTab"),
-        category: t("stocks.bondsDesc"),
-        icon: FileText,
-      },
-      indices: {
-        title: t("stocks.indicesTab"),
-        category: t("stocks.indicesDesc"),
-        icon: Layers,
-      },
-    };
-    return (
-      mapping[type] || {
-        title: t("stocks.assetTitle"),
-        category: t("stocks.assetCategory"),
-        icon: Layers,
-      }
-    );
-  }, [type, t]);
+  const assetInfo = useMemo(
+    () => ({
+      title: t("stocks.indicesTab"),
+      category: t("stocks.indicesDesc"),
+      icon: Layers,
+    }),
+    [t],
+  );
 
   const { title, category, icon: Icon } = assetInfo;
 
@@ -81,57 +54,49 @@ export function UserSimpleSymbolsTable({ symbols, type, isLoading }: Props) {
     setCurrentPage(1);
   }, [searchQuery]);
 
-  const totalPages = Math.ceil(filteredSymbols.length / ITEMS_PER_PAGE) || 1;
-  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+  const totalPages = Math.ceil(filteredSymbols.length / pageSize) || 1;
+  const startIndex = (currentPage - 1) * pageSize;
   const paginatedSymbols = filteredSymbols.slice(
     startIndex,
-    startIndex + ITEMS_PER_PAGE,
+    startIndex + pageSize,
   );
 
   const getSymbolDescription = (symbol: string) => {
-    if (type === "indices") {
-      const uSym = symbol.toUpperCase();
-      if (uSym === "VNINDEX") {
-        return t("stocks.vnIndexDesc");
-      }
-      if (uSym === "VN30") {
-        return t("stocks.vn30Desc");
-      }
-      if (uSym === "HNXINDEX") {
-        return t("stocks.hnxIndexDesc");
-      }
-      if (uSym === "HNX30") {
-        return t("stocks.hnx30Desc");
-      }
-      if (uSym === "UPCOMINDEX") {
-        return t("stocks.upcomIndexDesc");
-      }
-      return t("stocks.vietnamIndices");
+    const uSym = symbol.toUpperCase();
+    if (uSym === "VNINDEX") {
+      return t("stocks.vnIndexDesc");
     }
-    if (type === "futures") {
-      return symbol.toUpperCase().startsWith("VN30F")
-        ? t("stocks.futuresVn30")
-        : t("stocks.futuresDerivatives");
+    if (uSym === "VN30") {
+      return t("stocks.vn30Desc");
     }
-    return t("stocks.govBonds");
+    if (uSym === "HNXINDEX") {
+      return t("stocks.hnxIndexDesc");
+    }
+    if (uSym === "HNX30") {
+      return t("stocks.hnx30Desc");
+    }
+    if (uSym === "UPCOMINDEX") {
+      return t("stocks.upcomIndexDesc");
+    }
+    return t("stocks.vietnamIndices");
   };
 
   return (
-    <Card className="overflow-hidden rounded-xl border bg-white shadow-sm">
+    <Card className="border-border bg-card overflow-hidden rounded-xl border shadow-sm">
       <CardContent className="p-0">
         {/* Search bar */}
-        <div className="flex flex-col gap-4 border-b border-gray-100 bg-gray-50/50 p-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="border-border bg-muted/30 flex flex-col gap-4 border-b p-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="relative w-full max-w-md">
-            <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-gray-400" />
+            <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
             <Input
               type="text"
               placeholder={t("stocks.searchSimplePlaceholder", { title })}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="focus-visible:ring-brand-900 h-9 border-gray-200 bg-white pl-9"
+              className="border-input bg-background focus-visible:ring-brand-700 dark:focus-visible:ring-brand-400 h-9 pl-9"
             />
           </div>
-          <div className="text-xs font-medium text-gray-500">
+          <div className="text-muted-foreground text-xs font-medium">
             {t("stocks.foundCount", { count: filteredSymbols.length })}
           </div>
         </div>
@@ -171,22 +136,25 @@ export function UserSimpleSymbolsTable({ symbols, type, isLoading }: Props) {
                 <TableRow>
                   <TableCell
                     colSpan={3}
-                    className="h-32 text-center text-gray-400"
+                    className="text-muted-foreground h-32 text-center"
                   >
                     {t("stocks.noResults")}
                   </TableCell>
                 </TableRow>
               ) : (
                 paginatedSymbols.map((symbol) => (
-                  <TableRow key={symbol} className="hover:bg-gray-50/50">
-                    <TableCell className="text-brand-900 p-4 font-bold">
+                  <TableRow
+                    key={symbol}
+                    className="border-border hover:bg-muted/50"
+                  >
+                    <TableCell className="text-brand-800 dark:text-brand-300 p-4 font-bold">
                       {symbol}
                     </TableCell>
-                    <TableCell className="font-medium text-gray-700">
+                    <TableCell className="text-foreground font-medium">
                       {getSymbolDescription(symbol)}
                     </TableCell>
-                    <TableCell className="flex items-center gap-1.5 py-4 text-sm text-gray-500">
-                      <Icon className="h-3.5 w-3.5 shrink-0 text-gray-400" />
+                    <TableCell className="text-muted-foreground flex items-center gap-1.5 py-4 text-sm">
+                      <Icon className="text-muted-foreground h-3.5 w-3.5 shrink-0" />
                       <span>{category}</span>
                     </TableCell>
                   </TableRow>
@@ -196,35 +164,16 @@ export function UserSimpleSymbolsTable({ symbols, type, isLoading }: Props) {
           </Table>
         </div>
 
-        {/* Pagination control */}
-        {totalPages > 1 && (
-          <div className="flex items-center justify-between border-t border-gray-100 bg-gray-50/30 p-4">
-            <div className="text-sm text-gray-500">
-              {t("stocks.pageIndicator", {
-                current: currentPage,
-                total: totalPages,
-              })}
-            </div>
-            <div className="flex gap-2">
-              <ButtonCustom
-                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                disabled={currentPage === 1}
-                className="flex cursor-pointer items-center justify-center rounded-lg border bg-white p-2 shadow-xs hover:bg-gray-50 disabled:opacity-50"
-              >
-                <ChevronLeft className="h-4 w-4 text-gray-600" />
-              </ButtonCustom>
-              <ButtonCustom
-                onClick={() =>
-                  setCurrentPage((p) => Math.min(totalPages, p + 1))
-                }
-                disabled={currentPage === totalPages}
-                className="flex cursor-pointer items-center justify-center rounded-lg border bg-white p-2 shadow-xs hover:bg-gray-50 disabled:opacity-50"
-              >
-                <ChevronRight className="h-4 w-4 text-gray-600" />
-              </ButtonCustom>
-            </div>
-          </div>
-        )}
+        <StocksPagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          pageSize={pageSize}
+          onPageChange={setCurrentPage}
+          onPageSizeChange={(nextPageSize) => {
+            setPageSize(nextPageSize);
+            setCurrentPage(1);
+          }}
+        />
       </CardContent>
     </Card>
   );

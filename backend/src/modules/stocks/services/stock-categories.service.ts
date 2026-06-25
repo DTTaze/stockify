@@ -5,11 +5,12 @@ import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 
 import { MLService } from '@modules/ml/services/ml.service';
+
+import { QueryIcbDTO, QueryIcbStocksDTO } from '../dto/stocks.dto';
 import { IcbIndustry } from '../entities/icb-industry.model';
 import { StockGroupMapping } from '../entities/stock-group-mapping.model';
 import { StockGroup } from '../entities/stock-group.model';
 import { StockIcbMapping } from '../entities/stock-icb-mapping.model';
-import { QueryIcbDTO, QueryIcbStocksDTO } from '../dto/stocks.dto';
 import { Stock } from '../entities/stocks.model';
 
 @Injectable()

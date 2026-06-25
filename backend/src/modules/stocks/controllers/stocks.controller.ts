@@ -4,7 +4,12 @@ import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 
 import { TimePeriod } from '@modules/ml/dto/ml.dto';
-import { CrawlStocksDTO, QueryStocksDTO } from '../dto/stocks.dto';
+
+import {
+  CrawlStocksDTO,
+  QueryStocksDTO,
+  SyncGroupPricesDTO,
+} from '../dto/stocks.dto';
 import { StocksService } from '../services/stocks.service';
 
 @ApiTags('Stocks')
@@ -26,6 +31,16 @@ export class StocksController {
   @Post('sync-categories')
   async syncCategories(): Promise<HttpResponse> {
     return this.stocksService.syncClassifications();
+  }
+
+  @Post('sync-prices-by-group')
+  @ApiOperation({
+    summary: 'Sync stock prices for a specific stock group (e.g. VN100, VN30)',
+  })
+  async syncGroupPrices(
+    @Body() body: SyncGroupPricesDTO,
+  ): Promise<HttpResponse> {
+    return this.stocksService.syncGroupStockPrices(body.groupCode);
   }
 
   @Get('classification-summary')

@@ -49,4 +49,12 @@ export class AdminUserRolesService {
 
     await this.userRolesService.removeRole(userId, roleId);
   }
+
+  async syncRoles(userId: string, roleIds: string[]) {
+    const user = await this.userService.findByID(userId);
+    if (!user) {
+      throw new Error('User not found');
+    }
+    await this.userRolesService.syncRoles(userId, roleIds);
+  }
 }

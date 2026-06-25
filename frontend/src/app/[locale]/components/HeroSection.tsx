@@ -33,10 +33,12 @@ export function HeroSection() {
               <span className="text-sm">{t("hero.aiTech")}</span>
             </div>
 
-            <h1 className="text-primary mb-6 text-5xl leading-tight lg:text-6xl">
+            <h1 className="text-foreground mb-6 text-5xl leading-tight font-bold lg:text-6xl">
               {t("hero.title1")}
               <br />
-              <span className="hover:text-accent-500">{t("hero.title2")}</span>
+              <span className="text-primary hover:text-accent-500 transition-colors">
+                {t("hero.title2")}
+              </span>
             </h1>
 
             <p className="text-muted-foreground mb-8 text-xl leading-relaxed">
@@ -61,21 +63,23 @@ export function HeroSection() {
 
             <div className="flex items-center gap-8 pt-4">
               <div>
-                <div className="text-primary mb-1 text-3xl">10K+</div>
+                <div className="text-primary mb-1 text-3xl font-bold">10K+</div>
                 <div className="text-muted-foreground text-sm">
                   {t("hero.users")}
                 </div>
               </div>
               <div className="bg-border h-12 w-px"></div>
               <div>
-                <div className="text-primary mb-1 text-3xl">99.8%</div>
+                <div className="text-primary mb-1 text-3xl font-bold">
+                  99.8%
+                </div>
                 <div className="text-muted-foreground text-sm">
                   {t("hero.accuracy")}
                 </div>
               </div>
               <div className="bg-border h-12 w-px"></div>
               <div>
-                <div className="text-primary mb-1 text-3xl">24/7</div>
+                <div className="text-primary mb-1 text-3xl font-bold">24/7</div>
                 <div className="text-muted-foreground text-sm">
                   {t("hero.active")}
                 </div>
@@ -85,16 +89,20 @@ export function HeroSection() {
 
           <div className="relative">
             <div className="to-primary/20 from-accent-500/20 absolute inset-0 rounded-3xl bg-linear-to-br blur-3xl"></div>
-            <div className="border-border relative rounded-2xl border bg-white p-8 shadow-2xl">
+            <div className="border-border bg-card text-card-foreground relative rounded-2xl border p-8 shadow-2xl">
               <div className="mb-6 flex items-center justify-between">
-                <h3 className="text-primary">VN-INDEX</h3>
+                <h3 className="text-muted-foreground font-semibold">
+                  VN-INDEX
+                </h3>
                 <span className="rounded-full bg-green-100 px-3 py-1 text-sm text-green-700">
                   +2.5%
                 </span>
               </div>
 
               <div className="mb-6">
-                <div className="text-primary mb-2 text-4xl">1,254.32</div>
+                <div className="text-foreground mb-2 text-4xl font-bold">
+                  1,254.32
+                </div>
                 <div className="text-sm text-green-600">
                   +31.25 {t("hero.pointsToday")}
                 </div>
@@ -115,19 +123,19 @@ export function HeroSection() {
                   <div className="text-muted-foreground mb-1 text-xs">
                     {t("hero.highest")}
                   </div>
-                  <div className="text-primary">1,268.45</div>
+                  <div className="text-foreground">1,268.45</div>
                 </div>
                 <div>
                   <div className="text-muted-foreground mb-1 text-xs">
                     {t("hero.lowest")}
                   </div>
-                  <div className="text-primary">1,242.18</div>
+                  <div className="text-foreground">1,242.18</div>
                 </div>
                 <div>
                   <div className="text-muted-foreground mb-1 text-xs">
                     {t("hero.volume")}
                   </div>
-                  <div className="text-primary">850M</div>
+                  <div className="text-foreground">850M</div>
                 </div>
               </div>
             </div>

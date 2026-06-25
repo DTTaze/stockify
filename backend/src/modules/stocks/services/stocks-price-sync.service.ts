@@ -4,10 +4,11 @@ import { Repository } from 'typeorm';
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 
-import { getErrorMessage } from '@shared/helpers/common';
-
 import { MarketType, TimePeriod } from '@modules/ml/dto/ml.dto';
 import { MLService } from '@modules/ml/services/ml.service';
+
+import { getErrorMessage } from '@shared/helpers/common';
+
 import { StockPrice } from '../entities/stock-price.model';
 import { Stock } from '../entities/stocks.model';
 
@@ -35,7 +36,11 @@ export class StocksPriceSyncService {
         const sp = new StockPrice();
         const dateValue = p.date ?? p.time ?? '';
         sp.symbol = symbol.toUpperCase();
-        sp.date = new Date(String(dateValue));
+
+        // Normalize date to UTC midnight of the calendar date to prevent timezone duplicates
+        const dateStr = String(dateValue).substring(0, 10);
+        sp.date = new Date(`${dateStr}T00:00:00.000Z`);
+
         sp.open = Number(p.open ?? p.Open ?? 0);
         sp.high = Number(p.high ?? p.High ?? 0);
         sp.low = Number(p.low ?? p.Low ?? 0);
@@ -242,6 +247,111 @@ export class StocksPriceSyncService {
       return {
         success: false,
         message: `Failed to sync index prices: ${getErrorMessage(error)}`,
+      };
+    }
+  }
+
+  public async syncGroupStockPrices(
+    groupCode: string,
+  ): Promise<OperationResult> {
+    try {
+      const upperGroupCode = groupCode.toUpperCase();
+      this.logger.log(`Fetching stock symbols for group ${upperGroupCode}...`);
+
+      const stocks = await this.repo.find({
+        where: {
+          mappings: {
+            stockGroup: {
+              code: upperGroupCode,
+            },
+          },
+        },
+        relations: ['mappings', 'mappings.stockGroup'],
+      });
+
+      if (!stocks.length) {
+        return {
+          success: false,
+          message: `No stock symbols found for group ${upperGroupCode} in the database.`,
+        };
+      }
+
+      const symbols = stocks.map((s) => s.symbol);
+      this.logger.log(
+        `Found ${symbols.length} symbols for group ${upperGroupCode}. Starting price sync...`,
+      );
+
+      let syncedRecords = 0;
+      const failedSymbols: string[] = [];
+
+      for (const symbol of symbols) {
+        this.logger.log(`Syncing prices for ${symbol}...`);
+
+        // Wait 1 second between symbols to prevent rate-limiting from VCI/KBS data sources
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+
+        const historyResult = await this.retryOperation<unknown>(() =>
+          this.mlService.getMarketHistory({
+            symbol,
+            type: MarketType.STOCK,
+            period: TimePeriod.ONE_YEAR,
+          }),
+        );
+
+        if (!historyResult.success || !historyResult.data) {
+          this.logger.warn(
+            `Failed to fetch history for ${symbol}: ${historyResult.message}`,
+          );
+          failedSymbols.push(symbol);
+          continue;
+        }
+
+        const historyData = historyResult.data;
+        const prices = Array.isArray(historyData)
+          ? (historyData as Array<Record<string, unknown>>)
+          : Array.isArray((historyData as { data?: unknown }).data)
+            ? ((historyData as { data: unknown }).data as Array<
+                Record<string, unknown>
+              >)
+            : [];
+
+        if (!prices.length) {
+          this.logger.warn(`No prices returned for ${symbol}`);
+          failedSymbols.push(symbol);
+          continue;
+        }
+
+        const saveResult = await this.saveHistoricalPrices(symbol, prices);
+        if (!saveResult.success) {
+          failedSymbols.push(symbol);
+          continue;
+        }
+
+        syncedRecords += prices.length;
+      }
+
+      return {
+        success: true,
+        data: {
+          groupCode: upperGroupCode,
+          totalSymbols: symbols.length,
+          syncedRecords,
+          failedSymbols,
+        },
+        message: `Synced ${syncedRecords} price records for group ${upperGroupCode} (${
+          symbols.length - failedSymbols.length
+        }/${symbols.length} succeeded)`,
+      };
+    } catch (error) {
+      this.logger.error(
+        `Error syncing group ${groupCode} stock prices:`,
+        error,
+      );
+      return {
+        success: false,
+        message: `Failed to sync group ${groupCode} stock prices: ${getErrorMessage(
+          error,
+        )}`,
       };
     }
   }

@@ -12,7 +12,7 @@ export const InputSearch = (props: Props) => {
     <InputCustom
       prefixIcon={
         <div className="mr-2">
-          <SearchIcon className="text-neutral-black h-6 w-6" />
+          <SearchIcon className="h-6 w-6 text-neutral-500 dark:text-neutral-400" />
         </div>
       }
       classNameWrapper={classNameWrapper}

@@ -51,11 +51,9 @@ export function PredictionChart({
               tickFormatter={(value) => `${value}`}
             />
             <Tooltip
-              formatter={(value: number | string, name: string) => {
+              formatter={(value: string | number, name: string | number) => {
                 const priceVal =
-                  typeof value === "number"
-                    ? value
-                    : parseFloat(value as string);
+                  typeof value === "number" ? value : parseFloat(value);
                 if (isNaN(priceVal)) {
                   return [value, name];
                 }

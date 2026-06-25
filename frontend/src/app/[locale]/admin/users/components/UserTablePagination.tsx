@@ -45,14 +45,14 @@ export function UserTablePagination({
   onLimitChange,
 }: PaginationProps) {
   return (
-    <div className="flex flex-col items-center justify-between gap-4 border-t border-gray-100 bg-gray-50/30 p-4 sm:flex-row">
+    <div className="border-border bg-muted/20 flex flex-col items-center justify-between gap-4 border-t p-4 sm:flex-row">
       {/* Page Size Selector */}
-      <div className="flex items-center gap-2 text-sm text-gray-500">
+      <div className="text-muted-foreground flex items-center gap-2 text-sm">
         <span>Hiển thị</span>
         <select
           value={limit}
           onChange={(e) => onLimitChange(Number(e.target.value))}
-          className="rounded-lg border border-gray-200 bg-white px-2 py-1 text-sm font-medium text-gray-700 outline-hidden hover:border-gray-300"
+          className="border-border bg-card text-foreground cursor-pointer rounded-lg border px-2 py-1 text-sm font-medium outline-hidden transition-colors hover:border-neutral-300 dark:hover:border-neutral-700"
         >
           <option value={10}>10</option>
           <option value={25}>25</option>
@@ -69,9 +69,9 @@ export function UserTablePagination({
           <ButtonCustom
             onClick={() => onPageChange(Math.max(1, currentPage - 1))}
             disabled={currentPage === 1}
-            className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg border bg-white p-0 shadow-xs hover:bg-gray-50 disabled:opacity-50"
+            className="border-border bg-card hover:bg-muted flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg border p-0 shadow-xs disabled:opacity-50"
           >
-            <ChevronLeft className="h-4 w-4 text-gray-600" />
+            <ChevronLeft className="text-muted-foreground h-4 w-4" />
           </ButtonCustom>
 
           {/* First */}
@@ -81,8 +81,8 @@ export function UserTablePagination({
             className={cn(
               "h-8 cursor-pointer rounded-lg border px-2 text-xs font-semibold shadow-xs transition-all",
               currentPage === 1
-                ? "border-gray-200 bg-gray-100 text-gray-400"
-                : "border-gray-200 bg-white text-gray-600 hover:bg-gray-50",
+                ? "border-border bg-muted text-muted-foreground/50"
+                : "border-border bg-card text-foreground hover:bg-muted",
             )}
           >
             First
@@ -92,7 +92,10 @@ export function UserTablePagination({
           {getPageNumbers(currentPage, totalPages).map((p) => {
             if (p.value === "...") {
               return (
-                <span key={p.key} className="px-1 text-gray-400 select-none">
+                <span
+                  key={p.key}
+                  className="text-muted-foreground/60 px-1 select-none"
+                >
                   ...
                 </span>
               );
@@ -104,8 +107,8 @@ export function UserTablePagination({
                 className={cn(
                   "h-8 w-8 cursor-pointer rounded-lg text-xs font-semibold transition-all",
                   currentPage === p.value
-                    ? "bg-brand-900 text-white shadow-xs"
-                    : "border border-gray-200 bg-white text-gray-600 hover:bg-gray-50",
+                    ? "bg-brand-900 dark:bg-brand-700 text-white shadow-xs"
+                    : "border-border bg-card text-muted-foreground hover:bg-muted hover:text-foreground border",
                 )}
               >
                 {p.value}
@@ -120,8 +123,8 @@ export function UserTablePagination({
             className={cn(
               "h-8 cursor-pointer rounded-lg border px-2 text-xs font-semibold shadow-xs transition-all",
               currentPage === totalPages
-                ? "border-gray-200 bg-gray-100 text-gray-400"
-                : "border-gray-200 bg-white text-gray-600 hover:bg-gray-50",
+                ? "border-border bg-muted text-muted-foreground/50"
+                : "border-border bg-card text-foreground hover:bg-muted",
             )}
           >
             Last
@@ -131,9 +134,9 @@ export function UserTablePagination({
           <ButtonCustom
             onClick={() => onPageChange(Math.min(totalPages, currentPage + 1))}
             disabled={currentPage === totalPages}
-            className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg border bg-white p-0 shadow-xs hover:bg-gray-50 disabled:opacity-50"
+            className="border-border bg-card hover:bg-muted flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg border p-0 shadow-xs disabled:opacity-50"
           >
-            <ChevronRight className="h-4 w-4 text-gray-600" />
+            <ChevronRight className="text-muted-foreground h-4 w-4" />
           </ButtonCustom>
         </div>
       )}

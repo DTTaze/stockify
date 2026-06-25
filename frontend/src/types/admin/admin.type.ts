@@ -14,19 +14,22 @@ export const ACTIVITY_CONFIG: Record<
   }
 > = {
   [ADMIN_DASHBOARD_ACTIVITY_TYPE.SUCCESS]: {
-    container: "border-green-100 bg-green-50",
+    container:
+      "border-green-100 dark:border-green-950 bg-green-50 dark:bg-green-950/20",
     iconBg: "bg-green-500",
     icon: CheckCircle,
   },
 
   [ADMIN_DASHBOARD_ACTIVITY_TYPE.WARNING]: {
-    container: "border-yellow-100 bg-yellow-50",
+    container:
+      "border-yellow-100 dark:border-yellow-950 bg-yellow-50 dark:bg-yellow-950/20",
     iconBg: "bg-yellow-500",
     icon: AlertCircle,
   },
 
   [ADMIN_DASHBOARD_ACTIVITY_TYPE.INFO]: {
-    container: "border-blue-100 bg-blue-50",
+    container:
+      "border-blue-100 dark:border-blue-950 bg-blue-50 dark:bg-blue-950/20",
     iconBg: "bg-blue-500",
     icon: AlertCircle,
   },

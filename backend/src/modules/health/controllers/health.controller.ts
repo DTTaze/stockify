@@ -155,8 +155,7 @@ export class HealthController {
           'vi-VN',
         ),
         level: 'info',
-        message:
-          'Loaded cached AI prediction models for all VN30 symbols',
+        message: 'Loaded cached AI prediction models for all VN30 symbols',
       },
     ];
 

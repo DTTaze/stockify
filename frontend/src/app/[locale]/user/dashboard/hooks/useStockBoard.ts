@@ -39,12 +39,24 @@ export function useStockBoard() {
 
   // Market classification query
   const marketOffset = (currentPage - 1) * ITEMS_PER_PAGE;
-  const isMarketTab = activeTab === "VN30";
+  const isMarketTab = ["VN30", "HNX30", "HOSE", "HNX", "CP_NGANH"].includes(
+    activeTab,
+  );
+
+  const queryGroup = useMemo(() => {
+    if (activeTab === "CP_NGANH") {
+      return "HOSE";
+    }
+    if (activeTab === "HNX30") {
+      return "HNX30";
+    }
+    return activeTab;
+  }, [activeTab]);
 
   const { data: marketData, isLoading: isMarketLoading } = useQueryStocks(
     isMarketTab
       ? {
-          group: activeTab,
+          group: queryGroup,
           keyword: searchQuery.trim() || undefined,
           limit: ITEMS_PER_PAGE,
           offset: marketOffset,
@@ -207,12 +219,16 @@ export function useStockBoard() {
     () => ({
       AI: filteredAiSymbols.length,
       WATCHLIST: filteredWatchlistSymbols.length,
-      VN30: isMarketTab ? marketTotal : 30,
+      VN30: activeTab === "VN30" ? marketTotal : 30,
+      HNX30: activeTab === "HNX30" ? marketTotal : 30,
+      HOSE: activeTab === "HOSE" ? marketTotal : 150,
+      HNX: activeTab === "HNX" ? marketTotal : 100,
+      CP_NGANH: activeTab === "CP_NGANH" ? marketTotal : 100,
     }),
     [
       filteredAiSymbols.length,
       filteredWatchlistSymbols.length,
-      isMarketTab,
+      activeTab,
       marketTotal,
     ],
   );

@@ -23,7 +23,7 @@ export const InputCustom = (props: InputCustomProps) => {
     <div
       className={cn(
         "h-12 w-full rounded-lg",
-        "border-2 border-gray-200",
+        "border-2 border-gray-200 dark:border-neutral-800",
         "flex items-center",
         "p-4",
         "focus-within:border-accent-500 focus-within:ring-accent-500 focus-within:ring-2",

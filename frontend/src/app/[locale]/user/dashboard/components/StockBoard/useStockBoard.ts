@@ -14,9 +14,43 @@ import { useWatchlistWithQuotes } from "@/queries/watchlist/useWatchlistWithQuot
 import { MarketType, TimePeriod } from "@/types/stock/stock.type";
 
 export const BOARD_TABS = [
-  { id: "AI", label: "Cổ phiếu AI", translationKey: "boardTabAi" },
-  { id: "WATCHLIST", label: "Theo dõi", translationKey: "boardTabWatchlist" },
-  { id: "VN30", label: "Chỉ số VN30", translationKey: "boardTabVn30" },
+  {
+    id: "WATCHLIST",
+    label: "Danh mục của tôi",
+    translationKey: "boardTabWatchlist",
+    hasChevron: true,
+  },
+  {
+    id: "AI",
+    label: "Cổ phiếu AI",
+    translationKey: "boardTabAi",
+    hasChevron: false,
+  },
+  {
+    id: "VN30",
+    label: "VN30",
+    translationKey: "boardTabVn30",
+    hasChevron: true,
+  },
+  {
+    id: "HNX30",
+    label: "HNX30",
+    translationKey: "boardTabHnx30",
+    hasChevron: false,
+  },
+  {
+    id: "HOSE",
+    label: "HOSE",
+    translationKey: "boardTabHose",
+    hasChevron: true,
+  },
+  { id: "HNX", label: "HNX", translationKey: "boardTabHnx", hasChevron: true },
+  {
+    id: "CP_NGANH",
+    label: "CP Ngành",
+    translationKey: "boardTabCpNganh",
+    hasChevron: true,
+  },
 ] as const;
 
 export const ITEMS_PER_PAGE = 12;
@@ -45,12 +79,24 @@ export function useStockBoard() {
 
   // Market classification query
   const marketOffset = (currentPage - 1) * ITEMS_PER_PAGE;
-  const isMarketTab = activeTab === "VN30";
+  const isMarketTab = ["VN30", "HNX30", "HOSE", "HNX", "CP_NGANH"].includes(
+    activeTab,
+  );
+
+  const queryGroup = useMemo(() => {
+    if (activeTab === "CP_NGANH") {
+      return "HOSE";
+    }
+    if (activeTab === "HNX30") {
+      return "HNX30";
+    }
+    return activeTab;
+  }, [activeTab]);
 
   const { data: marketData, isLoading: isMarketLoading } = useQueryStocks(
     isMarketTab
       ? {
-          group: activeTab,
+          group: queryGroup,
           keyword: searchQuery.trim() || undefined,
           limit: ITEMS_PER_PAGE,
           offset: marketOffset,
@@ -213,12 +259,16 @@ export function useStockBoard() {
     () => ({
       AI: filteredAiSymbols.length,
       WATCHLIST: filteredWatchlistSymbols.length,
-      VN30: isMarketTab ? marketTotal : 30,
+      VN30: activeTab === "VN30" ? marketTotal : 30,
+      HNX30: activeTab === "HNX30" ? marketTotal : 30,
+      HOSE: activeTab === "HOSE" ? marketTotal : 150,
+      HNX: activeTab === "HNX" ? marketTotal : 100,
+      CP_NGANH: activeTab === "CP_NGANH" ? marketTotal : 100,
     }),
     [
       filteredAiSymbols.length,
       filteredWatchlistSymbols.length,
-      isMarketTab,
+      activeTab,
       marketTotal,
     ],
   );

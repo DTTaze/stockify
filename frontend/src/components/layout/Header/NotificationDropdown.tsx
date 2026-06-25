@@ -23,6 +23,7 @@ import { useLanguage } from "@/providers/LanguageProvider";
 export interface NotificationItem {
   id: string;
   titleKey: string;
+  titleValues?: Record<string, string | number>;
   time: string;
   read: boolean;
   type: "success" | "info" | "warning";
@@ -101,7 +102,7 @@ function NotificationRow({
               : "text-gray-600 dark:text-neutral-300"
           }`}
         >
-          {t(notification.titleKey)}
+          {t(notification.titleKey, notification.titleValues)}
         </p>
         <span className="mt-1 block text-[10px] text-gray-400 dark:text-neutral-500">
           {notification.time}

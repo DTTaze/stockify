@@ -21,6 +21,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/Table";
+import { PredictionTrend } from "@/constants/stock";
 import { useLanguage } from "@/providers/LanguageProvider";
 import {
   PurchaseTransaction,
@@ -41,6 +42,8 @@ type WatchlistTableProps = {
   removingSymbol: string | null;
   onRemove: (symbol: string) => void;
   isLoading?: boolean;
+  thresholds: Record<string, number>;
+  onSetThreshold: (symbol: string, value: number) => void;
 };
 
 export function WatchlistTable({
@@ -51,6 +54,8 @@ export function WatchlistTable({
   removingSymbol,
   onRemove,
   isLoading,
+  thresholds,
+  onSetThreshold,
 }: WatchlistTableProps) {
   const { t } = useLanguage();
   const [expandedSymbol, setExpandedSymbol] = useState<string | null>(null);
@@ -103,7 +108,7 @@ export function WatchlistTable({
   return (
     <Table
       classNameWrapper={cn(
-        "overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm",
+        "overflow-hidden rounded-xl border border-border bg-card text-card-foreground shadow-sm",
       )}
     >
       <TableHeader
@@ -130,13 +135,17 @@ export function WatchlistTable({
             {t("watchlist.tablePrediction")}
           </TableHead>
 
+          <TableHead className="px-6 py-4 text-center text-xs tracking-wider text-white uppercase">
+            {t("watchlist.tableAlert") || "Cảnh báo giảm"}
+          </TableHead>
+
           <TableHead className="px-6 py-4 text-xs tracking-wider text-white uppercase">
             {t("watchlist.tableAction")}
           </TableHead>
         </TableRow>
       </TableHeader>
 
-      <TableBody className="bg-white">
+      <TableBody className="bg-card">
         {isLoading
           ? ["sk-1", "sk-2", "sk-3"].map((rowKey) => (
               <TableRow key={rowKey}>
@@ -164,6 +173,9 @@ export function WatchlistTable({
                 <TableCell className="px-6 py-4">
                   <Skeleton className="h-6 w-16 rounded-full" />
                 </TableCell>
+                <TableCell className="px-6 py-4 text-center">
+                  <Skeleton className="mx-auto h-8 w-14 rounded-md" />
+                </TableCell>
                 <TableCell className="px-6 py-4">
                   <Skeleton className="h-9 w-9 rounded-lg" />
                 </TableCell>
@@ -171,13 +183,13 @@ export function WatchlistTable({
             ))
           : watchlist.map((item) => {
               const stockPurchases = purchases[item.symbol] || [];
-              const isPredUp = item.prediction === "Tăng";
+              const isPredUp = item.prediction === PredictionTrend.UP;
               return (
                 <React.Fragment key={item.id}>
                   <TableRow
                     className={cn(
-                      "hover:bg-blue-50/50",
-                      expandedSymbol === item.symbol && "bg-blue-50/30",
+                      "border-border hover:bg-muted/60",
+                      expandedSymbol === item.symbol && "bg-muted/50",
                     )}
                   >
                     <TableCell className="px-6 py-4">
@@ -190,11 +202,11 @@ export function WatchlistTable({
                         />
 
                         <div>
-                          <div className="text-brand-900 text-sm font-semibold">
+                          <div className="text-foreground text-sm font-semibold">
                             {item.symbol}
                           </div>
 
-                          <div className="text-xs text-gray-500">
+                          <div className="text-muted-foreground text-xs">
                             {item.name}
                           </div>
                         </div>
@@ -202,7 +214,7 @@ export function WatchlistTable({
                     </TableCell>
 
                     <TableCell className="px-6 py-4">
-                      <div className="text-brand-900 text-sm font-semibold">
+                      <div className="text-foreground text-sm font-semibold">
                         {(item.price * 1000).toLocaleString("vi-VN")} ₫
                       </div>
                     </TableCell>
@@ -211,15 +223,17 @@ export function WatchlistTable({
                       <div
                         className={cn(
                           "flex items-center space-x-2",
-                          item.change >= 0 ? "text-green-600" : "text-red-600",
+                          item.change >= 0
+                            ? "text-green-600 dark:text-green-400"
+                            : "text-red-600 dark:text-red-400",
                         )}
                       >
                         {item.change >= 0 ? (
-                          <div className="rounded bg-green-100 p-1.5">
+                          <div className="rounded bg-green-100 p-1.5 dark:bg-green-500/15">
                             <TrendingUp className="h-4 w-4" />
                           </div>
                         ) : (
-                          <div className="rounded bg-red-100 p-1.5">
+                          <div className="rounded bg-red-100 p-1.5 dark:bg-red-500/15">
                             <TrendingDown className="h-4 w-4" />
                           </div>
                         )}
@@ -231,7 +245,7 @@ export function WatchlistTable({
                       </div>
                     </TableCell>
 
-                    <TableCell className="px-6 py-4 text-sm text-gray-600">
+                    <TableCell className="text-muted-foreground px-6 py-4 text-sm">
                       {item.volume.toLocaleString("vi-VN")}
                     </TableCell>
 
@@ -240,22 +254,50 @@ export function WatchlistTable({
                         className={cn(
                           "rounded-full border px-3 py-1 text-xs",
                           isPredUp
-                            ? "border-green-200 bg-green-50 text-green-700"
-                            : "border-red-200 bg-red-50 text-red-700",
+                            ? "border-green-200 bg-green-50 text-green-700 dark:border-green-500/30 dark:bg-green-500/10 dark:text-green-300"
+                            : "border-red-200 bg-red-50 text-red-700 dark:border-red-500/30 dark:bg-red-500/10 dark:text-red-300",
                         )}
                       >
                         {isPredUp ? t("priceUp") : t("priceDown")}
                       </span>
                     </TableCell>
 
+                    <TableCell className="px-6 py-4 text-center">
+                      <div className="inline-flex items-center justify-center space-x-1">
+                        <input
+                          type="number"
+                          step="0.1"
+                          min="0"
+                          placeholder="--"
+                          value={
+                            thresholds[item.symbol] !== undefined &&
+                            thresholds[item.symbol] > 0
+                              ? thresholds[item.symbol]
+                              : ""
+                          }
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            onSetThreshold(
+                              item.symbol,
+                              val === "" ? 0 : parseFloat(val),
+                            );
+                          }}
+                          className="border-input bg-card text-foreground focus:border-accent-500 h-8 w-14 rounded-md border text-center text-xs font-semibold outline-none"
+                        />
+                        <span className="text-muted-foreground text-xs font-bold">
+                          %
+                        </span>
+                      </div>
+                    </TableCell>
+
                     <TableCell className="px-6 py-4">
                       <div className="flex items-center space-x-2">
                         <ButtonCustom
                           onClick={() => handleToggleExpand(item.symbol)}
-                          bgColor="bg-transparent hover:bg-gray-100"
+                          bgColor="bg-transparent hover:bg-muted"
                           transition="transition-colors"
                           className={cn(
-                            "flex items-center justify-center rounded-lg p-2 text-gray-600",
+                            "text-muted-foreground hover:text-foreground flex items-center justify-center rounded-lg p-2",
                           )}
                           title={t("watchlist.tooltipDetail")}
                         >
@@ -269,10 +311,10 @@ export function WatchlistTable({
                         <ButtonCustom
                           onClick={() => onRemove(item.symbol)}
                           disabled={removingSymbol === item.symbol}
-                          bgColor="bg-transparent hover:bg-red-50"
+                          bgColor="bg-transparent hover:bg-red-50 dark:hover:bg-red-500/10"
                           transition="transition-colors"
                           className={cn(
-                            "rounded-lg p-2 text-red-600",
+                            "rounded-lg p-2 text-red-600 dark:text-red-400",
                             removingSymbol === item.symbol && "opacity-50",
                           )}
                           title={t("watchlist.tooltipRemove")}
@@ -284,21 +326,21 @@ export function WatchlistTable({
                   </TableRow>
 
                   {expandedSymbol === item.symbol && (
-                    <TableRow className="bg-gray-50/30 hover:bg-gray-50/30">
+                    <TableRow className="bg-muted/30 hover:bg-muted/30">
                       <TableCell
-                        colSpan={6}
-                        className="border-t border-b border-gray-100 px-6 py-6"
+                        colSpan={7}
+                        className="border-border border-t border-b px-6 py-6"
                       >
                         <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
                           {/* Purchases list */}
                           <div className="space-y-4 md:col-span-2">
                             <div className="flex items-center justify-between">
-                              <h4 className="text-sm font-bold tracking-wider text-gray-700 uppercase">
+                              <h4 className="text-foreground text-sm font-bold tracking-wider uppercase">
                                 {t("watchlist.purchaseHistory", {
                                   symbol: item.symbol,
                                 })}
                               </h4>
-                              <span className="text-xs font-medium text-gray-500">
+                              <span className="text-muted-foreground text-xs font-medium">
                                 {t("watchlist.totalBatches", {
                                   count: stockPurchases.length,
                                 })}
@@ -306,35 +348,35 @@ export function WatchlistTable({
                             </div>
 
                             {stockPurchases.length === 0 ? (
-                              <div className="rounded-xl border border-dashed bg-white py-8 text-center text-sm text-gray-400">
+                              <div className="border-border bg-card text-muted-foreground rounded-xl border border-dashed py-8 text-center text-sm">
                                 {t("watchlist.noTransactions", {
                                   symbol: item.symbol,
                                 })}
                               </div>
                             ) : (
-                              <div className="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-xs">
+                              <div className="border-border bg-card overflow-hidden rounded-lg border shadow-xs">
                                 <table className="w-full border-collapse text-left">
                                   <thead>
-                                    <tr className="border-b border-gray-200 bg-gray-50">
-                                      <th className="px-4 py-3 text-xs font-semibold text-gray-500 uppercase">
+                                    <tr className="border-border bg-muted/60 border-b">
+                                      <th className="text-muted-foreground px-4 py-3 text-xs font-semibold uppercase">
                                         {t("watchlist.purchaseDate")}
                                       </th>
-                                      <th className="px-4 py-3 text-right text-xs font-semibold text-gray-500 uppercase">
+                                      <th className="text-muted-foreground px-4 py-3 text-right text-xs font-semibold uppercase">
                                         {t("watchlist.purchaseQuantity")}
                                       </th>
-                                      <th className="px-4 py-3 text-right text-xs font-semibold text-gray-500 uppercase">
+                                      <th className="text-muted-foreground px-4 py-3 text-right text-xs font-semibold uppercase">
                                         {t("watchlist.purchasePrice")}
                                       </th>
-                                      <th className="px-4 py-3 text-right text-xs font-semibold text-gray-500 uppercase">
+                                      <th className="text-muted-foreground px-4 py-3 text-right text-xs font-semibold uppercase">
                                         {t("watchlist.totalPurchase")}
                                       </th>
-                                      <th className="px-4 py-3 text-right text-xs font-semibold text-gray-500 uppercase">
+                                      <th className="text-muted-foreground px-4 py-3 text-right text-xs font-semibold uppercase">
                                         {t("watchlist.currentValue")}
                                       </th>
-                                      <th className="px-4 py-3 text-right text-xs font-semibold text-gray-500 uppercase">
+                                      <th className="text-muted-foreground px-4 py-3 text-right text-xs font-semibold uppercase">
                                         {t("watchlist.profitLoss")}
                                       </th>
-                                      <th className="w-[50px] px-4 py-3 text-center text-xs font-semibold text-gray-500 uppercase"></th>
+                                      <th className="text-muted-foreground w-[50px] px-4 py-3 text-center text-xs font-semibold uppercase"></th>
                                     </tr>
                                   </thead>
                                   <tbody>
@@ -352,30 +394,30 @@ export function WatchlistTable({
                                       return (
                                         <tr
                                           key={tx.id}
-                                          className="border-b border-gray-100 last:border-b-0 hover:bg-gray-50/50"
+                                          className="border-border hover:bg-muted/50 border-b last:border-b-0"
                                         >
-                                          <td className="px-4 py-3 text-sm text-gray-700">
+                                          <td className="text-muted-foreground px-4 py-3 text-sm">
                                             {tx.purchaseDate}
                                           </td>
-                                          <td className="px-4 py-3 text-right text-sm text-gray-900">
+                                          <td className="text-foreground px-4 py-3 text-right text-sm">
                                             {tx.quantity.toLocaleString(
                                               "vi-VN",
                                             )}
                                           </td>
-                                          <td className="px-4 py-3 text-right text-sm text-gray-900">
+                                          <td className="text-foreground px-4 py-3 text-right text-sm">
                                             {tx.price.toLocaleString("vi-VN")} ₫
                                           </td>
-                                          <td className="px-4 py-3 text-right text-sm text-gray-900">
+                                          <td className="text-foreground px-4 py-3 text-right text-sm">
                                             {totalBuy.toLocaleString("vi-VN")} ₫
                                           </td>
-                                          <td className="px-4 py-3 text-right text-sm text-gray-900">
+                                          <td className="text-foreground px-4 py-3 text-right text-sm">
                                             {totalCurrent.toLocaleString(
                                               "vi-VN",
                                             )}{" "}
                                             ₫
                                           </td>
                                           <td
-                                            className={`px-4 py-3 text-right text-sm font-semibold ${isProfit ? "text-green-600" : "text-red-600"}`}
+                                            className={`px-4 py-3 text-right text-sm font-semibold ${isProfit ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}`}
                                           >
                                             {isProfit ? "+" : ""}
                                             {pl.toLocaleString("vi-VN")} ₫
@@ -396,7 +438,7 @@ export function WatchlistTable({
                                                   tx.id,
                                                 )
                                               }
-                                              className="cursor-pointer rounded p-1 text-red-500 transition-colors hover:bg-red-50 hover:text-red-700"
+                                              className="cursor-pointer rounded p-1 text-red-500 transition-colors hover:bg-red-50 hover:text-red-700 dark:text-red-400 dark:hover:bg-red-500/10 dark:hover:text-red-300"
                                               title={t(
                                                 "watchlist.tooltipDeleteTx",
                                               )}
@@ -414,13 +456,13 @@ export function WatchlistTable({
                           </div>
 
                           {/* Add Purchase Form */}
-                          <div className="h-fit space-y-3 rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
-                            <h4 className="text-sm font-bold tracking-wider text-gray-700 uppercase">
+                          <div className="border-border bg-card h-fit space-y-3 rounded-xl border p-4 shadow-sm">
+                            <h4 className="text-foreground text-sm font-bold tracking-wider uppercase">
                               {t("watchlist.addPurchaseTx")}
                             </h4>
                             <div className="space-y-3">
                               <div>
-                                <label className="mb-1 block text-xs font-semibold text-gray-500">
+                                <label className="text-muted-foreground mb-1 block text-xs font-semibold">
                                   {t("watchlist.purchaseDate")}
                                 </label>
                                 <input
@@ -432,11 +474,11 @@ export function WatchlistTable({
                                       [item.symbol]: e.target.value,
                                     }))
                                   }
-                                  className="focus:border-brand-900 h-9 w-full rounded-lg border border-gray-200 bg-white px-3 text-sm text-gray-700 focus:outline-none"
+                                  className="focus:border-brand-700 border-input bg-background text-foreground dark:focus:border-brand-400 h-9 w-full rounded-lg border px-3 text-sm focus:outline-none"
                                 />
                               </div>
                               <div>
-                                <label className="mb-1 block text-xs font-semibold text-gray-500">
+                                <label className="text-muted-foreground mb-1 block text-xs font-semibold">
                                   {t("watchlist.purchaseQuantity")}
                                 </label>
                                 <input
@@ -451,11 +493,11 @@ export function WatchlistTable({
                                       [item.symbol]: e.target.value,
                                     }))
                                   }
-                                  className="focus:border-brand-900 h-9 w-full rounded-lg border border-gray-200 bg-white px-3 text-sm text-gray-700 focus:outline-none"
+                                  className="focus:border-brand-700 border-input bg-background text-foreground dark:focus:border-brand-400 h-9 w-full rounded-lg border px-3 text-sm focus:outline-none"
                                 />
                               </div>
                               <div>
-                                <label className="mb-1 block text-xs font-semibold text-gray-500">
+                                <label className="text-muted-foreground mb-1 block text-xs font-semibold">
                                   {t("watchlist.purchasePrice")}
                                 </label>
                                 <input
@@ -469,7 +511,7 @@ export function WatchlistTable({
                                       [item.symbol]: e.target.value,
                                     }))
                                   }
-                                  className="focus:border-brand-900 h-9 w-full rounded-lg border border-gray-200 bg-white px-3 text-sm text-gray-700 focus:outline-none"
+                                  className="focus:border-brand-700 border-input bg-background text-foreground dark:focus:border-brand-400 h-9 w-full rounded-lg border px-3 text-sm focus:outline-none"
                                 />
                               </div>
                               <button

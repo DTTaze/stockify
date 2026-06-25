@@ -80,24 +80,25 @@ export function useMarketOverview() {
   );
 
   // Derived indices
-  const hnx30Quote = useMemo<StockDataType>(() => {
-    const val = (hnxQuote?.price ?? 240) * 2.15;
-    const change = (hnxQuote?.change_percent ?? 0) * 0.95;
-    const vol = Math.round((hnxQuote?.volume ?? 50_000_000) * 0.72);
-    return { symbol: "HNX30", price: val, change_percent: change, volume: vol };
-  }, [hnxQuote]);
+  const hnx30Quote = useMemo<StockDataType>(
+    () => ({
+      symbol: "HNX30",
+      price: (hnxQuote?.price ?? 240) * 2.15,
+      change_percent: (hnxQuote?.change_percent ?? 0) * 0.95,
+      volume: Math.round((hnxQuote?.volume ?? 50_000_000) * 0.72),
+    }),
+    [hnxQuote],
+  );
 
-  const vnxallQuote = useMemo<StockDataType>(() => {
-    const val = (vnindexQuote?.price ?? 1200) * 1.61;
-    const change = (vnindexQuote?.change_percent ?? 0) * 1.05;
-    const vol = Math.round((vnindexQuote?.volume ?? 500_000_000) * 1.08);
-    return {
+  const vnxallQuote = useMemo<StockDataType>(
+    () => ({
       symbol: "VNXALL",
-      price: val,
-      change_percent: change,
-      volume: vol,
-    };
-  }, [vnindexQuote]);
+      price: (vnindexQuote?.price ?? 1200) * 1.61,
+      change_percent: (vnindexQuote?.change_percent ?? 0) * 1.05,
+      volume: Math.round((vnindexQuote?.volume ?? 500_000_000) * 1.08),
+    }),
+    [vnindexQuote],
+  );
 
   const hnx35Chart = useMemo(
     () => formatHistoryForChart(hnxHistory, hnx30Quote.price),
@@ -108,6 +109,29 @@ export function useMarketOverview() {
     if (isLoading) {
       return [];
     }
+
+    const derivedConfigs = [
+      { label: "VN100", pF: 0.95, cF: 0.98, vF: 0.45 },
+      { label: "VNALL", pF: 1.05, cF: 1.02, vF: 1.15 },
+      { label: "VNCOND", pF: 1.52, cF: 0.85, vF: 0.08 },
+      { label: "VNCONS", pF: 0.78, cF: 1.12, vF: 0.12 },
+      { label: "VNDIAMOND", pF: 1.84, cF: 1.25, vF: 0.22 },
+      { label: "VNENE", pF: 0.62, cF: 0.75, vF: 0.06 },
+      { label: "VNFIN", pF: 1.34, cF: 1.15, vF: 0.35 },
+      { label: "VNFINLEAD", pF: 1.42, cF: 1.18, vF: 0.25 },
+    ];
+
+    const derivedItems = derivedConfigs.map(({ label, pF, cF, vF }) => ({
+      label,
+      quote: {
+        symbol: label,
+        price: (vnindexQuote?.price ?? 1200) * pF,
+        change_percent: (vnindexQuote?.change_percent ?? 0) * cF,
+        volume: Math.round((vnindexQuote?.volume ?? 500_000_000) * vF),
+      },
+      chartData: vnindexChart.map((d) => ({ ...d, value: d.value * pF })),
+      exchange: "HOSE",
+    }));
 
     const items = [
       {
@@ -141,11 +165,12 @@ export function useMarketOverview() {
         exchange: "HNX",
       },
       {
-        label: "HNXUPCOMIND",
+        label: "HNXUPCOMINDEX",
         quote: upcomQuote ?? { price: 0, change_percent: 0, volume: 0 },
         chartData: upcomChart,
         exchange: "UPCOM",
       },
+      ...derivedItems,
     ];
 
     return items.map((item) => {

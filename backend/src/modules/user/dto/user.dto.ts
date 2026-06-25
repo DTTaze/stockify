@@ -22,6 +22,14 @@ export class QueryUsersDTO extends PaginationDTO {
   @IsString()
   @IsOptional()
   keyword?: string;
+
+  @ApiPropertyOptional({
+    description: 'Filter by status',
+    enum: ENTITY_STATUS,
+  })
+  @IsEnum(ENTITY_STATUS)
+  @IsOptional()
+  status?: ENTITY_STATUS;
 }
 
 export class UpdateUserStatusDTO {
